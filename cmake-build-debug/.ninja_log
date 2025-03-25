@@ -1,0 +1,10 @@
+# ninja log v6
+1	740	1742939860304525505	CMakeFiles/Sandbox.dir/sandbox.cpp.o	76cfc7f2d86835c6
+1	871	1742939860304525505	CMakeFiles/Sandbox.dir/primitives/Integer.cpp.o	3398f39f52b0fbae
+2	923	1742939860304525505	CMakeFiles/Sandbox.dir/Values.cpp.o	593a6ece444069f5
+1	945	1742939860304525505	CMakeFiles/Sandbox.dir/primitives/Real.cpp.o	af43a9ce238c5ad2
+2	1036	1742939860304525505	CMakeFiles/Sandbox.dir/primitives/Complex.cpp.o	3317fb9499a0620
+2	1262	1742939860304525505	CMakeFiles/Sandbox.dir/MathHelper.cpp.o	6ef04454fee289f9
+1	333	1742939868091575493	CMakeFiles/Sandbox.dir/AST.cpp.o	1e55ba49cfbef50d
+1	824	1742939884501218634	CMakeFiles/Sandbox.dir/Expressions.cpp.o	65cbb54b356adbdc
+824	950	1742939885317381021	Sandbox	2c3df6bf8624a6a

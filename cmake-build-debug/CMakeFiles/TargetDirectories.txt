@@ -1,0 +1,4 @@
+/home/xabdomo/Uni/Projects/Compilers/cmake-build-debug/CMakeFiles/Cmm.dir
+/home/xabdomo/Uni/Projects/Compilers/cmake-build-debug/CMakeFiles/Sandbox.dir
+/home/xabdomo/Uni/Projects/Compilers/cmake-build-debug/CMakeFiles/edit_cache.dir
+/home/xabdomo/Uni/Projects/Compilers/cmake-build-debug/CMakeFiles/rebuild_cache.dir

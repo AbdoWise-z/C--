@@ -1,0 +1,134 @@
+//
+// Created by xabdomo on 3/25/25.
+//
+
+#include "Expressions.h"
+#include "MathHelper.h"
+// #include "grammar/parser.tab.h"
+
+Cmm::Expressions::ExpressionNode::ExpressionNode() = default;
+
+Cmm::ValueObject Cmm::Expressions::ExpressionNode::eval() {
+    ValueObject result{};
+    result = children[0]->eval();
+    for (int i = 1; i < children.size(); i++) {
+        auto temp = children[i]->eval();
+        auto temp2 = MathHelper::add(result, temp);
+        ValuesHelper::Delete(result);
+        result = temp2;
+    }
+    return result;
+}
+
+Cmm::Expressions::ExpressionNode::~ExpressionNode() {
+    for (const auto & i : children) {
+        delete i;
+    }
+}
+
+Cmm::Expressions::TermNode::TermNode(EvaluableNode *left, EvaluableNode *right, int op) {
+    this->left = left;
+    this->right = right;
+    this->op = op;
+}
+
+Cmm::ValueObject Cmm::Expressions::TermNode::eval() {
+    auto left = this->left->eval();
+    auto right = this->right->eval();
+    ValueObject result{};
+
+    switch (op) {
+        case 0: //fixme
+            result = MathHelper::add(left, right);
+            break;
+        default:
+            throw std::invalid_argument("Invalid operation");
+    }
+
+    ValuesHelper::Delete(left);
+    ValuesHelper::Delete(right);
+
+    return result;
+}
+
+Cmm::Expressions::TermNode::~TermNode() {
+    delete left;
+    delete right;
+}
+
+Cmm::Expressions::NegatedNode::NegatedNode(EvaluableNode *child) {
+    this->child = child;
+}
+
+Cmm::ValueObject Cmm::Expressions::NegatedNode::eval() {
+    auto val = child->eval();
+    auto result = Cmm::ValueObject();
+    result.type = val.type;
+    switch (val.type) {
+        case V_Integer:
+            result.value = new Integer(-(*static_cast<Integer*>(val.value)));
+            break;
+        case V_Real:
+            result.value = new Real(-(*static_cast<Real*>(val.value)));
+            break;
+        case V_Complex:
+            result.value = new Complex(-(*static_cast<Complex*>(val.value)));
+            break;
+        case V_String:
+            throw std::invalid_argument("Invalid operation: negation on a string value");
+        case V_Bool:
+            result.value = reinterpret_cast<void*>(val.value == 0);
+            break;
+        default:
+            throw std::invalid_argument("Invalid operation: negation on a [Error / void] value");
+    }
+    return val;
+}
+
+Cmm::Expressions::NegatedNode::~NegatedNode() {
+    delete child;
+}
+
+
+Cmm::Expressions::ConstantValueNode::ConstantValueNode(const Real& v) {
+    value = {
+        .type = V_Real,
+        .value = new Real(v),
+    };
+}
+
+Cmm::Expressions::ConstantValueNode::ConstantValueNode(const Integer &v) {
+    value = {
+        .type = V_Real,
+        .value = new Integer(v),
+    };
+}
+
+Cmm::Expressions::ConstantValueNode::ConstantValueNode(const Complex &v) {
+    value = {
+        .type = V_Complex,
+        .value = new Complex(v),
+    };
+}
+
+Cmm::Expressions::ConstantValueNode::ConstantValueNode(const Bool &v) {
+    value = {
+        .type = V_Bool,
+        .value = reinterpret_cast<void*>(v != 0), // a little optimization :)
+    };
+}
+
+Cmm::Expressions::ConstantValueNode::ConstantValueNode(const String &v) {
+    value = {
+        .type = V_String,
+        .value = new String(v),
+    };
+}
+
+Cmm::ValueObject Cmm::Expressions::ConstantValueNode::eval() {
+    return value;
+}
+
+Cmm::Expressions::ConstantValueNode::~ConstantValueNode() {
+    ValuesHelper::Delete(value);
+}

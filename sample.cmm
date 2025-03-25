@@ -1,0 +1,29 @@
+var real_num : real = 45;
+var int_num  : int = 11;
+var string   : str = 145;
+var complex  : comp = 412 + 48i;
+const boolean  : bool = false;
+
+# this is a comment
+
+func sum(a: real, b: real) -> real {
+    var c = a; # type infered
+    {
+        # nested scope
+        c += b;
+    }
+    return c;
+}
+
+func feb(a: real) -> real {
+    # recursive functions :)
+    if (a <= 1)
+        return a;
+    return  feb(a - 1) + feb(a - 2);
+}
+
+func inc(a: real&) -> void {
+    a++;
+}
+
+var casting = (int) real_num;

@@ -1,21 +1,20 @@
-
 # takes a string as an input, and prints it to the console (don't append \n)
-export func print(text: str) -> void = native
+export func print(text: str) -> void = native;
 
 # reads a value from the standard input stream, the return type is based on the passed "type" param
-export func input(type: str = "str" | "int" | "real" | "complex" | "bool") -> str | int | real | complex | bool = native
+export func input(type: str = "str") -> str | int | real | complex | bool = native;
 
 # given a string, returns the length of it
-export func len(text: str) -> int = native
+export func len(text: str) -> int = native;
 
 # converts a string that contains a real number to a real variable
-export func toReal(_s: str) -> real = native
+export func toReal(_s: str) -> real = native;
 
 # converts a string that contains a integer number to a integer variable
-export func toInt(_s: str) -> int = native
+export func toInt(_s: str) -> int = native;
 
 # converts a string that contains a boolean value to a boolean variable
-export func toBool(_s: str) -> bool = native
+export func toBool(_s: str) -> bool = native;
 
 export true: bool = 1
 export false: bool = 0

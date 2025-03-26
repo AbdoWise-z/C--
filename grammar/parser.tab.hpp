@@ -97,24 +97,26 @@ extern int yydebug;
     D_RBRACE = 298,                /* D_RBRACE  */
     D_COLON = 299,                 /* D_COLON  */
     D_COMMA = 300,                 /* D_COMMA  */
-    CONTROL_IF = 301,              /* CONTROL_IF  */
-    CONTROL_ELSE = 302,            /* CONTROL_ELSE  */
-    CONTROL_WHILE = 303,           /* CONTROL_WHILE  */
-    CONTROL_FOR = 304,             /* CONTROL_FOR  */
-    CONTROL_SWITCH = 305,          /* CONTROL_SWITCH  */
-    CONTROL_CASE = 306,            /* CONTROL_CASE  */
-    CONTROL_DEFAULT = 307,         /* CONTROL_DEFAULT  */
-    CONTROL_DO = 308,              /* CONTROL_DO  */
-    CONTROL_RETURN = 309,          /* CONTROL_RETURN  */
-    CONTROL_BREAK = 310,           /* CONTROL_BREAK  */
-    CONTROL_CONTINUE = 311,        /* CONTROL_CONTINUE  */
-    MISC_FUNC = 312,               /* MISC_FUNC  */
-    MISC_VAR = 313,                /* MISC_VAR  */
-    MISC_CONST = 314,              /* MISC_CONST  */
-    MISC_IMPORT = 315,             /* MISC_IMPORT  */
-    MISC_EXPORT = 316,             /* MISC_EXPORT  */
-    MISC_NATIVE = 317,             /* MISC_NATIVE  */
-    OP_UNARY_MINUS = 318           /* OP_UNARY_MINUS  */
+    D_ARROW = 301,                 /* D_ARROW  */
+    CONTROL_IF = 302,              /* CONTROL_IF  */
+    CONTROL_ELSE = 303,            /* CONTROL_ELSE  */
+    CONTROL_WHILE = 304,           /* CONTROL_WHILE  */
+    CONTROL_FOR = 305,             /* CONTROL_FOR  */
+    CONTROL_SWITCH = 306,          /* CONTROL_SWITCH  */
+    CONTROL_CASE = 307,            /* CONTROL_CASE  */
+    CONTROL_DEFAULT = 308,         /* CONTROL_DEFAULT  */
+    CONTROL_DO = 309,              /* CONTROL_DO  */
+    CONTROL_RETURN = 310,          /* CONTROL_RETURN  */
+    CONTROL_BREAK = 311,           /* CONTROL_BREAK  */
+    CONTROL_CONTINUE = 312,        /* CONTROL_CONTINUE  */
+    MISC_FUNC = 313,               /* MISC_FUNC  */
+    MISC_FROM = 314,               /* MISC_FROM  */
+    MISC_VAR = 315,                /* MISC_VAR  */
+    MISC_CONST = 316,              /* MISC_CONST  */
+    MISC_IMPORT = 317,             /* MISC_IMPORT  */
+    MISC_EXPORT = 318,             /* MISC_EXPORT  */
+    MISC_NATIVE = 319,             /* MISC_NATIVE  */
+    OP_UNARY_MINUS = 320           /* OP_UNARY_MINUS  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -123,12 +125,14 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 25 "parser.ypp"
+#line 29 "parser.ypp"
 
     std::string* str;
     Cmm::EvaluableNode* evaluable;
+    Cmm::ExecutableNode* executable;
+    Cmm::ASTNode* node;
 
-#line 132 "parser.tab.hpp"
+#line 136 "parser.tab.hpp"
 
 };
 typedef union YYSTYPE YYSTYPE;

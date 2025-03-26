@@ -17,7 +17,8 @@ namespace Namespace {
         V_Complex,
         V_Bool,
         V_Void,
-        V_Error
+        V_Error,
+        V_Ref
     };
 
 
@@ -34,12 +35,14 @@ namespace Namespace {
             ValueType to;
         public:
             ConversionError(ValueType, ValueType);
-            const char *what() const noexcept override;
+            [[nodiscard]] const char *what() const noexcept override;
         };
 
         ValueObject castTo(ValueObject val, ValueType newType);
+        ValueObject clone(ValueObject val);
         void Delete(ValueObject&);
         std::string ValueTypeAsString(ValueType);
+        ValueType StringToValueType(const std::string&);
         std::string toString(ValueObject);
     }
 

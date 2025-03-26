@@ -33,7 +33,7 @@ void remove_first_and_last_char(std::string* str_ptr) {
     return V_STRING;
 }
 
-[0-9]+\.[0-9]+ {
+[0-9]+"\."[0-9]+ {
     std::string* val = new std::string(yytext);
     yylval.str = val;
     return V_REAL;
@@ -56,6 +56,15 @@ void remove_first_and_last_char(std::string* str_ptr) {
     yylval.str = val;
     return V_BOOLEAN;
 }
+
+";"       { return D_SEMICOLON; }
+"("       { return D_LPAREN; }
+")"       { return D_RPAREN; }
+"{"       { return D_LBRACE; }
+"}"       { return D_RBRACE; }
+":"       { return D_COLON; }
+","       { return D_COMMA; }
+"->"      { return D_ARROW; }
 
 "real"    { return TYPE_REAL; }
 "int"     { return TYPE_INT; }
@@ -88,14 +97,6 @@ void remove_first_and_last_char(std::string* str_ptr) {
 "!"       { std::string* val = new std::string(yytext); yylval.str = val; return OP_NOT; }
 "~"       { std::string* val = new std::string(yytext); yylval.str = val; return OP_INVERT; }
 
-";"       { return D_SEMICOLON; }
-"("       { return D_LPAREN; }
-")"       { return D_RPAREN; }
-"{"       { return D_LBRACE; }
-"}"       { return D_RBRACE; }
-":"       { return D_COLON; }
-","       { return D_COMMA; }
-
 "if"       { return CONTROL_IF; }
 "else"     { return CONTROL_ELSE; }
 "while"    { return CONTROL_WHILE; }
@@ -109,6 +110,7 @@ void remove_first_and_last_char(std::string* str_ptr) {
 "continue" { return CONTROL_CONTINUE; }
 
 "func"    { return MISC_FUNC; }
+"from"    { return MISC_FROM; }
 "var"     { return MISC_VAR; }
 "const"   { return MISC_CONST; }
 "import"  { return MISC_IMPORT; }

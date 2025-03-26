@@ -7,6 +7,7 @@
 #include <ranges>
 
 #include "MathHelper.h"
+#include "Program.h"
 
 Cmm::Expressions::ExpressionNode::ExpressionNode() = default;
 
@@ -124,14 +125,7 @@ Cmm::Expressions::VariableNode::VariableNode(const std::string &n) {
 }
 
 Cmm::ValueObject Cmm::Expressions::VariableNode::eval() {
-    // TODO: implement logic to get the variable value either from stack or global memory ..
-    //       this will be at the last stages of the project, I created it now because I
-    //       want to finalize the expressions logic.
-
-    return {
-        .type = V_Real,
-        .value = new Real(0.0),
-    };
+    return ValuesHelper::clone(Program::getVariable(name));
 }
 
 // nothing to do here

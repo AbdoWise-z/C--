@@ -13,8 +13,22 @@ std::string Cmm::ValuesHelper::ValueTypeAsString(ValueType v) {
     if (v == V_Complex) return "complex";
     if (v == V_Void) return "void";
     if (v == V_Error) return "error";
+    if (v == V_Ref) return "ref";
 
     return "wtf";
+}
+
+Cmm::ValueType Cmm::ValuesHelper::StringToValueType(const std::string& v) {
+    if (v == "int") return V_Integer;
+    if (v == "real") return V_Real;
+    if (v == "str") return V_String;
+    if (v == "bool") return V_Bool;
+    if (v == "complex") return V_Complex;
+    if (v == "void") return V_Void;
+    if (v == "error") return V_Error;
+    if (v == "ref") return V_Ref;
+
+    return static_cast<ValueType>(-1); // wtf xD
 }
 
 std::string Cmm::ValuesHelper::toString(ValueObject v) {
@@ -129,6 +143,24 @@ Cmm::ValueObject Cmm::ValuesHelper::castTo(ValueObject val, ValueType newType) {
     throw ConversionError(val.type, newType);
 }
 
+Cmm::ValueObject Cmm::ValuesHelper::clone(ValueObject val) {
+    if (val.type == V_Error || val.type == V_Void) {
+        return {
+            .type = val.type,
+            .value = nullptr
+        };
+    }
+
+    if (val.type == V_Ref) {
+        // a little hack
+        val.type = V_String;
+        auto clone = castTo(val, V_String);
+        clone.type = V_String;
+        return clone;
+    }
+
+    return castTo(val, val.type);
+}
 
 
 Cmm::ValuesHelper::ConversionError::ConversionError(ValueType a, ValueType b): exception() {

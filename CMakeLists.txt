@@ -44,6 +44,8 @@ add_executable(
         ${PARSER_HDR}
         ${PARSER_CPP_SRC}
         ${PARSER_C_SRC}
+        Program.cpp
+        Program.h
 )
 
 add_custom_target(
@@ -79,6 +81,8 @@ add_executable(Sandbox
         Expressions.cpp
         Expressions.h
         forward.h
+        Program.cpp
+        Program.h
 )
 
 target_link_libraries(

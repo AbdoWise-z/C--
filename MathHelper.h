@@ -21,7 +21,7 @@ namespace Namespace {
             std::string op;
         public:
             OperationError(ValueType, ValueType, const std::string&);
-            const char *what() const noexcept override;
+            [[nodiscard]] const char *what() const noexcept override;
         };
 
         ValueObject add(ValueObject& left, ValueObject& right);

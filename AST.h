@@ -5,10 +5,17 @@
 #ifndef AST_H
 #define AST_H
 
+#include <map>
+
 #include "config.h"
 #include "Values.h"
 
 namespace Namespace {
+
+    class ASTNode;
+    class EvaluableNode;
+    class ExecutableNode;
+
 
     class ASTNode {
     public:
@@ -20,7 +27,10 @@ namespace Namespace {
         virtual ValueObject eval() = 0;
     };
 
-
+    class ExecutableNode: public ASTNode {
+    public:
+        virtual void exec() = 0;
+    };
 }
 
 

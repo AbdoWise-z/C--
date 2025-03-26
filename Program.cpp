@@ -1,0 +1,315 @@
+//
+// Created by xabdomo on 3/26/25.
+//
+
+#include "Program.h"
+
+#include <iostream>
+#include <map>
+#include <thread>
+#include <shared_mutex>
+#include <utility>
+#include <vector>
+
+#include "Expressions.h"
+
+namespace Namespace::Program {
+
+    static std::map<std::thread::id, ProgramBlock> _programs;
+    static std::shared_mutex _programs_mutex;
+
+    static std::string stringfy(function_sig sig) {
+        std::string args;
+        for (int i = 0;i < sig.second.size();i++) {
+            args += ValuesHelper::ValueTypeAsString(sig.second[i]);
+            if (i != sig.second.size() - 1) {
+                args += ", ";
+            }
+        }
+
+        return sig.first + "(" + args + ")";
+    }
+
+    ProgramBlock& getCurrentProgram() {
+        auto this_thread = std::this_thread::get_id();
+        _programs_mutex.lock_shared();
+        auto it = _programs.find(this_thread);
+        if (it == _programs.end()) {
+            _programs_mutex.unlock_shared();
+            _programs_mutex.lock();
+            it = _programs.find(this_thread);
+            if (it != _programs.end()) return it->second;
+            _programs[this_thread] = ProgramBlock();
+            it = _programs.find(this_thread);
+            _programs_mutex.unlock();
+            return it->second;
+        }
+
+        _programs_mutex.unlock_shared();
+        return it->second;
+    }
+
+    void beginScope() {
+        getCurrentProgram().stack.push_back({});
+    }
+
+    void endScope() {
+        getCurrentProgram().stack.pop_back();
+    }
+
+    void createVariable(const std::string& name, Cmm::ValueObject val) {
+        ProgramBlock& block = getCurrentProgram();
+        if (block.stack.empty()) {
+            throw NoStackError();
+        }
+
+        Scope& scope = block.stack.back();
+        auto it1 = scope.variables.find(name);
+        if (it1 != scope.variables.end()) {
+            throw AlreadyDefinedError(name);
+        }
+
+        scope.variables[name] = val;
+    }
+
+    static ValueObject& resolveRef(int scope, ValueObject val) {
+        ProgramBlock& block = getCurrentProgram();
+        while (scope >= 0) {
+            std::string next_target = *static_cast<std::string*>(val.value);
+            Scope& _s = block.stack[scope];
+            auto it = _s.variables.find(next_target);
+            if (it != _s.variables.end()) {
+                ValueObject& obj = it->second;
+                if (obj.type != V_Ref) {
+                    return obj;  // found the target
+                }
+                val = obj;
+            }
+
+            scope --;
+        }
+
+        std::string next_target = *static_cast<std::string*>(val.value);
+
+        throw VariableNotFoundError("[Ref: " + next_target + "]");
+    }
+
+    ValueObject & getVariable(const std::string &name) {
+        ProgramBlock& block = getCurrentProgram();
+
+        // search scopes from bottom to top. and try to find the variable
+        int scope = block.stack.size() - 1;
+        while (scope >= 0) {
+            auto it = block.stack[scope].variables.find(name);
+            if (it != block.stack[scope].variables.end()) {
+                ValueObject& obj = it->second;
+                if (obj.type != V_Ref) {
+                    return obj;
+                }
+                return resolveRef(scope - 1, obj);
+            }
+            scope --;
+        }
+
+        throw VariableNotFoundError(name);
+    }
+
+    void createFunction(const function_sig &signature, FunctionNode* node) {
+        ProgramBlock& block = getCurrentProgram();
+        if (block.stack.empty()) {
+            throw NoStackError();
+        }
+
+        Scope& scope = block.stack.back();
+
+        auto it1 = scope.functions.find(signature);
+        if (it1 != scope.functions.end()) {
+            throw AlreadyDefinedError(stringfy(signature));
+        }
+
+        scope.functions[signature] = node;
+    }
+
+    ValueObject callFunction(const function_sig& signature, std::map<std::string, ValueObject> params) {
+        // bottom up search the function signature
+        ProgramBlock& block = getCurrentProgram();
+        int scope = block.stack.size() - 1;
+        while (scope >= 0) {
+            auto it = block.stack[scope].functions.find(signature);
+            if (it != block.stack[scope].functions.end()) {
+                FunctionNode* obj = it->second;
+                // do the actual calling
+                ValueObject result = obj->exec(params);
+                return result;
+            }
+            scope --;
+        }
+
+        throw FunctionNotFoundError(stringfy(signature));
+    }
+
+    NoStackError::NoStackError() = default;
+
+    const char * NoStackError::what() const noexcept {
+        return "No stack found while trying to create a variable or a function";
+    }
+
+    AlreadyDefinedError::AlreadyDefinedError(std::string id) : id(std::move(id)) {}
+
+    const char * AlreadyDefinedError::what() const noexcept {
+        static std::string err = "Object with id: " + id + " already defined.";
+        return err.c_str();
+    }
+
+    VariableNotFoundError::VariableNotFoundError(std::string id) : id(std::move(id)) {}
+
+    const char * VariableNotFoundError::what() const noexcept {
+        static std::string err = "Object with id: " + id + " not found.";
+        return err.c_str();
+    }
+
+    FunctionNotFoundError::FunctionNotFoundError(std::string id) : id(std::move(id)) {}
+
+    const char * FunctionNotFoundError::what() const noexcept {
+        static std::string err = "Function with signature: " + id + " not found.";
+        return err.c_str();
+    }
+
+    ProgramNode::ProgramNode(ExecutableNode *source) {
+        this->source = source;
+    }
+
+    void ProgramNode::exec() {
+        beginScope();
+
+        source->exec();
+
+        endScope();
+    }
+
+    VariableDeclarationNode::VariableDeclarationNode(bool isConst, std::string name, std::string type,
+                                                     EvaluableNode *value) {
+        this->isConst = isConst;
+        this->name = std::move(name);
+        this->type = std::move(type);
+        this->value = value;
+    }
+
+    void VariableDeclarationNode::exec() {
+        auto mType = ValuesHelper::StringToValueType(this->type);
+        auto mValue = this->value->eval();
+        if (mValue.type != mType) {
+            // cast it
+            auto temp = ValuesHelper::castTo(mValue, mType);
+            ValuesHelper::Delete(mValue);
+            mValue = temp;
+        }
+
+        // now that we have the name and value
+        // we try to push it to the scope
+        createVariable(name, mValue);
+        // fixme: constants are treated as normal values .. which is well .. wrong ..
+
+        std::cout << "[+]> " << name << "=" << ValuesHelper::toString(mValue) << std::endl;
+    }
+
+    ExpressionStatementNode::ExpressionStatementNode(EvaluableNode *value) {
+        expr = value;
+    }
+
+    void ExpressionStatementNode::exec() {
+        auto mValue = this->expr->eval();
+        std::cout << "[e]> expr" << "=" << ValuesHelper::toString(mValue) << std::endl;
+    }
+
+    VariableAssignmentNode::VariableAssignmentNode(std::string name, EvaluableNode *value) {
+        this->name = name;
+        this->expr = value;
+    }
+
+    void VariableAssignmentNode::exec() {
+        ValueObject& original = getVariable(name);
+        auto mValue = this->expr->eval();
+        if (mValue.type != original.type) {
+            auto temp = ValuesHelper::castTo(mValue, original.type);
+            ValuesHelper::Delete(original);
+            mValue = temp;
+        }
+
+        ValuesHelper::Delete(original);
+        original = mValue;
+        std::cout << "[u]> " << name << "=" << ValuesHelper::toString(mValue) << std::endl;
+    }
+
+    StatementListNode::StatementListNode(StatementListNode *other, ExecutableNode *next) {
+        this->statements.clear();
+        if (other) {
+            this->statements = other->statements;
+            other->statements.clear();
+            delete other;
+        }
+
+        statements.push_back(next);
+    }
+
+    StatementListNode::~StatementListNode() {
+        for (auto item: statements) {
+            delete item;
+        }
+    }
+
+    void StatementListNode::exec() {
+        for (auto item: statements) {
+            item->exec();
+        }
+    }
+
+    FunctionDeclarationNode::FunctionDeclarationNode(FunctionNode *node) : node(node) {}
+
+    void FunctionDeclarationNode::exec() {
+        node->decl();
+    }
+
+    FunctionDeclarationNode::~FunctionDeclarationNode() {
+        delete node;
+    }
+
+    FunctionArgumentNode::FunctionArgumentNode(std::string id, std::string type) : id(std::move(id)), type(type) {
+        defaultValue = nullptr;
+    }
+
+    FunctionArgumentNode::FunctionArgumentNode
+        (
+            std::string id,
+            std::string type,
+            EvaluableNode* defaultValue
+            ): id(std::move(id)), type(std::move(type)), defaultValue(defaultValue) {}
+
+    ValueObject FunctionArgumentNode::getDefaultValue() const {
+        return defaultValue->eval();
+    }
+
+    bool FunctionArgumentNode::hasDefaultValue() const {
+        return defaultValue != nullptr;
+    }
+
+    FunctionArgumentNode::~FunctionArgumentNode() {
+        delete defaultValue;
+    }
+
+    FunctionArgumentListNode::FunctionArgumentListNode(FunctionArgumentListNode *other, FunctionArgumentNode *next) {
+        arguments.clear();
+        if (other) {
+            arguments = other->arguments;
+            other->arguments.clear();
+            delete other;
+        }
+        arguments.push_back(next);
+    }
+
+    FunctionArgumentListNode::~FunctionArgumentListNode() {
+        for (auto item: this->arguments) {
+            delete item;
+        }
+    }
+}

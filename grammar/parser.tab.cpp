@@ -186,11 +186,14 @@ enum yysymbol_kind_t
   YYSYMBOL_YYACCEPT = 64,                  /* $accept  */
   YYSYMBOL_program = 65,                   /* program  */
   YYSYMBOL_expr = 66,                      /* expr  */
-  YYSYMBOL_expr_term = 67,                 /* expr_term  */
-  YYSYMBOL_expr_casted_term = 68,          /* expr_casted_term  */
+  YYSYMBOL_expr_casted_term = 67,          /* expr_casted_term  */
+  YYSYMBOL_expr_term = 68,                 /* expr_term  */
   YYSYMBOL_expr_value = 69,                /* expr_value  */
   YYSYMBOL_constant_value = 70,            /* constant_value  */
-  YYSYMBOL_type_specifier = 71             /* type_specifier  */
+  YYSYMBOL_type_specifier = 71,            /* type_specifier  */
+  YYSYMBOL_function_call = 72,             /* function_call  */
+  YYSYMBOL_function_arguments = 73,        /* function_arguments  */
+  YYSYMBOL_function_argument = 74          /* function_argument  */
 };
 typedef enum yysymbol_kind_t yysymbol_kind_t;
 
@@ -516,18 +519,18 @@ union yyalloc
 #endif /* !YYCOPY_NEEDED */
 
 /* YYFINAL -- State number of the termination state.  */
-#define YYFINAL  27
+#define YYFINAL  29
 /* YYLAST -- Last index in YYTABLE.  */
-#define YYLAST   57
+#define YYLAST   82
 
 /* YYNTOKENS -- Number of terminals.  */
 #define YYNTOKENS  64
 /* YYNNTS -- Number of nonterminals.  */
-#define YYNNTS  8
+#define YYNNTS  11
 /* YYNRULES -- Number of rules.  */
-#define YYNRULES  26
+#define YYNRULES  32
 /* YYNSTATES -- Number of states.  */
-#define YYNSTATES  39
+#define YYNSTATES  48
 
 /* YYMAXUTOK -- Last valid token kind.  */
 #define YYMAXUTOK   318
@@ -580,11 +583,12 @@ static const yytype_int8 yytranslate[] =
 
 #if YYDEBUG
 /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
-static const yytype_int8 yyrline[] =
+static const yytype_uint8 yyrline[] =
 {
-       0,    61,    61,    76,    77,    78,    82,    83,    84,    88,
-      89,    93,    94,    95,    96,    97,   101,   102,   103,   104,
-     105,   112,   113,   114,   115,   116,   117
+       0,    61,    61,    77,    78,    79,    83,    84,    88,    89,
+      90,    94,    95,    96,    97,    98,    99,   103,   104,   105,
+     106,   107,   114,   115,   116,   117,   118,   119,   123,   124,
+     128,   129,   133
 };
 #endif
 
@@ -612,8 +616,9 @@ static const char *const yytname[] =
   "CONTROL_SWITCH", "CONTROL_CASE", "CONTROL_DEFAULT", "CONTROL_DO",
   "CONTROL_RETURN", "CONTROL_BREAK", "CONTROL_CONTINUE", "MISC_FUNC",
   "MISC_VAR", "MISC_CONST", "MISC_IMPORT", "MISC_EXPORT", "MISC_NATIVE",
-  "OP_UNARY_MINUS", "$accept", "program", "expr", "expr_term",
-  "expr_casted_term", "expr_value", "constant_value", "type_specifier", YY_NULLPTR
+  "OP_UNARY_MINUS", "$accept", "program", "expr", "expr_casted_term",
+  "expr_term", "expr_value", "constant_value", "type_specifier",
+  "function_call", "function_arguments", "function_argument", YY_NULLPTR
 };
 
 static const char *
@@ -623,7 +628,7 @@ yysymbol_name (yysymbol_kind_t yysymbol)
 }
 #endif
 
-#define YYPACT_NINF (-15)
+#define YYPACT_NINF (-34)
 
 #define yypact_value_is_default(Yyn) \
   ((Yyn) == YYPACT_NINF)
@@ -637,10 +642,11 @@ yysymbol_name (yysymbol_kind_t yysymbol)
    STATE-NUM.  */
 static const yytype_int8 yypact[] =
 {
-      11,   -15,   -15,   -15,   -15,   -15,   -15,    17,    17,    -4,
-      12,    20,    21,   -15,   -15,   -15,    11,   -15,   -15,   -15,
-     -15,   -15,   -15,   -15,   -15,    15,   -14,   -15,    11,    11,
-      17,    17,   -15,    17,   -15,   -15,   -15,   -15,    21
+      35,   -34,   -34,   -34,   -34,   -34,   -33,    42,    42,    14,
+      10,    38,   -34,    43,   -34,   -34,   -34,    -3,    35,   -34,
+     -34,   -34,   -34,   -34,   -34,   -34,   -34,    -6,   -28,   -34,
+      35,    35,    42,    42,   -34,    38,    16,   -34,   -34,    42,
+     -34,   -34,   -34,   -34,   -34,    35,    43,   -34
 };
 
 /* YYDEFACT[STATE-NUM] -- Default reduction number in state STATE-NUM.
@@ -648,22 +654,25 @@ static const yytype_int8 yypact[] =
    means the default is an error.  */
 static const yytype_int8 yydefact[] =
 {
-       0,    16,    17,    20,    18,    19,    12,     0,     0,     0,
-       0,     2,    10,     3,     6,    11,     0,    15,    14,    22,
-      21,    23,    24,    25,    26,     0,     0,     1,     0,     0,
-       0,     0,    13,     0,     4,     5,     7,     8,     9
+       0,    17,    18,    21,    19,    20,    13,     0,     0,     0,
+       0,     2,     3,     7,     8,    11,    12,     0,     0,    16,
+      15,    23,    22,    24,    25,    26,    27,     0,     0,     1,
+       0,     0,     0,     0,    29,    32,     0,    30,    14,     0,
+       4,     5,     9,    10,    28,     0,     6,    31
 };
 
 /* YYPGOTO[NTERM-NUM].  */
 static const yytype_int8 yypgoto[] =
 {
-     -15,   -15,    39,    13,    14,    23,   -15,   -15
+     -34,   -34,     0,    34,   -23,     1,   -34,   -34,   -34,   -34,
+     -15
 };
 
 /* YYDEFGOTO[NTERM-NUM].  */
 static const yytype_int8 yydefgoto[] =
 {
-       0,    10,    25,    12,    13,    14,    15,    26
+       0,    10,    27,    12,    13,    14,    15,    28,    16,    36,
+      37
 };
 
 /* YYTABLE[YYPACT[STATE-NUM]] -- What to do in state STATE-NUM.  If
@@ -671,22 +680,28 @@ static const yytype_int8 yydefgoto[] =
    number is the opposite.  If YYTABLE_NINF, syntax error.  */
 static const yytype_int8 yytable[] =
 {
-       1,     2,     3,     4,     5,     6,    19,    20,    21,    22,
-      23,    24,    27,     7,     8,     1,     2,     3,     4,     5,
-       6,     1,     2,     3,     4,     5,     6,    33,     7,     8,
-      17,    18,    28,    29,     7,     8,     9,    28,    29,    11,
-      30,    31,    34,    35,     0,     0,    38,     0,     0,     0,
-       0,     9,     0,    36,    37,     0,    32,    16
+      11,     1,     2,     3,     4,     5,     6,    17,    19,    20,
+      29,    30,    31,    39,     7,     8,    46,    35,     1,     2,
+       3,     4,     5,     6,    21,    22,    23,    24,    25,    26,
+      47,     7,     8,    42,    43,    38,     0,     9,    34,     1,
+       2,     3,     4,     5,     6,    35,     1,     2,     3,     4,
+       5,     6,     7,     8,     9,    30,    31,    44,     0,     7,
+       8,    45,    32,    33,    40,    41,     0,     0,     0,     0,
+       0,     0,     0,     0,     0,     9,     0,     0,     0,     0,
+       0,     0,    18
 };
 
 static const yytype_int8 yycheck[] =
 {
-       4,     5,     6,     7,     8,     9,    10,    11,    12,    13,
-      14,    15,     0,    17,    18,     4,     5,     6,     7,     8,
-       9,     4,     5,     6,     7,     8,     9,    41,    17,    18,
-       7,     8,    17,    18,    17,    18,    40,    17,    18,     0,
-      19,    20,    28,    29,    -1,    -1,    33,    -1,    -1,    -1,
-      -1,    40,    -1,    30,    31,    -1,    41,    40
+       0,     4,     5,     6,     7,     8,     9,    40,     7,     8,
+       0,    17,    18,    41,    17,    18,    39,    17,     4,     5,
+       6,     7,     8,     9,    10,    11,    12,    13,    14,    15,
+      45,    17,    18,    32,    33,    41,    -1,    40,    41,     4,
+       5,     6,     7,     8,     9,    45,     4,     5,     6,     7,
+       8,     9,    17,    18,    40,    17,    18,    41,    -1,    17,
+      18,    45,    19,    20,    30,    31,    -1,    -1,    -1,    -1,
+      -1,    -1,    -1,    -1,    -1,    40,    -1,    -1,    -1,    -1,
+      -1,    -1,    40
 };
 
 /* YYSTOS[STATE-NUM] -- The symbol kind of the accessing symbol of
@@ -694,25 +709,28 @@ static const yytype_int8 yycheck[] =
 static const yytype_int8 yystos[] =
 {
        0,     4,     5,     6,     7,     8,     9,    17,    18,    40,
-      65,    66,    67,    68,    69,    70,    40,    69,    69,    10,
-      11,    12,    13,    14,    15,    66,    71,     0,    17,    18,
-      19,    20,    41,    41,    68,    68,    69,    69,    67
+      65,    66,    67,    68,    69,    70,    72,    40,    40,    69,
+      69,    10,    11,    12,    13,    14,    15,    66,    71,     0,
+      17,    18,    19,    20,    41,    66,    73,    74,    41,    41,
+      67,    67,    69,    69,    41,    45,    68,    74
 };
 
 /* YYR1[RULE-NUM] -- Symbol kind of the left-hand side of rule RULE-NUM.  */
 static const yytype_int8 yyr1[] =
 {
-       0,    64,    65,    66,    66,    66,    67,    67,    67,    68,
-      68,    69,    69,    69,    69,    69,    70,    70,    70,    70,
-      70,    71,    71,    71,    71,    71,    71
+       0,    64,    65,    66,    66,    66,    67,    67,    68,    68,
+      68,    69,    69,    69,    69,    69,    69,    70,    70,    70,
+      70,    70,    71,    71,    71,    71,    71,    71,    72,    72,
+      73,    73,    74
 };
 
 /* YYR2[RULE-NUM] -- Number of symbols on the right-hand side of rule RULE-NUM.  */
 static const yytype_int8 yyr2[] =
 {
-       0,     2,     1,     1,     3,     3,     1,     3,     3,     4,
-       1,     1,     1,     3,     2,     2,     1,     1,     1,     1,
-       1,     1,     1,     1,     1,     1,     1
+       0,     2,     1,     1,     3,     3,     4,     1,     1,     3,
+       3,     1,     1,     1,     3,     2,     2,     1,     1,     1,
+       1,     1,     1,     1,     1,     1,     1,     1,     4,     3,
+       1,     3,     1
 };
 
 
@@ -1183,164 +1201,182 @@ yyreduce:
           auto asStr = Cmm::ValuesHelper::castTo(result, Cmm::V_String);
           auto str_ptr = static_cast<Cmm::String*>(asStr.value);
           std::cout << *str_ptr << std::endl;
-        } catch (std::exception e) {
+        } catch (std::exception& e) {
           std::cerr << e.what() << std::endl;
           std::cerr << std::endl;
         }
         YYACCEPT;
       }
-#line 1193 "parser.tab.cpp"
-    break;
-
-  case 3: /* expr: expr_casted_term  */
-#line 76 "parser.ypp"
-                                            { (yyval.evaluable) = (yyvsp[0].evaluable); }
-#line 1199 "parser.tab.cpp"
-    break;
-
-  case 4: /* expr: expr OP_PLUS expr_casted_term  */
-#line 77 "parser.ypp"
-                                            { (yyval.evaluable) = new Cmm::Expressions::TermNode((yyvsp[-2].evaluable), (yyvsp[0].evaluable), *(yyvsp[-1].str)); }
-#line 1205 "parser.tab.cpp"
-    break;
-
-  case 5: /* expr: expr OP_MINUS expr_casted_term  */
-#line 78 "parser.ypp"
-                                            { (yyval.evaluable) = new Cmm::Expressions::TermNode((yyvsp[-2].evaluable), (yyvsp[0].evaluable), *(yyvsp[-1].str)); }
 #line 1211 "parser.tab.cpp"
     break;
 
-  case 6: /* expr_term: expr_value  */
-#line 82 "parser.ypp"
-                                                  { (yyval.evaluable) = (yyvsp[0].evaluable); }
+  case 3: /* expr: expr_casted_term  */
+#line 77 "parser.ypp"
+                                            { (yyval.evaluable) = (yyvsp[0].evaluable); }
 #line 1217 "parser.tab.cpp"
     break;
 
-  case 7: /* expr_term: expr_term OP_MULT expr_value  */
-#line 83 "parser.ypp"
-                                                  { (yyval.evaluable) = new Cmm::Expressions::TermNode((yyvsp[-2].evaluable), (yyvsp[0].evaluable), *(yyvsp[-1].str)); }
+  case 4: /* expr: expr OP_PLUS expr_casted_term  */
+#line 78 "parser.ypp"
+                                            { (yyval.evaluable) = new Cmm::Expressions::TermNode((yyvsp[-2].evaluable), (yyvsp[0].evaluable), *(yyvsp[-1].str)); }
 #line 1223 "parser.tab.cpp"
     break;
 
-  case 8: /* expr_term: expr_term OP_DIV expr_value  */
-#line 84 "parser.ypp"
-                                                  { (yyval.evaluable) = new Cmm::Expressions::TermNode((yyvsp[-2].evaluable), (yyvsp[0].evaluable), *(yyvsp[-1].str)); }
+  case 5: /* expr: expr OP_MINUS expr_casted_term  */
+#line 79 "parser.ypp"
+                                            { (yyval.evaluable) = new Cmm::Expressions::TermNode((yyvsp[-2].evaluable), (yyvsp[0].evaluable), *(yyvsp[-1].str)); }
 #line 1229 "parser.tab.cpp"
     break;
 
-  case 9: /* expr_casted_term: D_LPAREN type_specifier D_RPAREN expr_term  */
-#line 88 "parser.ypp"
+  case 6: /* expr_casted_term: D_LPAREN type_specifier D_RPAREN expr_term  */
+#line 83 "parser.ypp"
                                                  { (yyval.evaluable) = new Cmm::Expressions::CastNode((yyvsp[0].evaluable), *(yyvsp[-2].str)); }
 #line 1235 "parser.tab.cpp"
     break;
 
-  case 10: /* expr_casted_term: expr_term  */
-#line 89 "parser.ypp"
+  case 7: /* expr_casted_term: expr_term  */
+#line 84 "parser.ypp"
                                                  { (yyval.evaluable) = (yyvsp[0].evaluable); }
 #line 1241 "parser.tab.cpp"
     break;
 
-  case 11: /* expr_value: constant_value  */
-#line 93 "parser.ypp"
-                                               { (yyval.evaluable) = (yyvsp[0].evaluable); }
+  case 8: /* expr_term: expr_value  */
+#line 88 "parser.ypp"
+                                                  { (yyval.evaluable) = (yyvsp[0].evaluable); }
 #line 1247 "parser.tab.cpp"
     break;
 
-  case 12: /* expr_value: ID  */
-#line 94 "parser.ypp"
-                                               { (yyval.evaluable) = new Cmm::Expressions::VariableNode(*(yyvsp[0].str)); }
+  case 9: /* expr_term: expr_term OP_MULT expr_value  */
+#line 89 "parser.ypp"
+                                                  { (yyval.evaluable) = new Cmm::Expressions::TermNode((yyvsp[-2].evaluable), (yyvsp[0].evaluable), *(yyvsp[-1].str)); }
 #line 1253 "parser.tab.cpp"
     break;
 
-  case 13: /* expr_value: D_LPAREN expr D_RPAREN  */
-#line 95 "parser.ypp"
-                                               { (yyval.evaluable) = (yyvsp[-1].evaluable); }
+  case 10: /* expr_term: expr_term OP_DIV expr_value  */
+#line 90 "parser.ypp"
+                                                  { (yyval.evaluable) = new Cmm::Expressions::TermNode((yyvsp[-2].evaluable), (yyvsp[0].evaluable), *(yyvsp[-1].str)); }
 #line 1259 "parser.tab.cpp"
     break;
 
-  case 14: /* expr_value: OP_MINUS expr_value  */
-#line 96 "parser.ypp"
-                                               { (yyval.evaluable) = new Cmm::Expressions::NegatedNode((yyvsp[0].evaluable)); }
+  case 11: /* expr_value: constant_value  */
+#line 94 "parser.ypp"
+                                               { (yyval.evaluable) = (yyvsp[0].evaluable); }
 #line 1265 "parser.tab.cpp"
     break;
 
-  case 15: /* expr_value: OP_PLUS expr_value  */
-#line 97 "parser.ypp"
-                                               { (yyval.evaluable) = (yyvsp[0].evaluable); }
+  case 12: /* expr_value: function_call  */
+#line 95 "parser.ypp"
+                                               { (yyval.evaluable) = new Cmm::Expressions::ConstantValueNode(Cmm::Real("1.0")); /* TODO: implement this */ }
 #line 1271 "parser.tab.cpp"
     break;
 
-  case 16: /* constant_value: V_STRING  */
-#line 101 "parser.ypp"
-                  { (yyval.evaluable) = new Cmm::Expressions::ConstantValueNode(Cmm::String(*(yyvsp[0].str))); }
+  case 13: /* expr_value: ID  */
+#line 96 "parser.ypp"
+                                               { (yyval.evaluable) = new Cmm::Expressions::VariableNode(*(yyvsp[0].str)); }
 #line 1277 "parser.tab.cpp"
     break;
 
-  case 17: /* constant_value: V_INTEGER  */
-#line 102 "parser.ypp"
-                  { (yyval.evaluable) = new Cmm::Expressions::ConstantValueNode(Cmm::Integer((*(yyvsp[0].str)).c_str())); }
+  case 14: /* expr_value: D_LPAREN expr D_RPAREN  */
+#line 97 "parser.ypp"
+                                               { (yyval.evaluable) = (yyvsp[-1].evaluable); }
 #line 1283 "parser.tab.cpp"
     break;
 
-  case 18: /* constant_value: V_REAL  */
-#line 103 "parser.ypp"
-                  { (yyval.evaluable) = new Cmm::Expressions::ConstantValueNode(Cmm::Real((*(yyvsp[0].str)).c_str())); }
+  case 15: /* expr_value: OP_MINUS expr_value  */
+#line 98 "parser.ypp"
+                                               { (yyval.evaluable) = new Cmm::Expressions::NegatedNode((yyvsp[0].evaluable)); }
 #line 1289 "parser.tab.cpp"
     break;
 
-  case 19: /* constant_value: V_BOOLEAN  */
-#line 104 "parser.ypp"
-                  { (yyval.evaluable) = new Cmm::Expressions::ConstantValueNode(Cmm::Bool(*((yyvsp[0].str)) == "true")); }
+  case 16: /* expr_value: OP_PLUS expr_value  */
+#line 99 "parser.ypp"
+                                               { (yyval.evaluable) = (yyvsp[0].evaluable); }
 #line 1295 "parser.tab.cpp"
     break;
 
-  case 20: /* constant_value: V_COMPLEX  */
+  case 17: /* constant_value: V_STRING  */
+#line 103 "parser.ypp"
+                  { (yyval.evaluable) = new Cmm::Expressions::ConstantValueNode(Cmm::String(*(yyvsp[0].str))); }
+#line 1301 "parser.tab.cpp"
+    break;
+
+  case 18: /* constant_value: V_INTEGER  */
+#line 104 "parser.ypp"
+                  { (yyval.evaluable) = new Cmm::Expressions::ConstantValueNode(Cmm::Integer((*(yyvsp[0].str)).c_str())); }
+#line 1307 "parser.tab.cpp"
+    break;
+
+  case 19: /* constant_value: V_REAL  */
 #line 105 "parser.ypp"
+                  { (yyval.evaluable) = new Cmm::Expressions::ConstantValueNode(Cmm::Real((*(yyvsp[0].str)).c_str())); }
+#line 1313 "parser.tab.cpp"
+    break;
+
+  case 20: /* constant_value: V_BOOLEAN  */
+#line 106 "parser.ypp"
+                  { (yyval.evaluable) = new Cmm::Expressions::ConstantValueNode(Cmm::Bool(*((yyvsp[0].str)) == "true")); }
+#line 1319 "parser.tab.cpp"
+    break;
+
+  case 21: /* constant_value: V_COMPLEX  */
+#line 107 "parser.ypp"
                   { 
       (yyvsp[0].str)->pop_back();
       (yyval.evaluable) = new Cmm::Expressions::ConstantValueNode(Cmm::Complex(Cmm::Real(0.0), Cmm::Real((yyvsp[0].str)->c_str()))); 
     }
-#line 1304 "parser.tab.cpp"
-    break;
-
-  case 21: /* type_specifier: TYPE_INT  */
-#line 112 "parser.ypp"
-                    { (yyval.str) = new std::string("int"); }
-#line 1310 "parser.tab.cpp"
-    break;
-
-  case 22: /* type_specifier: TYPE_REAL  */
-#line 113 "parser.ypp"
-                    { (yyval.str) = new std::string("real"); }
-#line 1316 "parser.tab.cpp"
-    break;
-
-  case 23: /* type_specifier: TYPE_STR  */
-#line 114 "parser.ypp"
-                    { (yyval.str) = new std::string("str"); }
-#line 1322 "parser.tab.cpp"
-    break;
-
-  case 24: /* type_specifier: TYPE_COMPLEX  */
-#line 115 "parser.ypp"
-                    { (yyval.str) = new std::string("complex"); }
 #line 1328 "parser.tab.cpp"
     break;
 
-  case 25: /* type_specifier: TYPE_BOOL  */
-#line 116 "parser.ypp"
-                    { (yyval.str) = new std::string("bool"); }
+  case 22: /* type_specifier: TYPE_INT  */
+#line 114 "parser.ypp"
+                    { (yyval.str) = new std::string("int"); }
 #line 1334 "parser.tab.cpp"
     break;
 
-  case 26: /* type_specifier: TYPE_VOID  */
-#line 117 "parser.ypp"
-                    { (yyval.str) = new std::string("void"); }
+  case 23: /* type_specifier: TYPE_REAL  */
+#line 115 "parser.ypp"
+                    { (yyval.str) = new std::string("real"); }
 #line 1340 "parser.tab.cpp"
     break;
 
+  case 24: /* type_specifier: TYPE_STR  */
+#line 116 "parser.ypp"
+                    { (yyval.str) = new std::string("str"); }
+#line 1346 "parser.tab.cpp"
+    break;
 
-#line 1344 "parser.tab.cpp"
+  case 25: /* type_specifier: TYPE_COMPLEX  */
+#line 117 "parser.ypp"
+                    { (yyval.str) = new std::string("complex"); }
+#line 1352 "parser.tab.cpp"
+    break;
+
+  case 26: /* type_specifier: TYPE_BOOL  */
+#line 118 "parser.ypp"
+                    { (yyval.str) = new std::string("bool"); }
+#line 1358 "parser.tab.cpp"
+    break;
+
+  case 27: /* type_specifier: TYPE_VOID  */
+#line 119 "parser.ypp"
+                    { (yyval.str) = new std::string("void"); }
+#line 1364 "parser.tab.cpp"
+    break;
+
+  case 28: /* function_call: ID D_LPAREN function_arguments D_RPAREN  */
+#line 123 "parser.ypp"
+                                               { std::cout << "func: " << (*(yyvsp[-3].str)) << ", will be implemented soon." << std::endl; }
+#line 1370 "parser.tab.cpp"
+    break;
+
+  case 29: /* function_call: ID D_LPAREN D_RPAREN  */
+#line 124 "parser.ypp"
+                                               { std::cout << "func: " << (*(yyvsp[-2].str)) << ", will be implemented soon." << std::endl; }
+#line 1376 "parser.tab.cpp"
+    break;
+
+
+#line 1380 "parser.tab.cpp"
 
       default: break;
     }
@@ -1533,4 +1569,4 @@ yyreturnlab:
   return yyresult;
 }
 
-#line 120 "parser.ypp"
+#line 136 "parser.ypp"

@@ -7,7 +7,6 @@
 #include <ranges>
 
 #include "MathHelper.h"
-#include "grammar/parser.tab.hpp"
 
 Cmm::Expressions::ExpressionNode::ExpressionNode() = default;
 

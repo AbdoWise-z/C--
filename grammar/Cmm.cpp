@@ -1,5 +1,7 @@
 #include <iostream>
 #include <string>
+
+// ========== must have these includes before including parser.tab ==========
 #include "../config.h"
 #include "../forward.h"
 #include "../AST.h"
@@ -20,6 +22,7 @@ int main() {
     std::cout << "Unauthorized copying, reproduction, or distribution of this software is strictly prohibited." << std::endl;
 
     while (true) {
+
         std::cout << ">>> ";
         std::getline(std::cin, input);
         

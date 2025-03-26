@@ -12,7 +12,6 @@
 
 namespace Namespace {
 
-
     namespace MathHelper {
 
         class OperationError: public std::exception {

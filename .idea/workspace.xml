@@ -31,27 +31,12 @@
     </configurations>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="bb72ea9c-acd4-417c-95e1-fa9aa9786eef" name="Changes" comment="finally a working thing">
-      <change afterPath="$PROJECT_DIR$/forward.h" afterDir="false" />
+    <list default="true" id="bb72ea9c-acd4-417c-95e1-fa9aa9786eef" name="Changes" comment="expressions (+ , - , * , /)">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/AST.h" beforeDir="false" afterPath="$PROJECT_DIR$/AST.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/CMakeLists.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Expressions.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Expressions.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Expressions.h" beforeDir="false" afterPath="$PROJECT_DIR$/Expressions.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/MathHelper.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/MathHelper.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/MathHelper.h" beforeDir="false" afterPath="$PROJECT_DIR$/MathHelper.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/cmake-build-debug/.ninja_deps" beforeDir="false" afterPath="$PROJECT_DIR$/cmake-build-debug/.ninja_deps" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/cmake-build-debug/.ninja_log" beforeDir="false" afterPath="$PROJECT_DIR$/cmake-build-debug/.ninja_log" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmake-build-debug/CMakeFiles/Sandbox.dir/Expressions.cpp.o" beforeDir="false" afterPath="$PROJECT_DIR$/cmake-build-debug/CMakeFiles/Sandbox.dir/Expressions.cpp.o" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmake-build-debug/CMakeFiles/Sandbox.dir/sandbox.cpp.o" beforeDir="false" afterPath="$PROJECT_DIR$/cmake-build-debug/CMakeFiles/Sandbox.dir/sandbox.cpp.o" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmake-build-debug/Sandbox" beforeDir="false" afterPath="$PROJECT_DIR$/cmake-build-debug/Sandbox" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/cmake-build-debug/Testing/Temporary/LastTest.log" beforeDir="false" afterPath="$PROJECT_DIR$/cmake-build-debug/Testing/Temporary/LastTest.log" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/grammar/Cmm.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/grammar/Cmm.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/grammar/lexer.l" beforeDir="false" afterPath="$PROJECT_DIR$/grammar/lexer.l" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/grammar/lexer.yy.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/grammar/lexer.yy.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/grammar/parser.tab.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/grammar/parser.tab.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/grammar/parser.tab.hpp" beforeDir="false" afterPath="$PROJECT_DIR$/grammar/parser.tab.hpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/grammar/parser.ypp" beforeDir="false" afterPath="$PROJECT_DIR$/grammar/parser.ypp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/sandbox.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/sandbox.cpp" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -307,7 +292,7 @@
       <workItem from="1742837094941" duration="10354000" />
       <workItem from="1742900153336" duration="3825000" />
       <workItem from="1742905240985" duration="15472000" />
-      <workItem from="1742935651991" duration="15365000" />
+      <workItem from="1742935651991" duration="15828000" />
     </task>
     <task id="LOCAL-00001" summary="aa">
       <option name="closed" value="true" />
@@ -333,7 +318,15 @@
       <option name="project" value="LOCAL" />
       <updated>1742980768897</updated>
     </task>
-    <option name="localTasksCounter" value="4" />
+    <task id="LOCAL-00004" summary="expressions (+ , - , * , /)">
+      <option name="closed" value="true" />
+      <created>1742986205980</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1742986205980</updated>
+    </task>
+    <option name="localTasksCounter" value="5" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -347,7 +340,8 @@
   <component name="VcsManagerConfiguration">
     <MESSAGE value="aa" />
     <MESSAGE value="finally a working thing" />
-    <option name="LAST_COMMIT_MESSAGE" value="finally a working thing" />
+    <MESSAGE value="expressions (+ , - , * , /)" />
+    <option name="LAST_COMMIT_MESSAGE" value="expressions (+ , - , * , /)" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>

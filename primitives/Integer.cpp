@@ -139,7 +139,9 @@ bool Integer::operator<=(const Integer &b) const {
 
 Integer Integer::operator-() const {
     Integer temp;
+
     mpz_neg(temp.mValue , mValue);
+    // printf("Negation Operator: %s -> %s\n", this->toString(10).c_str(), temp.toString(10).c_str());
     return temp;
 }
 
@@ -157,13 +159,13 @@ Integer Integer::operator!() const {
 
 std::string Integer::toString(int base) const {
     size_t num_bits = mpz_sizeinbase(mValue, base);  // Get required string size (including null terminator)
-    char *str = (char *)malloc(num_bits + 1);  // Allocate memory for the string
-    // Convert var to a string in base 10
-    char* err = mpz_get_str(str, base, mValue);  // 10 for base 10 conversion
+    char *str = (char *)malloc(num_bits + 2);  // Allocate memory for the string
+    memset(str, 0, num_bits + 2);
+    char* err = mpz_get_str(str, base, mValue);
     if (err == nullptr) {
-        throw "Failed to convert to string";
+        throw std::runtime_error("Failed to convert integer to string");
     }
-    str[num_bits] = '\0';
+    str[num_bits + 1] = '\0';
     std::string out = str;
     free (str);
     return out;

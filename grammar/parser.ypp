@@ -46,7 +46,7 @@ void yyerror(const char* s) {
 
 // Type declarations
 %type <str> type_specifier
-%type <evaluable> constant_value expr expr_value expr_term
+%type <evaluable> constant_value expr expr_value expr_term expr_casted_term
 %type <str> OP_ASSIGN OP_PLUS OP_MINUS OP_MULT OP_DIV OP_APLUS OP_AMINUS OP_AMULT OP_ADIV OP_LS OP_RS OP_BOR OP_BAND OP_XOR OP_ALS OP_ARL OP_ABOR OP_ABAND OP_AXOR OP_OR OP_AND OP_NOT OP_INVERT
 
 %left OP_PLUS OP_MINUS
@@ -72,21 +72,28 @@ program:
     ;
 
 expr:
-      expr_term                      { $$ = $1; }
-    | expr OP_PLUS expr_term         { $$ = new Cmm::Expressions::TermNode($1, $3, *$2); }
-    | expr OP_MINUS expr_term        { $$ = new Cmm::Expressions::TermNode($1, $3, *$2); }
+      expr_casted_term                      { $$ = $1; }
+    | expr OP_PLUS expr_casted_term         { $$ = new Cmm::Expressions::TermNode($1, $3, *$2); }
+    | expr OP_MINUS expr_casted_term        { $$ = new Cmm::Expressions::TermNode($1, $3, *$2); }
     ;
 
 expr_term:
-      expr_value                     { $$ = $1; }
-    | expr_term OP_MULT expr_value   { $$ = new Cmm::Expressions::TermNode($1, $3, *$2); }
-    | expr_term OP_DIV expr_value    { $$ = new Cmm::Expressions::TermNode($1, $3, *$2); }
+      expr_value                                  { $$ = $1; }
+    | expr_term OP_MULT expr_value                { $$ = new Cmm::Expressions::TermNode($1, $3, *$2); }
+    | expr_term OP_DIV  expr_value                { $$ = new Cmm::Expressions::TermNode($1, $3, *$2); }
+    ;
+
+expr_casted_term:
+      D_LPAREN type_specifier D_RPAREN expr_term { $$ = new Cmm::Expressions::CastNode($4, *$2); }
+    | expr_term                                  { $$ = $1; }
     ;
 
 expr_value:
       constant_value                           { $$ = $1; }
+    | ID                                       { $$ = new Cmm::Expressions::VariableNode(*$1); }
     | D_LPAREN expr D_RPAREN                   { $$ = $2; }
     | OP_MINUS expr_value %prec OP_UNARY_MINUS { $$ = new Cmm::Expressions::NegatedNode($2); }
+    | OP_PLUS  expr_value %prec OP_UNARY_MINUS { $$ = $2; }
     ;
 
 constant_value:
@@ -101,12 +108,12 @@ constant_value:
     ;
 
 type_specifier:
-      TYPE_INT      { $$ = "int"; }
-    | TYPE_REAL     { $$ = "real"; }
-    | TYPE_STR      { $$ = "str"; }
-    | TYPE_COMPLEX  { $$ = "complex"; }
-    | TYPE_BOOL     { $$ = "bool"; }
-    | TYPE_VOID     { $$ = "void"; }
+      TYPE_INT      { $$ = new std::string("int"); }
+    | TYPE_REAL     { $$ = new std::string("real"); }
+    | TYPE_STR      { $$ = new std::string("str"); }
+    | TYPE_COMPLEX  { $$ = new std::string("complex"); }
+    | TYPE_BOOL     { $$ = new std::string("bool"); }
+    | TYPE_VOID     { $$ = new std::string("void"); }
     ;
 
 %%

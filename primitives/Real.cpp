@@ -7,10 +7,10 @@
 #include "Complex.h"
 #include "Integer.h"
 
-using namespace Namespace;
 
 
 using namespace Namespace;
+
 
 Real::Real() {
     mpf_init(mValue);
@@ -137,16 +137,21 @@ Real Real::operator-() const {
 
 
 static std::string mpfToString(const mpf_t num, int base = 10, size_t digits = 0) {
+
     if (digits == 0) {
         digits = mpf_get_prec(num) / 3.32;
     }
 
-    char *str = (char *)malloc(digits + 10);
+    char *str = (char *) malloc(digits + 10);
     mp_exp_t exponent;
 
     mpf_get_str(str, &exponent, base, digits, num);
 
     std::string result = str;
+
+    bool neg = !result.empty() && result[0] == '-';
+    if (neg) result.erase(0, 1);
+
     free(str);
 
     if (exponent > 0) {
@@ -160,6 +165,7 @@ static std::string mpfToString(const mpf_t num, int base = 10, size_t digits = 0
     }
 
     if (result.ends_with(".")) result.append("0");
+    if (neg) result.insert(0, "-");
     return result;
 }
 

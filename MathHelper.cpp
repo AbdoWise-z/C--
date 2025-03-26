@@ -4,7 +4,9 @@
 
 #include "MathHelper.h"
 
+#include <iostream>
 #include <map>
+#include <ostream>
 
 #include "primitives.h"
 
@@ -111,9 +113,7 @@ Cmm::ValueObject Cmm::MathHelper::add(ValueObject &left, ValueObject &right) {
                 );
         break;
         case Cmm::V_Bool:
-            result.value = new Bool(
-                *static_cast<Bool*>(l_ptr->value) || *static_cast<Bool*>(r_ptr->value)
-                );
+            result.value = reinterpret_cast<void*>(reinterpret_cast<long>(l_ptr->value) || reinterpret_cast<long>(r_ptr->value));
         break;
         default: result.value = nullptr;
     }
@@ -186,9 +186,7 @@ Cmm::ValueObject Cmm::MathHelper::sub(ValueObject &left, ValueObject &right) {
                 );
         break;
         case Cmm::V_Bool:
-            result.value = new Bool(
-                *static_cast<Bool*>(l_ptr->value) ^ *static_cast<Bool*>(r_ptr->value)
-                );
+            result.value = reinterpret_cast<void*>(reinterpret_cast<long>(l_ptr->value) ^ reinterpret_cast<long>(r_ptr->value));
         break;
         default: result.value = nullptr;
     }
@@ -261,9 +259,7 @@ Cmm::ValueObject Cmm::MathHelper::mul(ValueObject &left, ValueObject &right) {
                 );
         break;
         case Cmm::V_Bool:
-            result.value = new Bool(
-                *static_cast<Bool*>(l_ptr->value) && *static_cast<Bool*>(r_ptr->value)
-                );
+            result.value = reinterpret_cast<void*>(reinterpret_cast<long>(l_ptr->value) && reinterpret_cast<long>(r_ptr->value));
         break;
         default: result.value = nullptr;
     }
@@ -336,9 +332,7 @@ Cmm::ValueObject Cmm::MathHelper::div(ValueObject &left, ValueObject &right) {
                 );
         break;
         case Cmm::V_Bool:
-            result.value = new Bool(
-                *static_cast<Bool*>(l_ptr->value) || *static_cast<Bool*>(r_ptr->value)
-                );
+            result.value = reinterpret_cast<void*>(reinterpret_cast<long>(l_ptr->value) ^ reinterpret_cast<long>(r_ptr->value));
         break;
         default: result.value = nullptr;
     }

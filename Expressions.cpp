@@ -92,12 +92,51 @@ Cmm::ValueObject Cmm::Expressions::NegatedNode::eval() {
         default:
             throw std::invalid_argument("Invalid operation: negation on a [Error / void] value");
     }
-    return val;
+
+    return result;
 }
 
 Cmm::Expressions::NegatedNode::~NegatedNode() {
     delete child;
 }
+
+
+Cmm::Expressions::CastNode::CastNode(EvaluableNode *child, const std::string& type) {
+    this->child = child;
+    if (type == "int") targetType = V_Integer;
+    if (type == "real") targetType = V_Real;
+    if (type == "complex") targetType = V_Complex;
+    if (type == "str") targetType = V_String;
+    if (type == "bool") targetType = V_Bool;
+    if (type == "void") targetType = V_Void; // will capture this in runtime instead of compile time since I want types to be runtime bound
+}
+
+Cmm::ValueObject Cmm::Expressions::CastNode::eval() {
+    auto val = child->eval();
+    return ValuesHelper::castTo(val, targetType);
+}
+
+Cmm::Expressions::CastNode::~CastNode() {
+    delete child;
+}
+
+Cmm::Expressions::VariableNode::VariableNode(const std::string &n) {
+    this->name = n;
+}
+
+Cmm::ValueObject Cmm::Expressions::VariableNode::eval() {
+    // TODO: implement logic to get the variable value either from stack or global memory ..
+    //       this will be at the last stages of the project, I created it now because I
+    //       want to finalize the expressions logic.
+
+    return {
+        .type = V_Real,
+        .value = new Real(0.0),
+    };
+}
+
+// nothing to do here
+Cmm::Expressions::VariableNode::~VariableNode() = default;
 
 
 Cmm::Expressions::ConstantValueNode::ConstantValueNode(const Real& v) {

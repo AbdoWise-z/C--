@@ -48,6 +48,23 @@ namespace Namespace {
             ~NegatedNode() override;
         };
 
+        class CastNode final : public EvaluableNode {
+        public:
+            EvaluableNode* child;
+            ValueType targetType;
+            explicit CastNode(EvaluableNode* child, const std::string& type);
+            ValueObject eval() override;
+            ~CastNode() override;
+        };
+
+        class VariableNode final : public EvaluableNode {
+        public:
+            std::string name;
+            explicit VariableNode(const std::string& n);
+            ValueObject eval() override;
+            ~VariableNode() override;
+        };
+
 
         class ConstantValueNode final : public EvaluableNode {
         public:

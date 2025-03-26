@@ -6,7 +6,7 @@
 
 
 int main() {
-    Cmm::EvaluableNode* ptr = new Cmm::Expressions::ConstantValueNode(Cmm::Integer(1));
+    Cmm::EvaluableNode* ptr = new Cmm::Expressions::NegatedNode(new Cmm::Expressions::ConstantValueNode(Cmm::Real(1.0)));
 
     try {
         auto result = ptr->eval();

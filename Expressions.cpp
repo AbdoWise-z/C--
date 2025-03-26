@@ -4,7 +4,7 @@
 
 #include "Expressions.h"
 #include "MathHelper.h"
-// #include "grammar/parser.tab.h"
+#include "grammar/parser.tab.hpp"
 
 Cmm::Expressions::ExpressionNode::ExpressionNode() = default;
 
@@ -38,7 +38,7 @@ Cmm::ValueObject Cmm::Expressions::TermNode::eval() {
     ValueObject result{};
 
     switch (op) {
-        case 0: //fixme
+        case OP_PLUS:
             result = MathHelper::add(left, right);
             break;
         default:

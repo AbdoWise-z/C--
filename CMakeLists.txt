@@ -5,12 +5,13 @@ set(CMAKE_CXX_STANDARD 23)
 
 set(CMAKE_C_COMPILER "${CMAKE_CXX_COMPILER}")
 
-file(GLOB PARSER_SRC "${CMAKE_SOURCE_DIR}/grammar/*.c")
-file(GLOB PARSER_HDR "${CMAKE_SOURCE_DIR}/grammar/*.h")
+file(GLOB PARSER_CPP_SRC "${CMAKE_SOURCE_DIR}/grammar/*.cpp")
+file(GLOB PARSER_C_SRC   "${CMAKE_SOURCE_DIR}/grammar/*.c")
+file(GLOB PARSER_HDR     "${CMAKE_SOURCE_DIR}/grammar/*.hpp")
 
 
 
-message("Sources: " ${PARSER_SRC})
+message("Sources: " ${PARSER_CPP_SRC} ${PARSER_C_SRC})
 message("Headers: " ${PARSER_HDR})
 
 add_executable(
@@ -39,16 +40,18 @@ add_executable(
         Values.h
 
         ${PARSER_HDR}
-        ${PARSER_SRC}
+        ${PARSER_CPP_SRC}
+        ${PARSER_C_SRC}
 )
 
-add_custom_command(
-        TARGET Cmm
-        PRE_BUILD
-        COMMAND ${CMAKE_SOURCE_DIR}/grammar/gen_sources.sh
+add_custom_target(
+        GenerateGrammar ALL
+        COMMAND ${CMAKE_SOURCE_DIR}/grammar/generate.sh
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-        COMMENT "Executing pre-build steps"
+        COMMENT "grammar generation..."
 )
+
+add_dependencies(Cmm GenerateGrammar)
 
 add_executable(Sandbox
         sandbox.cpp

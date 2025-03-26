@@ -1,36 +1,51 @@
 %{
-#include "y.tab.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <string>
+#include <iostream>
+#include "parser.tab.hpp"
 
-extern YYSTYPE yylval;
+void remove_first_and_last_char(std::string* str_ptr) {
+    if (str_ptr == nullptr || str_ptr->length() < 2) {
+        return;
+    }
+    str_ptr->erase(0, 1);
+    str_ptr->pop_back();
+}
 
 %}
+
+%option noyywrap
 
 %%
 
 \"([^\"]*)\"      {
-    char *temp = strdup(yytext + 1);
-    temp[strlen(temp) - 1] = '\0';
-    yylval.str = strdup(temp);
-    free(temp);
+    std::string* val = new std::string(yytext);
+    remove_first_and_last_char(val);
+    yylval.str = val;
     return V_STRING;
 }
 
+[0-9]+\.[0-9]+ {
+    std::string* val = new std::string(yytext);
+    yylval.str = val;
+    return V_REAL;
+}
+
 [0-9]+   {
-    yylval.str = yytext;
-    return V_NUMBER;
+    std::string* val = new std::string(yytext);
+    yylval.str = val;
+    return V_INTEGER;
 }
 
 [0-9]+i  {
-    yylval.str = yytext;
+    std::string* val = new std::string(yytext);
+    yylval.str = val;
     return V_COMPLEX;
 }
 
-[0-9]+\.[0-9]+ {
-    yylval.str = yytext;
-    return V_REAL;
+"true"|"false" {
+    std::string* val = new std::string(yytext);
+    yylval.str = val;
+    return V_BOOLEAN;
 }
 
 "real"    { return TYPE_REAL; }
@@ -70,7 +85,7 @@ extern YYSTYPE yylval;
 "{"       { return D_LBRACE; }
 "}"       { return D_RBRACE; }
 ":"       { return D_COLON; }
-","       { return D_COLON; }
+","       { return D_COMMA; }
 
 "if"       { return CONTROL_IF; }
 "else"     { return CONTROL_ELSE; }
@@ -91,20 +106,19 @@ extern YYSTYPE yylval;
 "export"  { return MISC_EXPORT; }
 "native"  { return MISC_NATIVE; }
 
+[a-zA-Z_][a-zA-Z0-9_]*  { 
+    std::string* val = new std::string(yytext);
+    yylval.str = val;
+    return ID;
+}
 
-[a-zA-Z_][a-zA-Z0-9_]*  { return ID; }
+[ \t\n]   { /* Skip whitespace */ }
 
+<<EOF>>         { return END; }
 
-[ \t\n]   { }
+.               { 
+    std::cerr << "Unexpected character: " << yytext << std::endl; 
+    return 0; 
+}
 
 %%
-
-int yywrap() { return 1; }
-
-int main() {
-    int token;
-    while ((token = yylex())) {
-        printf("Token: %d\n", token);
-    }
-    return 0;
-}

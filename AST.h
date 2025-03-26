@@ -7,7 +7,7 @@
 
 #include "config.h"
 #include "Values.h"
-// #include "grammar/parser.tab.h"
+#include "grammar/parser.tab.hpp"
 
 
 namespace Namespace {

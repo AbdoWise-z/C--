@@ -34,8 +34,8 @@ namespace Namespace {
         public:
             EvaluableNode* left;
             EvaluableNode* right;
-            int op;
-            TermNode(EvaluableNode* left, EvaluableNode* right, int op);
+            std::string op;
+            TermNode(EvaluableNode* left, EvaluableNode* right, const std::string& op);
             ValueObject eval() override;
             ~TermNode() override;
         };

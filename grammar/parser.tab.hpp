@@ -123,11 +123,12 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 16 "parser.ypp"
+#line 25 "parser.ypp"
 
     std::string* str;
+    Cmm::EvaluableNode* evaluable;
 
-#line 131 "parser.tab.hpp"
+#line 132 "parser.tab.hpp"
 
 };
 typedef union YYSTYPE YYSTYPE;

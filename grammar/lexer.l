@@ -1,6 +1,15 @@
 %{
 #include <string>
 #include <iostream>
+
+#include "../config.h"
+#include "../forward.h"
+#include "../AST.h"
+#include "../primitives.h"
+#include "../MathHelper.h"
+#include "../Values.h"
+#include "../Expressions.h"
+
 #include "parser.tab.hpp"
 
 void remove_first_and_last_char(std::string* str_ptr) {
@@ -55,29 +64,29 @@ void remove_first_and_last_char(std::string* str_ptr) {
 "bool"    { return TYPE_BOOL; }
 "void"    { return TYPE_VOID; }
 
-"="       { return OP_ASSIGN; }
-"+"       { return OP_PLUS; }
-"-"       { return OP_MINUS; }
-"*"       { return OP_MULT; }
-"/"       { return OP_DIV; }
-"+="      { return OP_APLUS; }
-"-="      { return OP_AMINUS; }
-"*="      { return OP_AMULT; }
-"/="      { return OP_ADIV; }
-">>"      { return OP_LS; }
-"<<"      { return OP_RS; }
-"|"       { return OP_BOR; }
-"&"       { return OP_BAND; }
-"^"       { return OP_XOR; }
-">>="     { return OP_ALS; }
-"<<="     { return OP_ARL; }
-"|="      { return OP_ABOR; }
-"&="      { return OP_ABAND; }
-"^="      { return OP_AXOR; }
-"||"      { return OP_OR; }
-"&&"      { return OP_AND; }
-"!"       { return OP_NOT; }
-"~"       { return OP_INVERT; }
+"="       { std::string* val = new std::string(yytext); yylval.str = val; return OP_ASSIGN; }
+"+"       { std::string* val = new std::string(yytext); yylval.str = val; return OP_PLUS; }
+"-"       { std::string* val = new std::string(yytext); yylval.str = val; return OP_MINUS; }
+"*"       { std::string* val = new std::string(yytext); yylval.str = val; return OP_MULT; }
+"/"       { std::string* val = new std::string(yytext); yylval.str = val; return OP_DIV; }
+"+="      { std::string* val = new std::string(yytext); yylval.str = val; return OP_APLUS; }
+"-="      { std::string* val = new std::string(yytext); yylval.str = val; return OP_AMINUS; }
+"*="      { std::string* val = new std::string(yytext); yylval.str = val; return OP_AMULT; }
+"/="      { std::string* val = new std::string(yytext); yylval.str = val; return OP_ADIV; }
+">>"      { std::string* val = new std::string(yytext); yylval.str = val; return OP_LS; }
+"<<"      { std::string* val = new std::string(yytext); yylval.str = val; return OP_RS; }
+"|"       { std::string* val = new std::string(yytext); yylval.str = val; return OP_BOR; }
+"&"       { std::string* val = new std::string(yytext); yylval.str = val; return OP_BAND; }
+"^"       { std::string* val = new std::string(yytext); yylval.str = val; return OP_XOR; }
+">>="     { std::string* val = new std::string(yytext); yylval.str = val; return OP_ALS; }
+"<<="     { std::string* val = new std::string(yytext); yylval.str = val; return OP_ARL; }
+"|="      { std::string* val = new std::string(yytext); yylval.str = val; return OP_ABOR; }
+"&="      { std::string* val = new std::string(yytext); yylval.str = val; return OP_ABAND; }
+"^="      { std::string* val = new std::string(yytext); yylval.str = val; return OP_AXOR; }
+"||"      { std::string* val = new std::string(yytext); yylval.str = val; return OP_OR; }
+"&&"      { std::string* val = new std::string(yytext); yylval.str = val; return OP_AND; }
+"!"       { std::string* val = new std::string(yytext); yylval.str = val; return OP_NOT; }
+"~"       { std::string* val = new std::string(yytext); yylval.str = val; return OP_INVERT; }
 
 ";"       { return D_SEMICOLON; }
 "("       { return D_LPAREN; }

@@ -1,8 +1,17 @@
 %{
 #include <iostream>
 #include <string>
-#include "parser.tab.hpp"
+
+#include "../config.h"
+#include "../forward.h"
+#include "../AST.h"
+#include "../primitives.h"
+#include "../MathHelper.h"
+#include "../Values.h"
 #include "../Expressions.h"
+
+#include "parser.tab.hpp"
+
 // Declare yylex for Bison
 extern int yylex();
 
@@ -15,6 +24,7 @@ void yyerror(const char* s) {
 
 %union {
     std::string* str;
+    Cmm::EvaluableNode* evaluable;
 }
 
 %token END
@@ -36,6 +46,8 @@ void yyerror(const char* s) {
 
 // Type declarations
 %type <str> type_specifier
+%type <evaluable> constant_value expr expr_value expr_term
+%type <str> OP_ASSIGN OP_PLUS OP_MINUS OP_MULT OP_DIV OP_APLUS OP_AMINUS OP_AMULT OP_ADIV OP_LS OP_RS OP_BOR OP_BAND OP_XOR OP_ALS OP_ARL OP_ABOR OP_ABAND OP_AXOR OP_OR OP_AND OP_NOT OP_INVERT
 
 %left OP_PLUS OP_MINUS
 %left OP_MULT OP_DIV
@@ -47,34 +59,45 @@ void yyerror(const char* s) {
 
 program:
       expr {
-        std::cout << "Program ok :)" << std::endl;
+        try {
+          auto result = $1->eval();
+          auto asStr = Cmm::ValuesHelper::castTo(result, Cmm::V_String);
+          auto str_ptr = static_cast<Cmm::String*>(asStr.value);
+          std::cout << *str_ptr << std::endl;
+        } catch (std::exception e) {
+           std::cerr << e.what() << std::endl;
+        }
         YYACCEPT;
       }
     ;
 
 expr:
-      expr_term
-    | expr OP_PLUS expr_term 
-    | expr OP_MINUS expr_term  
+      expr_term                      { $$ = $1; }
+    | expr OP_PLUS expr_term         { $$ = new Cmm::Expressions::TermNode($1, $3, *$2); }
+    | expr OP_MINUS expr_term        { $$ = new Cmm::Expressions::TermNode($1, $3, *$2); }
     ;
 
 expr_term:
-      expr_value
-    | expr_term OP_MULT expr_value 
-    | expr_term OP_DIV expr_value  
+      expr_value                     { $$ = $1; }
+    | expr_term OP_MULT expr_value   { $$ = new Cmm::Expressions::TermNode($1, $3, *$2); }
+    | expr_term OP_DIV expr_value    { $$ = new Cmm::Expressions::TermNode($1, $3, *$2); }
     ;
 
 expr_value:
-      constant_value
-    | D_LPAREN expr D_RPAREN
-    | OP_MINUS expr_value %prec OP_UNARY_MINUS
+      constant_value                           { $$ = $1; }
+    | D_LPAREN expr D_RPAREN                   { $$ = $2; }
+    | OP_MINUS expr_value %prec OP_UNARY_MINUS { $$ = new Cmm::Expressions::NegatedNode($2); }
     ;
 
 constant_value:
-      V_STRING  
-    | V_INTEGER  
-    | V_REAL  
-    | V_BOOLEAN 
+      V_STRING    { $$ = new Cmm::Expressions::ConstantValueNode(Cmm::String(*$1)); }
+    | V_INTEGER   { $$ = new Cmm::Expressions::ConstantValueNode(Cmm::Integer((*$1).c_str())); }
+    | V_REAL      { $$ = new Cmm::Expressions::ConstantValueNode(Cmm::Real((*$1).c_str())); }
+    | V_BOOLEAN   { $$ = new Cmm::Expressions::ConstantValueNode(Cmm::Bool(*($1) == "true")); }
+    | V_COMPLEX   { 
+      $1->pop_back();
+      $$ = new Cmm::Expressions::ConstantValueNode(Cmm::Complex(Cmm::Real(0.0), Cmm::Real($1->c_str()))); 
+    }
     ;
 
 type_specifier:

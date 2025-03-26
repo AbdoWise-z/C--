@@ -167,17 +167,17 @@ Cmm::ValueObject Cmm::MathHelper::sub(ValueObject &left, ValueObject &right) {
     switch (common) {
         case Cmm::V_Integer:
             result.value = new Integer(
-                *static_cast<Integer*>(l_ptr->value) + *static_cast<Integer*>(r_ptr->value)
+                *static_cast<Integer*>(l_ptr->value) - *static_cast<Integer*>(r_ptr->value)
                 );
         break;
         case Cmm::V_Real:
             result.value = new Real(
-                *static_cast<Real*>(l_ptr->value) + *static_cast<Real*>(r_ptr->value)
+                *static_cast<Real*>(l_ptr->value) - *static_cast<Real*>(r_ptr->value)
                 );
         break;
         case Cmm::V_Complex:
             result.value = new Complex(
-                *static_cast<Complex*>(l_ptr->value) + *static_cast<Complex*>(r_ptr->value)
+                *static_cast<Complex*>(l_ptr->value) - *static_cast<Complex*>(r_ptr->value)
                 );
         break;
         case Cmm::V_String:
@@ -187,7 +187,7 @@ Cmm::ValueObject Cmm::MathHelper::sub(ValueObject &left, ValueObject &right) {
         break;
         case Cmm::V_Bool:
             result.value = new Bool(
-                *static_cast<Bool*>(l_ptr->value) || *static_cast<Bool*>(r_ptr->value)
+                *static_cast<Bool*>(l_ptr->value) ^ *static_cast<Bool*>(r_ptr->value)
                 );
         break;
         default: result.value = nullptr;
@@ -242,17 +242,17 @@ Cmm::ValueObject Cmm::MathHelper::mul(ValueObject &left, ValueObject &right) {
     switch (common) {
         case Cmm::V_Integer:
             result.value = new Integer(
-                *static_cast<Integer*>(l_ptr->value) + *static_cast<Integer*>(r_ptr->value)
+                *static_cast<Integer*>(l_ptr->value) * *static_cast<Integer*>(r_ptr->value)
                 );
         break;
         case Cmm::V_Real:
             result.value = new Real(
-                *static_cast<Real*>(l_ptr->value) + *static_cast<Real*>(r_ptr->value)
+                *static_cast<Real*>(l_ptr->value) * *static_cast<Real*>(r_ptr->value)
                 );
         break;
         case Cmm::V_Complex:
             result.value = new Complex(
-                *static_cast<Complex*>(l_ptr->value) + *static_cast<Complex*>(r_ptr->value)
+                *static_cast<Complex*>(l_ptr->value) * *static_cast<Complex*>(r_ptr->value)
                 );
         break;
         case Cmm::V_String:
@@ -262,7 +262,7 @@ Cmm::ValueObject Cmm::MathHelper::mul(ValueObject &left, ValueObject &right) {
         break;
         case Cmm::V_Bool:
             result.value = new Bool(
-                *static_cast<Bool*>(l_ptr->value) || *static_cast<Bool*>(r_ptr->value)
+                *static_cast<Bool*>(l_ptr->value) && *static_cast<Bool*>(r_ptr->value)
                 );
         break;
         default: result.value = nullptr;
@@ -293,7 +293,7 @@ Cmm::ValueObject Cmm::MathHelper::div(ValueObject &left, ValueObject &right) {
     ValueObject* l_ptr;
     ValueObject* r_ptr;
 
-    if (common == V_String) {
+    if (common == V_String || common == V_Bool) {
         throw MathHelper::OperationError(left.type, right.type, "\"/\"");
     }
 
@@ -317,17 +317,17 @@ Cmm::ValueObject Cmm::MathHelper::div(ValueObject &left, ValueObject &right) {
     switch (common) {
         case Cmm::V_Integer:
             result.value = new Integer(
-                *static_cast<Integer*>(l_ptr->value) + *static_cast<Integer*>(r_ptr->value)
+                *static_cast<Integer*>(l_ptr->value) / *static_cast<Integer*>(r_ptr->value)
                 );
         break;
         case Cmm::V_Real:
             result.value = new Real(
-                *static_cast<Real*>(l_ptr->value) + *static_cast<Real*>(r_ptr->value)
+                *static_cast<Real*>(l_ptr->value) / *static_cast<Real*>(r_ptr->value)
                 );
         break;
         case Cmm::V_Complex:
             result.value = new Complex(
-                *static_cast<Complex*>(l_ptr->value) + *static_cast<Complex*>(r_ptr->value)
+                *static_cast<Complex*>(l_ptr->value) / *static_cast<Complex*>(r_ptr->value)
                 );
         break;
         case Cmm::V_String:

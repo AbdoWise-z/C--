@@ -537,6 +537,15 @@ char *yytext;
 #line 2 "lexer.l"
 #include <string>
 #include <iostream>
+
+#include "../config.h"
+#include "../forward.h"
+#include "../AST.h"
+#include "../primitives.h"
+#include "../MathHelper.h"
+#include "../Values.h"
+#include "../Expressions.h"
+
 #include "parser.tab.hpp"
 
 void remove_first_and_last_char(std::string* str_ptr) {
@@ -547,8 +556,8 @@ void remove_first_and_last_char(std::string* str_ptr) {
     str_ptr->pop_back();
 }
 
-#line 551 "lexer.yy.cpp"
-#line 552 "lexer.yy.cpp"
+#line 560 "lexer.yy.cpp"
+#line 561 "lexer.yy.cpp"
 
 #define INITIAL 0
 
@@ -765,10 +774,10 @@ YY_DECL
 		}
 
 	{
-#line 18 "lexer.l"
+#line 27 "lexer.l"
 
 
-#line 772 "lexer.yy.cpp"
+#line 781 "lexer.yy.cpp"
 
 	while ( /*CONSTCOND*/1 )		/* loops until end-of-file is reached */
 		{
@@ -828,7 +837,7 @@ do_action:	/* This label is used only to access EOF actions. */
 case 1:
 /* rule 1 can match eol */
 YY_RULE_SETUP
-#line 20 "lexer.l"
+#line 29 "lexer.l"
 {
     std::string* val = new std::string(yytext);
     remove_first_and_last_char(val);
@@ -838,7 +847,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 27 "lexer.l"
+#line 36 "lexer.l"
 {
     std::string* val = new std::string(yytext);
     yylval.str = val;
@@ -847,7 +856,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 33 "lexer.l"
+#line 42 "lexer.l"
 {
     std::string* val = new std::string(yytext);
     yylval.str = val;
@@ -856,7 +865,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 39 "lexer.l"
+#line 48 "lexer.l"
 {
     std::string* val = new std::string(yytext);
     yylval.str = val;
@@ -865,7 +874,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 45 "lexer.l"
+#line 54 "lexer.l"
 {
     std::string* val = new std::string(yytext);
     yylval.str = val;
@@ -874,272 +883,272 @@ YY_RULE_SETUP
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 51 "lexer.l"
+#line 60 "lexer.l"
 { return TYPE_REAL; }
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
-#line 52 "lexer.l"
+#line 61 "lexer.l"
 { return TYPE_INT; }
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 53 "lexer.l"
+#line 62 "lexer.l"
 { return TYPE_STR; }
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 54 "lexer.l"
+#line 63 "lexer.l"
 { return TYPE_COMPLEX; }
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 55 "lexer.l"
+#line 64 "lexer.l"
 { return TYPE_BOOL; }
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 56 "lexer.l"
+#line 65 "lexer.l"
 { return TYPE_VOID; }
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 58 "lexer.l"
-{ return OP_ASSIGN; }
+#line 67 "lexer.l"
+{ std::string* val = new std::string(yytext); yylval.str = val; return OP_ASSIGN; }
 	YY_BREAK
 case 13:
 YY_RULE_SETUP
-#line 59 "lexer.l"
-{ return OP_PLUS; }
+#line 68 "lexer.l"
+{ std::string* val = new std::string(yytext); yylval.str = val; return OP_PLUS; }
 	YY_BREAK
 case 14:
 YY_RULE_SETUP
-#line 60 "lexer.l"
-{ return OP_MINUS; }
+#line 69 "lexer.l"
+{ std::string* val = new std::string(yytext); yylval.str = val; return OP_MINUS; }
 	YY_BREAK
 case 15:
 YY_RULE_SETUP
-#line 61 "lexer.l"
-{ return OP_MULT; }
+#line 70 "lexer.l"
+{ std::string* val = new std::string(yytext); yylval.str = val; return OP_MULT; }
 	YY_BREAK
 case 16:
 YY_RULE_SETUP
-#line 62 "lexer.l"
-{ return OP_DIV; }
+#line 71 "lexer.l"
+{ std::string* val = new std::string(yytext); yylval.str = val; return OP_DIV; }
 	YY_BREAK
 case 17:
 YY_RULE_SETUP
-#line 63 "lexer.l"
-{ return OP_APLUS; }
+#line 72 "lexer.l"
+{ std::string* val = new std::string(yytext); yylval.str = val; return OP_APLUS; }
 	YY_BREAK
 case 18:
 YY_RULE_SETUP
-#line 64 "lexer.l"
-{ return OP_AMINUS; }
+#line 73 "lexer.l"
+{ std::string* val = new std::string(yytext); yylval.str = val; return OP_AMINUS; }
 	YY_BREAK
 case 19:
 YY_RULE_SETUP
-#line 65 "lexer.l"
-{ return OP_AMULT; }
+#line 74 "lexer.l"
+{ std::string* val = new std::string(yytext); yylval.str = val; return OP_AMULT; }
 	YY_BREAK
 case 20:
 YY_RULE_SETUP
-#line 66 "lexer.l"
-{ return OP_ADIV; }
+#line 75 "lexer.l"
+{ std::string* val = new std::string(yytext); yylval.str = val; return OP_ADIV; }
 	YY_BREAK
 case 21:
 YY_RULE_SETUP
-#line 67 "lexer.l"
-{ return OP_LS; }
+#line 76 "lexer.l"
+{ std::string* val = new std::string(yytext); yylval.str = val; return OP_LS; }
 	YY_BREAK
 case 22:
 YY_RULE_SETUP
-#line 68 "lexer.l"
-{ return OP_RS; }
+#line 77 "lexer.l"
+{ std::string* val = new std::string(yytext); yylval.str = val; return OP_RS; }
 	YY_BREAK
 case 23:
 YY_RULE_SETUP
-#line 69 "lexer.l"
-{ return OP_BOR; }
+#line 78 "lexer.l"
+{ std::string* val = new std::string(yytext); yylval.str = val; return OP_BOR; }
 	YY_BREAK
 case 24:
 YY_RULE_SETUP
-#line 70 "lexer.l"
-{ return OP_BAND; }
+#line 79 "lexer.l"
+{ std::string* val = new std::string(yytext); yylval.str = val; return OP_BAND; }
 	YY_BREAK
 case 25:
 YY_RULE_SETUP
-#line 71 "lexer.l"
-{ return OP_XOR; }
+#line 80 "lexer.l"
+{ std::string* val = new std::string(yytext); yylval.str = val; return OP_XOR; }
 	YY_BREAK
 case 26:
 YY_RULE_SETUP
-#line 72 "lexer.l"
-{ return OP_ALS; }
+#line 81 "lexer.l"
+{ std::string* val = new std::string(yytext); yylval.str = val; return OP_ALS; }
 	YY_BREAK
 case 27:
 YY_RULE_SETUP
-#line 73 "lexer.l"
-{ return OP_ARL; }
+#line 82 "lexer.l"
+{ std::string* val = new std::string(yytext); yylval.str = val; return OP_ARL; }
 	YY_BREAK
 case 28:
 YY_RULE_SETUP
-#line 74 "lexer.l"
-{ return OP_ABOR; }
+#line 83 "lexer.l"
+{ std::string* val = new std::string(yytext); yylval.str = val; return OP_ABOR; }
 	YY_BREAK
 case 29:
 YY_RULE_SETUP
-#line 75 "lexer.l"
-{ return OP_ABAND; }
+#line 84 "lexer.l"
+{ std::string* val = new std::string(yytext); yylval.str = val; return OP_ABAND; }
 	YY_BREAK
 case 30:
 YY_RULE_SETUP
-#line 76 "lexer.l"
-{ return OP_AXOR; }
+#line 85 "lexer.l"
+{ std::string* val = new std::string(yytext); yylval.str = val; return OP_AXOR; }
 	YY_BREAK
 case 31:
 YY_RULE_SETUP
-#line 77 "lexer.l"
-{ return OP_OR; }
+#line 86 "lexer.l"
+{ std::string* val = new std::string(yytext); yylval.str = val; return OP_OR; }
 	YY_BREAK
 case 32:
 YY_RULE_SETUP
-#line 78 "lexer.l"
-{ return OP_AND; }
+#line 87 "lexer.l"
+{ std::string* val = new std::string(yytext); yylval.str = val; return OP_AND; }
 	YY_BREAK
 case 33:
 YY_RULE_SETUP
-#line 79 "lexer.l"
-{ return OP_NOT; }
+#line 88 "lexer.l"
+{ std::string* val = new std::string(yytext); yylval.str = val; return OP_NOT; }
 	YY_BREAK
 case 34:
 YY_RULE_SETUP
-#line 80 "lexer.l"
-{ return OP_INVERT; }
+#line 89 "lexer.l"
+{ std::string* val = new std::string(yytext); yylval.str = val; return OP_INVERT; }
 	YY_BREAK
 case 35:
 YY_RULE_SETUP
-#line 82 "lexer.l"
+#line 91 "lexer.l"
 { return D_SEMICOLON; }
 	YY_BREAK
 case 36:
 YY_RULE_SETUP
-#line 83 "lexer.l"
+#line 92 "lexer.l"
 { return D_LPAREN; }
 	YY_BREAK
 case 37:
 YY_RULE_SETUP
-#line 84 "lexer.l"
+#line 93 "lexer.l"
 { return D_RPAREN; }
 	YY_BREAK
 case 38:
 YY_RULE_SETUP
-#line 85 "lexer.l"
+#line 94 "lexer.l"
 { return D_LBRACE; }
 	YY_BREAK
 case 39:
 YY_RULE_SETUP
-#line 86 "lexer.l"
+#line 95 "lexer.l"
 { return D_RBRACE; }
 	YY_BREAK
 case 40:
 YY_RULE_SETUP
-#line 87 "lexer.l"
+#line 96 "lexer.l"
 { return D_COLON; }
 	YY_BREAK
 case 41:
 YY_RULE_SETUP
-#line 88 "lexer.l"
+#line 97 "lexer.l"
 { return D_COMMA; }
 	YY_BREAK
 case 42:
 YY_RULE_SETUP
-#line 90 "lexer.l"
+#line 99 "lexer.l"
 { return CONTROL_IF; }
 	YY_BREAK
 case 43:
 YY_RULE_SETUP
-#line 91 "lexer.l"
+#line 100 "lexer.l"
 { return CONTROL_ELSE; }
 	YY_BREAK
 case 44:
 YY_RULE_SETUP
-#line 92 "lexer.l"
+#line 101 "lexer.l"
 { return CONTROL_WHILE; }
 	YY_BREAK
 case 45:
 YY_RULE_SETUP
-#line 93 "lexer.l"
+#line 102 "lexer.l"
 { return CONTROL_FOR; }
 	YY_BREAK
 case 46:
 YY_RULE_SETUP
-#line 94 "lexer.l"
+#line 103 "lexer.l"
 { return CONTROL_SWITCH; }
 	YY_BREAK
 case 47:
 YY_RULE_SETUP
-#line 95 "lexer.l"
+#line 104 "lexer.l"
 { return CONTROL_CASE; }
 	YY_BREAK
 case 48:
 YY_RULE_SETUP
-#line 96 "lexer.l"
+#line 105 "lexer.l"
 { return CONTROL_DEFAULT; }
 	YY_BREAK
 case 49:
 YY_RULE_SETUP
-#line 97 "lexer.l"
+#line 106 "lexer.l"
 { return CONTROL_DO; }
 	YY_BREAK
 case 50:
 YY_RULE_SETUP
-#line 98 "lexer.l"
+#line 107 "lexer.l"
 { return CONTROL_RETURN; }
 	YY_BREAK
 case 51:
 YY_RULE_SETUP
-#line 99 "lexer.l"
+#line 108 "lexer.l"
 { return CONTROL_BREAK; }
 	YY_BREAK
 case 52:
 YY_RULE_SETUP
-#line 100 "lexer.l"
+#line 109 "lexer.l"
 { return CONTROL_CONTINUE; }
 	YY_BREAK
 case 53:
 YY_RULE_SETUP
-#line 102 "lexer.l"
+#line 111 "lexer.l"
 { return MISC_FUNC; }
 	YY_BREAK
 case 54:
 YY_RULE_SETUP
-#line 103 "lexer.l"
+#line 112 "lexer.l"
 { return MISC_VAR; }
 	YY_BREAK
 case 55:
 YY_RULE_SETUP
-#line 104 "lexer.l"
+#line 113 "lexer.l"
 { return MISC_CONST; }
 	YY_BREAK
 case 56:
 YY_RULE_SETUP
-#line 105 "lexer.l"
+#line 114 "lexer.l"
 { return MISC_IMPORT; }
 	YY_BREAK
 case 57:
 YY_RULE_SETUP
-#line 106 "lexer.l"
+#line 115 "lexer.l"
 { return MISC_EXPORT; }
 	YY_BREAK
 case 58:
 YY_RULE_SETUP
-#line 107 "lexer.l"
+#line 116 "lexer.l"
 { return MISC_NATIVE; }
 	YY_BREAK
 case 59:
 YY_RULE_SETUP
-#line 109 "lexer.l"
+#line 118 "lexer.l"
 { 
     std::string* val = new std::string(yytext);
     yylval.str = val;
@@ -1149,16 +1158,16 @@ YY_RULE_SETUP
 case 60:
 /* rule 60 can match eol */
 YY_RULE_SETUP
-#line 115 "lexer.l"
+#line 124 "lexer.l"
 { /* Skip whitespace */ }
 	YY_BREAK
 case YY_STATE_EOF(INITIAL):
-#line 117 "lexer.l"
+#line 126 "lexer.l"
 { return END; }
 	YY_BREAK
 case 61:
 YY_RULE_SETUP
-#line 119 "lexer.l"
+#line 128 "lexer.l"
 { 
     std::cerr << "Unexpected character: " << yytext << std::endl; 
     return 0; 
@@ -1166,10 +1175,10 @@ YY_RULE_SETUP
 	YY_BREAK
 case 62:
 YY_RULE_SETUP
-#line 124 "lexer.l"
+#line 133 "lexer.l"
 ECHO;
 	YY_BREAK
-#line 1173 "lexer.yy.cpp"
+#line 1182 "lexer.yy.cpp"
 
 	case YY_END_OF_BUFFER:
 		{
@@ -2172,5 +2181,5 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 124 "lexer.l"
+#line 133 "lexer.l"
 

@@ -1,5 +1,13 @@
 #include <iostream>
 #include <string>
+#include "../config.h"
+#include "../forward.h"
+#include "../AST.h"
+#include "../primitives.h"
+#include "../MathHelper.h"
+#include "../Values.h"
+#include "../Expressions.h"
+
 #include "parser.tab.hpp"
 
 extern int yyparse();

@@ -3,6 +3,9 @@
 //
 
 #include "Expressions.h"
+
+#include <ranges>
+
 #include "MathHelper.h"
 #include "grammar/parser.tab.hpp"
 
@@ -26,7 +29,7 @@ Cmm::Expressions::ExpressionNode::~ExpressionNode() {
     }
 }
 
-Cmm::Expressions::TermNode::TermNode(EvaluableNode *left, EvaluableNode *right, int op) {
+Cmm::Expressions::TermNode::TermNode(EvaluableNode *left, EvaluableNode *right, const std::string& op) {
     this->left = left;
     this->right = right;
     this->op = op;
@@ -37,12 +40,19 @@ Cmm::ValueObject Cmm::Expressions::TermNode::eval() {
     auto right = this->right->eval();
     ValueObject result{};
 
-    switch (op) {
-        case OP_PLUS:
-            result = MathHelper::add(left, right);
-            break;
-        default:
-            throw std::invalid_argument("Invalid operation");
+    if (op == "+") {
+        result = MathHelper::add(left, right);
+    } else if (op == "-") {
+        result = MathHelper::sub(left, right);
+    }
+    else if (op == "*") {
+        result = MathHelper::mul(left, right);
+    }
+    else if (op == "/") {
+        result = MathHelper::div(left, right);
+    }
+    else {
+        throw std::invalid_argument("Invalid operation");
     }
 
     ValuesHelper::Delete(left);
@@ -99,7 +109,7 @@ Cmm::Expressions::ConstantValueNode::ConstantValueNode(const Real& v) {
 
 Cmm::Expressions::ConstantValueNode::ConstantValueNode(const Integer &v) {
     value = {
-        .type = V_Real,
+        .type = V_Integer,
         .value = new Integer(v),
     };
 }
@@ -126,7 +136,9 @@ Cmm::Expressions::ConstantValueNode::ConstantValueNode(const String &v) {
 }
 
 Cmm::ValueObject Cmm::Expressions::ConstantValueNode::eval() {
-    return value;
+    // each node assumes it's the owner of the value returned by eval, so we need to copy it, since it will always be deleted
+    auto cpy = ValuesHelper::castTo(value, value.type);
+    return cpy;
 }
 
 Cmm::Expressions::ConstantValueNode::~ConstantValueNode() {

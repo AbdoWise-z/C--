@@ -86,6 +86,8 @@ namespace Namespace::Program {
         int scope = block.stack.size() - 1;
         while (scope >= 0) {
             auto owner = block.stack[scope].owner;
+            scope --;
+
             if (owner == nullptr) continue;
             auto cast = dynamic_cast<T*>(owner);
             if (cast != nullptr) return cast;
@@ -309,7 +311,11 @@ namespace Namespace::Program {
     }
 
     void StatementListNode::exec() {
+        auto func = getNearestFunctionScopeOwner();
+
         for (auto item: statements) {
+            if (func && func->_shouldReturn) break;
+
             item->exec();
         }
     }
@@ -465,15 +471,13 @@ namespace Namespace::Program {
 
         beginScope(this);
 
-        // fill in params;
+        // push in params into the stack;
         for (int i = 0;i < arguments->arguments.size();i++) {
             createVariable(arguments->arguments[i]->id, params[i]);
         }
 
-        for (auto item: this->function->statements) {
-            item->exec();
-            if (_shouldReturn) break;
-        }
+        this->function->exec();
+
         endScope();
 
         // now check the return value

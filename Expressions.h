@@ -48,6 +48,22 @@ namespace Namespace {
             ~NegatedNode() override;
         };
 
+        class NotNode final : public EvaluableNode {
+        public:
+            EvaluableNode* child;
+            explicit NotNode(EvaluableNode* child);
+            ValueObject eval() override;
+            ~NotNode() override;
+        };
+
+        class InvertNode final : public EvaluableNode {
+        public:
+            EvaluableNode* child;
+            explicit InvertNode(EvaluableNode* child);
+            ValueObject eval() override;
+            ~InvertNode() override;
+        };
+
         class CastNode final : public EvaluableNode {
         public:
             EvaluableNode* child;

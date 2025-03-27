@@ -152,9 +152,46 @@ Integer Integer::operator^(const Integer &b) const {
 }
 
 Integer Integer::operator!() const {
+    return *this == 0;
+}
+
+Integer Integer::operator~() const {
     Integer temp;
     mpz_invert(temp.mValue , mValue , temp.mValue);
     return temp;
+}
+
+Integer Integer::operator>>(const Integer &b) const {
+    static Integer two(2);
+    Integer temp(0);
+    mpz_pow_ui(temp.mValue , two.mValue , mpz_get_ui(b.mValue));
+    mpz_div(temp.mValue , mValue , temp.mValue);
+    return temp;
+}
+
+Integer Integer::operator<<(const Integer &b) const {
+    static Integer two(2);
+    Integer temp(0);
+    mpz_pow_ui(temp.mValue , two.mValue , mpz_get_ui(b.mValue));
+    mpz_mul(temp.mValue , mValue , temp.mValue);
+    return temp;
+}
+
+Integer Integer::operator|(const Integer &b) const {
+    Integer t1;
+    Integer t2;
+
+    mpz_xor(t1.mValue , b.mValue , mValue );   // this library doesn't have or, so this a little hack to do it :)
+    mpz_and(t2.mValue , mValue , b.mValue);
+    mpz_add(t1.mValue , t1.mValue , t2.mValue);
+
+    return t1;
+}
+
+Integer Integer::operator&(const Integer &b) const {
+    Integer t1;
+    mpz_and(t1.mValue , mValue , b.mValue);
+    return t1;
 }
 
 std::string Integer::toString(int base) const {

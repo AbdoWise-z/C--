@@ -11,8 +11,10 @@
 #include <map>
 #include <vector>
 
+#include "Typing.h"
 
-namespace Cmm::Program {
+
+namespace Namespace::Program {
 
     class FunctionNode;
     class FunctionArgumentListNode;
@@ -22,29 +24,43 @@ namespace Cmm::Program {
     class VariableAssignmentNode;
     class ExpressionStatementNode;
     class VariableDeclarationNode;
+    class ReturnStatementNode;
+    class FunctionCallNode;
+    class ScopeNode;
 
-    typedef std::pair<std::string, std::pmr::vector<ValueType>> function_sig;
+    typedef std::pair<std::string, std::vector<ValueType>> function_sig;
 
     struct Scope {
         std::map<std::string, Cmm::ValueObject> variables;
         std::map<function_sig, FunctionNode*> functions;
+        ASTNode* owner;
     };
 
     struct ProgramBlock {
         std::vector<Scope> stack;
+        std::vector<std::string> moduleStack;
         ASTNode* programCode;
     };
 
     ProgramBlock& getCurrentProgram();
 
-    void beginScope();
+    void pushModule(const std::string&);
+    void popModule();
+
+    std::string getModule();
+
+    void beginScope(ASTNode* owner = nullptr);
     void endScope();
+
+    // todo: add other types
+    FunctionNode* getNearestFunctionScopeOwner();
+
 
     void createVariable(const std::string& name, Cmm::ValueObject);
     ValueObject& getVariable(const std::string& name);
 
     void createFunction(const function_sig &signature, FunctionNode*);
-    ValueObject callFunction(const function_sig& signature, std::map<std::string, ValueObject>);
+    ValueObject callFunction(const function_sig& signature, const std::vector<ValueObject>&);
 
     // ========================= ERRORS =========================
 
@@ -75,13 +91,20 @@ namespace Cmm::Program {
         [[nodiscard]] const char *what() const noexcept override;
     };
 
+    class ControlError : public std::exception {
+        std::string msg;
+    public:
+        explicit ControlError(std::string  msg);
+        [[nodiscard]] const char *what() const noexcept override;
+    };
+
     // ========================= NODES =========================
 
     class ProgramNode: public ExecutableNode {
     public:
 
         ExecutableNode* source;
-        ProgramNode(ExecutableNode* source);
+        explicit ProgramNode(ExecutableNode* source);
         void exec() override;
     };
 
@@ -98,7 +121,7 @@ namespace Cmm::Program {
     class ExpressionStatementNode: public ExecutableNode {
     public:
         EvaluableNode* expr;
-        ExpressionStatementNode(EvaluableNode* value);
+        explicit ExpressionStatementNode(EvaluableNode* value);
         void exec() override;
     };
 
@@ -119,12 +142,19 @@ namespace Cmm::Program {
     };
 
     class FunctionDeclarationNode: public ExecutableNode {
-    private:
-        FunctionNode* node;
     public:
+        FunctionNode* node;
         explicit FunctionDeclarationNode(FunctionNode* node);
         void exec() override;
         ~FunctionDeclarationNode() override;
+    };
+
+    class ReturnStatementNode: public ExecutableNode {
+    public:
+        EvaluableNode* expr;
+        explicit ReturnStatementNode(EvaluableNode* expr);
+        void exec() override;
+        ~ReturnStatementNode() override;
     };
 
     class FunctionArgumentNode: public ASTNode {
@@ -146,12 +176,46 @@ namespace Cmm::Program {
         ~FunctionArgumentListNode() override;
     };
 
-    class FunctionNode: public ASTNode {
-
+    class FunctionParamListNode: public ASTNode {
     public:
-        virtual ValueObject decl();
-        virtual ValueObject exec(std::map<std::string, ValueObject>);
-        ~FunctionNode();
+        std::vector<EvaluableNode*> params;
+        FunctionParamListNode(FunctionParamListNode* other, EvaluableNode* next);
+        [[nodiscard]] std::vector<ValueObject> getParams() const;
+        ~FunctionParamListNode() override;
+    };
+
+    class FunctionCallNode: public EvaluableNode {
+    public:
+        std::string id;
+        FunctionParamListNode* funcParam;
+        explicit FunctionCallNode(std::string id, FunctionParamListNode* funcParam);
+        ~FunctionCallNode() override;
+        ValueObject eval() override;
+    };
+
+    class FunctionNode: public ASTNode {
+    public:
+        FunctionArgumentListNode* arguments;
+        StatementListNode* function;
+        std::string id;
+        Typing::TypeListNode* returnType;
+
+        bool _shouldReturn;
+        ValueObject _returnValue{};
+
+        FunctionNode(FunctionArgumentListNode* arguments, StatementListNode* function, std::string id, Typing::TypeListNode* returnType);
+
+        virtual void decl();
+        virtual ValueObject exec(const std::vector<ValueObject>&);
+        ~FunctionNode() override;
+    };
+
+    class ScopeNode: public ExecutableNode {
+    public:
+        ExecutableNode* statements;
+        explicit ScopeNode(ExecutableNode* node);
+        void exec() override;
+        ~ScopeNode() override;
     };
 
 }

@@ -71,6 +71,22 @@ bool Complex::operator==(const Complex &other) const {
     return real == other.real && imag == other.imag;
 }
 
+bool Complex::operator>(const Complex &other) const {
+    return mag2() > other.mag2();
+}
+
+bool Complex::operator<(const Complex &other) const {
+    return mag2() < other.mag2();
+}
+
+bool Complex::operator>=(const Complex &other) const {
+    return mag2() >= other.mag2();
+}
+
+bool Complex::operator<=(const Complex &other) const {
+    return mag2() <= other.mag2();
+}
+
 bool Complex::operator!=(const Complex &other) const {
     return real != other.real || imag != other.imag;
 }
@@ -129,6 +145,10 @@ Real & Complex::getRealPart() {
 
 Real & Complex::getImagPart() {
     return imag;
+}
+
+Real Complex::mag2() const {
+    return real * real + imag * imag;
 }
 
 Complex &Complex::operator=(const Complex &other) noexcept {

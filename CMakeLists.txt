@@ -9,8 +9,6 @@ file(GLOB PARSER_CPP_SRC "${CMAKE_SOURCE_DIR}/grammar/*.cpp")
 file(GLOB PARSER_C_SRC   "${CMAKE_SOURCE_DIR}/grammar/*.c")
 file(GLOB PARSER_HDR     "${CMAKE_SOURCE_DIR}/grammar/*.hpp")
 
-
-
 message("Sources: " ${PARSER_CPP_SRC} ${PARSER_C_SRC})
 message("Headers: " ${PARSER_HDR})
 
@@ -41,11 +39,19 @@ add_executable(
 
         forward.h
 
+        Program.cpp
+        Program.h
+
+        Typing.cpp
+        Typing.h
+
+        Control.cpp
+        Control.h
+
         ${PARSER_HDR}
         ${PARSER_CPP_SRC}
         ${PARSER_C_SRC}
-        Program.cpp
-        Program.h
+
 )
 
 add_custom_target(
@@ -83,6 +89,10 @@ add_executable(Sandbox
         forward.h
         Program.cpp
         Program.h
+        Typing.cpp
+        Typing.h
+        Control.cpp
+        Control.h
 )
 
 target_link_libraries(

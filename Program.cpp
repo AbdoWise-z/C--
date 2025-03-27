@@ -14,9 +14,16 @@
 #include "Expressions.h"
 
 namespace Namespace::Program {
-
     static std::map<std::thread::id, ProgramBlock> _programs;
     static std::shared_mutex _programs_mutex;
+
+    static std::vector<ValueType> conversionPriority = {
+        V_String,
+        V_Complex,
+        V_Real,
+        V_Integer,
+        V_Bool
+    };
 
     static std::string stringfy(function_sig sig) {
         std::string args;
@@ -49,12 +56,46 @@ namespace Namespace::Program {
         return it->second;
     }
 
-    void beginScope() {
-        getCurrentProgram().stack.push_back({});
+    void pushModule(const std::string & m) {
+        getCurrentProgram().moduleStack.push_back(m);
+    }
+
+    void popModule() {
+        getCurrentProgram().moduleStack.pop_back();
+    }
+
+    std::string getModule() {
+        return getCurrentProgram().moduleStack.back();
+    }
+
+    void beginScope(ASTNode *owner) {
+        getCurrentProgram().stack.push_back({
+            .variables = {},
+            .functions = {},
+            .owner = owner,
+        });
     }
 
     void endScope() {
         getCurrentProgram().stack.pop_back();
+    }
+
+    template <typename T>
+    T* getNearstScopeOwnerOfType() {
+        ProgramBlock& block = getCurrentProgram();
+        int scope = block.stack.size() - 1;
+        while (scope >= 0) {
+            auto owner = block.stack[scope].owner;
+            if (owner == nullptr) continue;
+            auto cast = dynamic_cast<T*>(owner);
+            if (cast != nullptr) return cast;
+        }
+
+        return nullptr;
+    }
+
+    FunctionNode* getNearestFunctionScopeOwner() {
+        return getNearstScopeOwnerOfType<FunctionNode>();
     }
 
     void createVariable(const std::string& name, Cmm::ValueObject val) {
@@ -130,7 +171,7 @@ namespace Namespace::Program {
         scope.functions[signature] = node;
     }
 
-    ValueObject callFunction(const function_sig& signature, std::map<std::string, ValueObject> params) {
+    ValueObject callFunction(const function_sig& signature, const std::vector<ValueObject>& params) {
         // bottom up search the function signature
         ProgramBlock& block = getCurrentProgram();
         int scope = block.stack.size() - 1;
@@ -174,6 +215,15 @@ namespace Namespace::Program {
         static std::string err = "Function with signature: " + id + " not found.";
         return err.c_str();
     }
+
+    ControlError::ControlError(std::string msg) {
+        this->msg = msg;
+    }
+
+    const char * ControlError::what() const noexcept {
+        return msg.c_str();
+    }
+
 
     ProgramNode::ProgramNode(ExecutableNode *source) {
         this->source = source;
@@ -219,7 +269,7 @@ namespace Namespace::Program {
 
     void ExpressionStatementNode::exec() {
         auto mValue = this->expr->eval();
-        std::cout << "[e]> expr" << "=" << ValuesHelper::toString(mValue) << std::endl;
+        std::cout << "[e]> expr[" << ValuesHelper::ValueTypeAsString(mValue.type) << "]" << "=" << ValuesHelper::toString(mValue) << std::endl;
     }
 
     VariableAssignmentNode::VariableAssignmentNode(std::string name, EvaluableNode *value) {
@@ -274,6 +324,26 @@ namespace Namespace::Program {
         delete node;
     }
 
+    ReturnStatementNode::ReturnStatementNode(EvaluableNode *expr) {
+        this->expr = expr;
+    }
+
+    void ReturnStatementNode::exec() {
+        auto func = getNearestFunctionScopeOwner();
+        if (func == nullptr) {
+            throw ControlError("Return cannot be used outside a function scope");
+        }
+
+        auto result = expr->eval();
+        func->_returnValue = result;
+        func->_shouldReturn = true;
+    }
+
+    ReturnStatementNode::~ReturnStatementNode() {
+        delete expr;
+    }
+
+
     FunctionArgumentNode::FunctionArgumentNode(std::string id, std::string type) : id(std::move(id)), type(type) {
         defaultValue = nullptr;
     }
@@ -304,12 +374,144 @@ namespace Namespace::Program {
             other->arguments.clear();
             delete other;
         }
-        arguments.push_back(next);
+
+        if (next)
+            arguments.push_back(next);
     }
 
     FunctionArgumentListNode::~FunctionArgumentListNode() {
         for (auto item: this->arguments) {
             delete item;
         }
+    }
+
+    FunctionParamListNode::FunctionParamListNode(FunctionParamListNode *other, EvaluableNode *next) {
+        params.clear();
+        if (other) {
+            params = other->params;
+            other->params.clear();
+            delete other;
+        }
+
+        if (next)
+            params.push_back(next);
+    }
+
+    std::vector<ValueObject> FunctionParamListNode::getParams() const {
+        std::vector<ValueObject> result;
+        for (auto item: params) {
+            result.push_back(item->eval());
+        }
+        return result;
+    }
+
+    FunctionParamListNode::~FunctionParamListNode() {
+        for (auto item: this->params) {
+            delete item;
+        }
+    }
+
+    FunctionCallNode::FunctionCallNode(std::string id, FunctionParamListNode *funcParam) {
+        this->id = std::move(id);
+        this->funcParam = funcParam;
+        if (!this->funcParam) {
+            this->funcParam = new FunctionParamListNode(nullptr, nullptr);
+        }
+    }
+
+    FunctionCallNode::~FunctionCallNode() {
+        delete funcParam;
+    }
+
+    ValueObject FunctionCallNode::eval() {
+        auto params = funcParam->getParams();
+        std::vector<ValueType> types;
+        for (auto item: params) {
+            types.push_back(item.type);
+        }
+
+        std::pair sig = {id, types};
+        return callFunction(sig, params);
+    }
+
+
+    FunctionNode::FunctionNode(FunctionArgumentListNode *arguments, StatementListNode *function, std::string id, Typing::TypeListNode *returnType) {
+        this->arguments = arguments;
+        this->function = function;
+        this->id = std::move(id);
+        this->returnType = returnType;
+
+        this->_returnValue = {};
+        this->_shouldReturn = false;
+    }
+
+    void FunctionNode::decl() {
+        // declare this function to the scope
+        std::vector<ValueType> args;
+        for (auto item: arguments->arguments) {
+            args.push_back(ValuesHelper::StringToValueType(item->type));
+        }
+
+        std::pair sig = { id, args};
+        createFunction(sig, this);
+    }
+
+    ValueObject FunctionNode::exec(const std::vector<ValueObject>& params) {
+        _shouldReturn = false;
+        _returnValue = {
+            V_Void,
+            nullptr
+        };
+
+        beginScope(this);
+
+        // fill in params;
+        for (int i = 0;i < arguments->arguments.size();i++) {
+            createVariable(arguments->arguments[i]->id, params[i]);
+        }
+
+        for (auto item: this->function->statements) {
+            item->exec();
+            if (_shouldReturn) break;
+        }
+        endScope();
+
+        // now check the return value
+        if (returnType->types.contains(_returnValue.type)) {
+            // successful execution
+            return _returnValue;
+        } else {
+            for (auto type : conversionPriority) {
+                if (returnType->types.contains(type)) {
+                    // convert to this type and move on :)
+                    ValueObject temp = ValuesHelper::castTo(_returnValue, type);
+                    ValuesHelper::Delete(_returnValue);
+                    _returnValue = temp;
+                    return _returnValue;
+                }
+            }
+        }
+
+        throw ControlError("Function cannot return due to type missmatch");
+    }
+
+    FunctionNode::~FunctionNode() {
+        delete this->function;
+        delete this->returnType;
+        delete this->returnType;
+    }
+
+    ScopeNode::ScopeNode(ExecutableNode *node) {
+        this->statements = node;
+    }
+
+    void ScopeNode::exec() {
+        beginScope(nullptr);
+        statements->exec();
+        endScope();
+    }
+
+    ScopeNode::~ScopeNode() {
+        delete statements;
     }
 }

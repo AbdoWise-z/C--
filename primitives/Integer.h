@@ -44,6 +44,8 @@ namespace Namespace {
         Integer operator* (const Integer& b) const;
         Integer operator% (const Integer& b) const;
 
+
+
         bool operator> (const Integer& b) const;
         bool operator< (const Integer& b) const;
         bool operator== (const Integer& b) const;
@@ -54,6 +56,11 @@ namespace Namespace {
         Integer operator- () const;
         Integer operator^ (const Integer& b) const;
         Integer operator! () const;
+        Integer operator~ () const;
+        Integer operator>> (const Integer& b) const;
+        Integer operator<< (const Integer& b) const;
+        Integer operator| (const Integer& b) const;
+        Integer operator& (const Integer& b) const;
 
         [[nodiscard]] std::string toString(int base) const;
 

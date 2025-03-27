@@ -10,17 +10,22 @@
 #include "../Values.h"
 #include "../Expressions.h"
 #include "../Program.h"
-
+#include "../Typing.h"
+#include "../Control.h"
 #include "parser.tab.hpp"
 
 // Declare yylex for Bison
 extern int yylex();
 
-// Error reporting function
-void yyerror(const char* s) {
-    std::cerr << "Error: " << s << std::endl;
-}
+extern char* yytext;
+extern int yylineno;
+extern int yydebug;
 
+void yyerror(const char* s) {
+    std::cerr << "Error at line " << yylineno << ": " << s 
+              << " (unexpected token: '" << yytext << "')" 
+              << std::endl;
+}
 
 extern Cmm::Program::ProgramNode* root;
 
@@ -31,6 +36,7 @@ extern Cmm::Program::ProgramNode* root;
     Cmm::EvaluableNode* evaluable;
     Cmm::ExecutableNode* executable;
     Cmm::ASTNode* node;
+    Cmm::Typing::TypeListNode* tlist;
 }
 
 %token END
@@ -40,35 +46,49 @@ extern Cmm::Program::ProgramNode* root;
 %token <str> ID
 
 %token TYPE_REAL TYPE_INT TYPE_STR TYPE_COMPLEX TYPE_BOOL TYPE_VOID
-%token OP_ASSIGN OP_PLUS OP_MINUS OP_MULT OP_DIV
+%token OP_ASSIGN OP_PLUS OP_MINUS OP_MULT OP_DIV OP_MOD
 %token OP_APLUS OP_AMINUS OP_AMULT OP_ADIV
 %token OP_LS OP_RS OP_BOR OP_BAND OP_XOR
-%token OP_ALS OP_ARL OP_ABOR OP_ABAND OP_AXOR
-%token OP_OR OP_AND OP_NOT OP_INVERT
+%token OP_ALS OP_ARS OP_ABOR OP_ABAND OP_AXOR
+%token OP_OR OP_AND OP_NOT OP_INVERT OP_EQUAL
+%token OP_GREATER OP_LESS OP_GE OP_LE OP_NEQUAL
 %token D_SEMICOLON D_LPAREN D_RPAREN D_LBRACE D_RBRACE D_COLON D_COMMA D_ARROW
 %token CONTROL_IF CONTROL_ELSE CONTROL_WHILE CONTROL_FOR CONTROL_SWITCH
 %token CONTROL_CASE CONTROL_DEFAULT CONTROL_DO CONTROL_RETURN CONTROL_BREAK CONTROL_CONTINUE
 %token MISC_FUNC MISC_FROM MISC_VAR MISC_CONST MISC_IMPORT MISC_EXPORT MISC_NATIVE
 
 // Type declarations
-%type <str> type_specifier
-%type <evaluable> constant_value expr expr_value expr_term expr_casted_term func_call
-%type <str> OP_ASSIGN OP_PLUS OP_MINUS OP_MULT OP_DIV OP_APLUS OP_AMINUS OP_AMULT OP_ADIV OP_LS OP_RS OP_BOR OP_BAND OP_XOR OP_ALS OP_ARL OP_ABOR OP_ABAND OP_AXOR OP_OR OP_AND OP_NOT OP_INVERT
+%type <str> OP_EQUAL OP_ASSIGN OP_PLUS OP_MINUS OP_MULT OP_DIV OP_MOD OP_APLUS OP_AMINUS OP_AMULT OP_ADIV OP_LS OP_RS OP_BOR OP_BAND OP_XOR OP_ALS OP_ARS OP_ABOR OP_ABAND OP_AXOR OP_OR OP_AND OP_NOT OP_INVERT
+%type <str> OP_GREATER OP_LESS OP_GE OP_LE OP_NEQUAL
 
-%type <executable> program statement statements_list var_decl var_assign
+%type <str> type_specifier
+%type <evaluable> constant_value expr expr_value expr_term expr_casted_term
+
+%type <executable> program statement statements_list var_decl_stmt var_assign_stmt
+
+%type <executable> func_def return_stmt scope_stmt
+%type <node>       func_arg_list func_arg 
+%type <tlist>      types_list
+
+%type <evaluable>  func_param func_call 
+%type <node>       func_param_list
+
+%type <executable> if_stmt
 
 %left OP_PLUS OP_MINUS
 %left OP_MULT OP_DIV
 %precedence OP_UNARY_MINUS
 
+%nonassoc CONTROL_IF
+%nonassoc LOWER_THAN_ELSE
+%nonassoc CONTROL_ELSE
+
 %start program
 
 %%
 
-//               ============== Program ==============
 
-program:
-      /* expr {
+ /* expr {
         try {
           auto result = $1->eval();
           auto asStr = Cmm::ValuesHelper::castTo(result, Cmm::V_String);
@@ -81,7 +101,10 @@ program:
         YYACCEPT;
       } */
 
-      statements_list {
+//               ============== Program ==============
+
+program:
+      statements_list END {
         $$ = new Cmm::Program::ProgramNode($1);
         root = dynamic_cast<Cmm::Program::ProgramNode*>($$);
         YYACCEPT;
@@ -95,61 +118,85 @@ statements_list:
   ;
 
 statement:
-    expr D_SEMICOLON            { $$ = new Cmm::Program::ExpressionStatementNode($1);}
-//| func_call D_SEMICOLON  // expr can be a function call
-//  | func_def
-  | var_decl D_SEMICOLON        { $$ = $1; }
-  | var_assign D_SEMICOLON      { $$ = $1; }
+    expr D_SEMICOLON                 { $$ = new Cmm::Program::ExpressionStatementNode($1);}
+  | var_decl_stmt D_SEMICOLON        { $$ = $1; }
+  | var_assign_stmt D_SEMICOLON      { $$ = $1; }
+  | return_stmt D_SEMICOLON          { $$ = $1; }
+  | func_def                         { $$ = $1; }
+  | scope_stmt                       { $$ = $1; }
+  | if_stmt                          { $$ = $1; }
   ;
 
-/* //               ============== DEBUGGING  ==============
-output_call:
-  'print' D_LPAREN func_arg D_RPAREN           { std::cout << "DEBUG:" << std::endl; } */
+//               ==============  CONTROL   ==============
+if_stmt:
+    CONTROL_IF D_RPAREN expr D_RPAREN statement %prec LOWER_THAN_ELSE CONTROL_ELSE statement    { 
+    $$ = new Cmm::Control::IFNode($3, $5, $7);
+  }
+  | CONTROL_IF D_LPAREN expr D_RPAREN statement                           { $$ = new Cmm::Control::IFNode($3, $5, nullptr); }
+  ;
+
+return_stmt:
+    CONTROL_RETURN expr                                   { $$ = new Cmm::Program::ReturnStatementNode($2); } 
+  ;
 
 //               ============== VARIABLES  ==============
-var_decl:
+var_decl_stmt:
     MISC_VAR   ID D_COLON type_specifier OP_ASSIGN expr { $$ = new Cmm::Program::VariableDeclarationNode(false, *$2, *$4, $6); }
   | MISC_CONST ID D_COLON type_specifier OP_ASSIGN expr { $$ = new Cmm::Program::VariableDeclarationNode(true , *$2, *$4, $6); }
   ;
 
-var_assign:
+var_assign_stmt:
     ID OP_ASSIGN expr                                   { $$ = new Cmm::Program::VariableAssignmentNode(*$1, $3); }
+  ;
 
 //               ============== FUNCSTIONS ==============
-/* func_def:
+scope_stmt:
+    D_LBRACE statements_list D_RBRACE {
+      $$ = new Cmm::Program::ScopeNode($2);
+    }
+  ;
+func_def:
     // func input(type: str = "str") -> str | int | real | complex | bool { .. }
-    MISC_FUNC ID D_LPAREN func_arg_list D_RPAREN D_ARROW type_list D_LBRACE statements_list D_RBRACE
+    MISC_FUNC ID D_LPAREN func_arg_list D_RPAREN D_ARROW types_list D_LBRACE statements_list D_RBRACE { 
+      $$ = new Cmm::Program::FunctionDeclarationNode(new Cmm::Program::FunctionNode(
+        dynamic_cast<Cmm::Program::FunctionArgumentListNode*>($4),
+        dynamic_cast<Cmm::Program::StatementListNode*>($9),
+        *$2,
+        $7
+      ));
+  }
     // func input(type: str = "str") -> str | int | real | complex | bool = native
-  | MISC_FUNC ID D_LPAREN func_arg_list D_RPAREN D_ARROW type_list OP_ASSIGN MISC_NATIVE D_SEMICOLON
+  | MISC_FUNC ID D_LPAREN func_arg_list D_RPAREN D_ARROW types_list OP_ASSIGN MISC_NATIVE D_SEMICOLON { $$ = nullptr; } // later
     // export func input(type: str = "str") -> str | int | real | complex | bool { .. } 
-  | MISC_EXPORT MISC_FUNC ID D_LPAREN func_arg_list D_RPAREN D_ARROW type_list D_LBRACE statements_list D_RBRACE
+  | MISC_EXPORT MISC_FUNC ID D_LPAREN func_arg_list D_RPAREN D_ARROW types_list D_LBRACE statements_list D_RBRACE { $$ = nullptr; } // will deal with you later ..
     // export func input(type: str = "str") -> str | int | real | complex | bool = native
-  | MISC_EXPORT MISC_FUNC ID D_LPAREN func_arg_list D_RPAREN D_ARROW type_list OP_ASSIGN MISC_NATIVE D_SEMICOLON
+  | MISC_EXPORT MISC_FUNC ID D_LPAREN func_arg_list D_RPAREN D_ARROW types_list OP_ASSIGN MISC_NATIVE D_SEMICOLON { $$ = nullptr; }
   ;
 
 func_arg:
-    ID D_COLON type_specifier
-  | ID D_COLON type_specifier OP_ASSIGN constant_value
+    ID D_COLON type_specifier                            { $$ = new Cmm::Program::FunctionArgumentNode(*$1, *$3); }
+  | ID D_COLON type_specifier OP_ASSIGN constant_value   { $$ = new Cmm::Program::FunctionArgumentNode(*$1, *$3, $5); }
   ;
 
 func_arg_list:
-    func_arg
-  | func_arg_list func_arg
-  ; */
+    func_arg                                   { $$ = new Cmm::Program::FunctionArgumentListNode(nullptr, dynamic_cast<Cmm::Program::FunctionArgumentNode*>($1)); }
+  | func_arg_list D_COMMA func_arg             { $$ = new Cmm::Program::FunctionArgumentListNode(dynamic_cast<Cmm::Program::FunctionArgumentListNode*>($1), dynamic_cast<Cmm::Program::FunctionArgumentNode*>($3)); }
+  |                                            { $$ = new Cmm::Program::FunctionArgumentListNode(nullptr, nullptr); }
+  ;
 
 
 func_call:
-    ID D_LPAREN func_param_list D_RPAREN       { std::cout << "func: " << (*$1) << ", will be implemented soon." << std::endl; }
-  | ID D_LPAREN D_RPAREN                       { std::cout << "func: " << (*$1) << ", will be implemented soon." << std::endl; }
+    ID D_LPAREN func_param_list D_RPAREN       { $$ = new Cmm::Program::FunctionCallNode(*$1, dynamic_cast<Cmm::Program::FunctionParamListNode*>($3)); }
+  | ID D_LPAREN D_RPAREN                       { $$ = new Cmm::Program::FunctionCallNode(*$1, nullptr); }
   ;
 
 func_param_list:
-    func_param
-  | func_param_list D_COMMA func_param
+    func_param                                 { $$ = new Cmm::Program::FunctionParamListNode(nullptr, $1); }
+  | func_param_list D_COMMA func_param         { $$ = new Cmm::Program::FunctionParamListNode(dynamic_cast<Cmm::Program::FunctionParamListNode*>($1), $3); }
   ;
 
 func_param:
-    expr
+    expr                                       { $$ = $1; }
   ;
 
 
@@ -170,15 +217,30 @@ expr_term:
     expr_value                                  { $$ = $1; }
   | expr_term OP_MULT expr_value                { $$ = new Cmm::Expressions::TermNode($1, $3, *$2); }
   | expr_term OP_DIV  expr_value                { $$ = new Cmm::Expressions::TermNode($1, $3, *$2); }
+  | expr_term OP_LS expr_value                  { $$ = new Cmm::Expressions::TermNode($1, $3, *$2); }
+  | expr_term OP_RS expr_value                  { $$ = new Cmm::Expressions::TermNode($1, $3, *$2); }
+  | expr_term OP_BOR expr_value                 { $$ = new Cmm::Expressions::TermNode($1, $3, *$2); }
+  | expr_term OP_BAND expr_value                { $$ = new Cmm::Expressions::TermNode($1, $3, *$2); }
+  | expr_term OP_XOR expr_value                 { $$ = new Cmm::Expressions::TermNode($1, $3, *$2); }
+  | expr_term OP_OR expr_value                  { $$ = new Cmm::Expressions::TermNode($1, $3, *$2); }
+  | expr_term OP_AND expr_value                 { $$ = new Cmm::Expressions::TermNode($1, $3, *$2); }
+  | expr_term OP_EQUAL expr_value               { $$ = new Cmm::Expressions::TermNode($1, $3, *$2); }
+  | expr_term OP_GREATER expr_value             { $$ = new Cmm::Expressions::TermNode($1, $3, *$2); }
+  | expr_term OP_LESS expr_value                { $$ = new Cmm::Expressions::TermNode($1, $3, *$2); }
+  | expr_term OP_LE expr_value                  { $$ = new Cmm::Expressions::TermNode($1, $3, *$2); }
+  | expr_term OP_GE expr_value                  { $$ = new Cmm::Expressions::TermNode($1, $3, *$2); }
+  | expr_term OP_NEQUAL expr_value              { $$ = new Cmm::Expressions::TermNode($1, $3, *$2); }
   ;
 
 expr_value:
     constant_value                           { $$ = $1; }
-  | func_call                                { $$ = new Cmm::Expressions::ConstantValueNode(Cmm::Real("1.0")); /* TODO: implement this */ }
+  | func_call                                { $$ = $1; }
   | ID                                       { $$ = new Cmm::Expressions::VariableNode(*$1); }
   | D_LPAREN expr D_RPAREN                   { $$ = $2; }
-  | OP_MINUS expr_value %prec OP_UNARY_MINUS { $$ = new Cmm::Expressions::NegatedNode($2); }
-  | OP_PLUS  expr_value %prec OP_UNARY_MINUS { $$ = $2; }
+  | OP_MINUS  expr_value %prec OP_UNARY_MINUS  { $$ = new Cmm::Expressions::NegatedNode($2); }
+  | OP_PLUS   expr_value %prec OP_UNARY_MINUS  { $$ = $2; }
+  | OP_NOT    expr_value %prec OP_UNARY_MINUS  { $$ = new Cmm::Expressions::NotNode($2); }
+  | OP_INVERT expr_value %prec OP_UNARY_MINUS  { $$ = new Cmm::Expressions::InvertNode($2); }
   ;
 
 constant_value:
@@ -192,13 +254,11 @@ constant_value:
   }
   ;
 
-
-
 //               ============== Typing ==============
 
-type_list:
-    type_specifier                     {  }
-  | type_list OP_BOR type_specifier    {  }
+types_list:
+    type_specifier                      { $$ = new Cmm::Typing::TypeListNode(nullptr, *$1); }
+  | types_list OP_BOR type_specifier    { $$ = new Cmm::Typing::TypeListNode($1, *$3); }
   ;
 
 type_specifier:

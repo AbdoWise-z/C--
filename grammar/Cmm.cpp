@@ -19,6 +19,8 @@ extern void yylex_destroy();
 
 Cmm::Program::ProgramNode* root;
 
+//fixme: Error with input "1; else 2;"
+
 int main() {
     std::string input;
     std::cout << "Copyright © 2025 xAbdoMo. All rights reserved." << std::endl;
@@ -28,6 +30,7 @@ int main() {
     while (true) {
 
         std::cout << ">>> ";
+
         std::getline(std::cin, input);
         
         if (input == "quit") break;

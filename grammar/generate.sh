@@ -22,7 +22,7 @@ fi
 
 # Generate Bison files
 echo "Generating Bison files..."
-bison -d "$BISON_FILE" --output="parser.tab.cpp" --header="parser.tab.hpp" -Wcounterexamples
+bison -t -d "$BISON_FILE" --output="parser.tab.cpp" --header="parser.tab.hpp"
 if [ $? -ne 0 ]; then
     echo "Error: Failed to generate Bison files."
     exit 1

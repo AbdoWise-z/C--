@@ -40,9 +40,10 @@ Cmm::ValueObject Cmm::Expressions::TermNode::eval() {
     auto right = this->right->eval();
     ValueObject result{};
 
-    if (op == "+") {
+    if      (op == "+") {
         result = MathHelper::add(left, right);
-    } else if (op == "-") {
+    }
+    else if (op == "-") {
         result = MathHelper::sub(left, right);
     }
     else if (op == "*") {
@@ -51,6 +52,46 @@ Cmm::ValueObject Cmm::Expressions::TermNode::eval() {
     else if (op == "/") {
         result = MathHelper::div(left, right);
     }
+    else if (op == ">>") {
+        result = MathHelper::rshift(left, right);
+    }
+    else if (op == "<<") {
+        result = MathHelper::lshift(left, right);
+    }
+    else if (op == "|") {
+        result = MathHelper::bitwise_or(left, right);
+    }
+    else if (op == "&") {
+        result = MathHelper::bitwise_and(left, right);
+    }
+    else if (op == "^") {
+        result = MathHelper::bitwise_xor(left, right);
+    }
+    else if (op == "||") {
+        result = MathHelper::logical_or(left, right);
+    }
+    else if (op == "&&") {
+        result = MathHelper::logical_and(left, right);
+    }
+    else if (op == "==") {
+        result = MathHelper::equal(left, right);
+    }
+    else if (op == ">=") {
+        result = MathHelper::greater_equal(left, right);
+    }
+    else if (op == "<=") {
+        result = MathHelper::less_equal(left, right);
+    }
+    else if (op == ">") {
+        result = MathHelper::greater(left, right);
+    }
+    else if (op == "<") {
+        result = MathHelper::less(left, right);
+    }
+    else if (op == "!=") {
+        result = MathHelper::not_equal(left, right);
+    }
+
     else {
         throw std::invalid_argument("Invalid operation");
     }
@@ -97,6 +138,36 @@ Cmm::ValueObject Cmm::Expressions::NegatedNode::eval() {
 }
 
 Cmm::Expressions::NegatedNode::~NegatedNode() {
+    delete child;
+}
+
+Cmm::Expressions::NotNode::NotNode(EvaluableNode *child) {
+    this->child = child;
+}
+
+Cmm::ValueObject Cmm::Expressions::NotNode::eval() {
+    auto val = child->eval();
+    auto result = MathHelper::logical_not(val);
+    ValuesHelper::Delete(val);
+    return result;
+}
+
+Cmm::Expressions::NotNode::~NotNode() {
+    delete child;
+}
+
+Cmm::Expressions::InvertNode::InvertNode(EvaluableNode *child) {
+    this->child = child;
+}
+
+Cmm::ValueObject Cmm::Expressions::InvertNode::eval() {
+    auto val = child->eval();
+    auto result = MathHelper::bitwise_not(val);
+    ValuesHelper::Delete(val);
+    return result;
+}
+
+Cmm::Expressions::InvertNode::~InvertNode() {
     delete child;
 }
 

@@ -22,6 +22,7 @@ Cmm::Program::ProgramNode* root;
 //fixme: Error with input "1; else 2;"
 
 int main() {
+    yydebug = 0;
     std::string input;
     std::cout << "Copyright © 2025 xAbdoMo. All rights reserved." << std::endl;
     std::cout << "Unauthorized copying, reproduction, or distribution of this software is strictly prohibited." << std::endl;

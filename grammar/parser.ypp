@@ -129,7 +129,7 @@ statement:
 
 //               ==============  CONTROL   ==============
 if_stmt:
-    CONTROL_IF D_RPAREN expr D_RPAREN statement %prec LOWER_THAN_ELSE CONTROL_ELSE statement    { 
+    CONTROL_IF D_LPAREN expr D_RPAREN statement %prec LOWER_THAN_ELSE CONTROL_ELSE statement    { 
     $$ = new Cmm::Control::IFNode($3, $5, $7);
   }
   | CONTROL_IF D_LPAREN expr D_RPAREN statement                           { $$ = new Cmm::Control::IFNode($3, $5, nullptr); }

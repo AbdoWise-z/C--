@@ -12,6 +12,8 @@
 #include "../Program.h"
 #include "../Typing.h"
 #include "../Control.h"
+#include "../Variables.h"
+#include "../Functional.h"
 
 #include "parser.tab.hpp"
 

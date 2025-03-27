@@ -13,12 +13,13 @@
 
 #include "Control.h"
 #include "Expressions.h"
+#include "Functional.h"
 
 namespace Namespace::Program {
     static std::map<std::thread::id, ProgramBlock> _programs;
     static std::shared_mutex _programs_mutex;
 
-    static std::vector<ValueType> conversionPriority = {
+    std::vector<ValueType> conversionPriority = {
         V_String,
         V_Complex,
         V_Real,
@@ -167,7 +168,7 @@ namespace Namespace::Program {
         throw VariableNotFoundError(name);
     }
 
-    void createFunction(const function_sig &signature, FunctionNode* node) {
+    void createFunction(const function_sig &signature, Functional::FunctionNode* node) {
         ProgramBlock& block = getCurrentProgram();
         if (block.stack.empty()) {
             throw NoStackError();
@@ -190,7 +191,7 @@ namespace Namespace::Program {
         while (scope >= 0) {
             auto it = block.stack[scope].functions.find(signature);
             if (it != block.stack[scope].functions.end()) {
-                FunctionNode* obj = it->second;
+                Functional::FunctionNode* obj = it->second;
                 // do the actual calling
                 ValueObject result = obj->exec(params);
                 return result;
@@ -249,31 +250,7 @@ namespace Namespace::Program {
         endScope();
     }
 
-    VariableDeclarationNode::VariableDeclarationNode(bool isConst, std::string name, std::string type,
-                                                     EvaluableNode *value) {
-        this->isConst = isConst;
-        this->name = std::move(name);
-        this->type = std::move(type);
-        this->value = value;
-    }
 
-    void VariableDeclarationNode::exec() {
-        auto mType = ValuesHelper::StringToValueType(this->type);
-        auto mValue = this->value->eval();
-        if (mValue.type != mType) {
-            // cast it
-            auto temp = ValuesHelper::castTo(mValue, mType);
-            ValuesHelper::Delete(mValue);
-            mValue = temp;
-        }
-
-        // now that we have the name and value
-        // we try to push it to the scope
-        createVariable(name, mValue);
-        // fixme: constants are treated as normal values .. which is well .. wrong ..
-
-        std::cout << "[+]> " << name << "=" << ValuesHelper::toString(mValue) << std::endl;
-    }
 
     ExpressionStatementNode::ExpressionStatementNode(EvaluableNode *value) {
         expr = value;
@@ -282,25 +259,6 @@ namespace Namespace::Program {
     void ExpressionStatementNode::exec() {
         auto mValue = this->expr->eval();
         std::cout << "[e]> expr[" << ValuesHelper::ValueTypeAsString(mValue.type) << "]" << "=" << ValuesHelper::toString(mValue) << std::endl;
-    }
-
-    VariableAssignmentNode::VariableAssignmentNode(std::string name, EvaluableNode *value) {
-        this->name = name;
-        this->expr = value;
-    }
-
-    void VariableAssignmentNode::exec() {
-        ValueObject& original = getVariable(name);
-        auto mValue = this->expr->eval();
-        if (mValue.type != original.type) {
-            auto temp = ValuesHelper::castTo(mValue, original.type);
-            ValuesHelper::Delete(original);
-            mValue = temp;
-        }
-
-        ValuesHelper::Delete(original);
-        original = mValue;
-        std::cout << "[u]> " << name << "=" << ValuesHelper::toString(mValue) << std::endl;
     }
 
     StatementListNode::StatementListNode(StatementListNode *other, ExecutableNode *next) {
@@ -332,171 +290,6 @@ namespace Namespace::Program {
             if (cnt && cnt->_shouldContinue) break;
             item->exec();
         }
-    }
-
-    FunctionDeclarationNode::FunctionDeclarationNode(FunctionNode *node) : node(node) {}
-
-    void FunctionDeclarationNode::exec() {
-        node->decl();
-    }
-
-    FunctionDeclarationNode::~FunctionDeclarationNode() {
-        delete node;
-    }
-
-    FunctionArgumentNode::FunctionArgumentNode(std::string id, std::string type) : id(std::move(id)), type(type) {
-        defaultValue = nullptr;
-    }
-
-    FunctionArgumentNode::FunctionArgumentNode
-        (
-            std::string id,
-            std::string type,
-            EvaluableNode* defaultValue
-            ): id(std::move(id)), type(std::move(type)), defaultValue(defaultValue) {}
-
-    ValueObject FunctionArgumentNode::getDefaultValue() const {
-        return defaultValue->eval();
-    }
-
-    bool FunctionArgumentNode::hasDefaultValue() const {
-        return defaultValue != nullptr;
-    }
-
-    FunctionArgumentNode::~FunctionArgumentNode() {
-        delete defaultValue;
-    }
-
-    FunctionArgumentListNode::FunctionArgumentListNode(FunctionArgumentListNode *other, FunctionArgumentNode *next) {
-        arguments.clear();
-        if (other) {
-            arguments = other->arguments;
-            other->arguments.clear();
-            delete other;
-        }
-
-        if (next)
-            arguments.push_back(next);
-    }
-
-    FunctionArgumentListNode::~FunctionArgumentListNode() {
-        for (auto item: this->arguments) {
-            delete item;
-        }
-    }
-
-    FunctionParamListNode::FunctionParamListNode(FunctionParamListNode *other, EvaluableNode *next) {
-        params.clear();
-        if (other) {
-            params = other->params;
-            other->params.clear();
-            delete other;
-        }
-
-        if (next)
-            params.push_back(next);
-    }
-
-    std::vector<ValueObject> FunctionParamListNode::getParams() const {
-        std::vector<ValueObject> result;
-        for (auto item: params) {
-            result.push_back(item->eval());
-        }
-        return result;
-    }
-
-    FunctionParamListNode::~FunctionParamListNode() {
-        for (auto item: this->params) {
-            delete item;
-        }
-    }
-
-    FunctionCallNode::FunctionCallNode(std::string id, FunctionParamListNode *funcParam) {
-        this->id = std::move(id);
-        this->funcParam = funcParam;
-        if (!this->funcParam) {
-            this->funcParam = new FunctionParamListNode(nullptr, nullptr);
-        }
-    }
-
-    FunctionCallNode::~FunctionCallNode() {
-        delete funcParam;
-    }
-
-    ValueObject FunctionCallNode::eval() {
-        auto params = funcParam->getParams();
-        std::vector<ValueType> types;
-        for (auto item: params) {
-            types.push_back(item.type);
-        }
-
-        std::pair sig = {id, types};
-        return callFunction(sig, params);
-    }
-
-
-    FunctionNode::FunctionNode(FunctionArgumentListNode *arguments, StatementListNode *function, std::string id, Typing::TypeListNode *returnType) {
-        this->arguments = arguments;
-        this->function = function;
-        this->id = std::move(id);
-        this->returnType = returnType;
-
-        this->_returnValue = {};
-        this->_shouldReturn = false;
-    }
-
-    void FunctionNode::decl() {
-        // declare this function to the scope
-        std::vector<ValueType> args;
-        for (auto item: arguments->arguments) {
-            args.push_back(ValuesHelper::StringToValueType(item->type));
-        }
-
-        std::pair sig = { id, args};
-        createFunction(sig, this);
-    }
-
-    ValueObject FunctionNode::exec(const std::vector<ValueObject>& params) {
-        _shouldReturn = false;
-        _returnValue = {
-            V_Void,
-            nullptr
-        };
-
-        beginScope(this);
-
-        // push in params into the stack;
-        for (int i = 0;i < arguments->arguments.size();i++) {
-            createVariable(arguments->arguments[i]->id, params[i]);
-        }
-
-        this->function->exec();
-
-        endScope();
-
-        // now check the return value
-        if (returnType->types.contains(_returnValue.type)) {
-            // successful execution
-            return _returnValue;
-        } else {
-            for (auto type : conversionPriority) {
-                if (returnType->types.contains(type)) {
-                    // convert to this type and move on :)
-                    ValueObject temp = ValuesHelper::castTo(_returnValue, type);
-                    ValuesHelper::Delete(_returnValue);
-                    _returnValue = temp;
-                    return _returnValue;
-                }
-            }
-        }
-
-        throw ControlError("Function cannot return due to type missmatch");
-    }
-
-    FunctionNode::~FunctionNode() {
-        delete this->function;
-        delete this->returnType;
-        delete this->returnType;
     }
 
     ScopeNode::ScopeNode(ExecutableNode *node) {

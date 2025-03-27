@@ -48,6 +48,12 @@ add_executable(
         Control.cpp
         Control.h
 
+        Variables.cpp
+        Variables.h
+
+        Functional.cpp
+        Functional.h
+
         editor/NanoEditor.cpp
         editor/NanoEditor.h
 
@@ -98,6 +104,10 @@ add_executable(Sandbox
 
         editor/NanoEditor.cpp
         editor/NanoEditor.h
+        Variables.cpp
+        Variables.h
+        Functional.cpp
+        Functional.h
 )
 
 target_link_libraries(

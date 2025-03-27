@@ -12,6 +12,9 @@
 #include "../Program.h"
 #include "../Typing.h"
 #include "../Control.h"
+#include "../Variables.h"
+#include "../Functional.h"
+
 #include "parser.tab.hpp"
 
 // Declare yylex for Bison
@@ -168,12 +171,12 @@ return_stmt:
 
 //               ============== VARIABLES  ==============
 var_decl_stmt:
-    MISC_VAR   ID D_COLON type_specifier OP_ASSIGN expr { $$ = new Cmm::Program::VariableDeclarationNode(false, *$2, *$4, $6); }
-  | MISC_CONST ID D_COLON type_specifier OP_ASSIGN expr { $$ = new Cmm::Program::VariableDeclarationNode(true , *$2, *$4, $6); }
+    MISC_VAR   ID D_COLON type_specifier OP_ASSIGN expr { $$ = new Cmm::Variables::VariableDeclarationNode(false, *$2, *$4, $6); }
+  | MISC_CONST ID D_COLON type_specifier OP_ASSIGN expr { $$ = new Cmm::Variables::VariableDeclarationNode(true , *$2, *$4, $6); }
   ;
 
 var_assign_stmt:
-    ID OP_ASSIGN expr                                   { $$ = new Cmm::Program::VariableAssignmentNode(*$1, $3); }
+    ID OP_ASSIGN expr                                   { $$ = new Cmm::Variables::VariableAssignmentNode(*$1, $3); }
   ;
 
 //               ============== FUNCSTIONS ==============
@@ -188,8 +191,8 @@ scope_stmt:
 func_def:
     // func input(type: str = "str") -> str | int | real | complex | bool { .. }
     MISC_FUNC ID D_LPAREN func_arg_list D_RPAREN D_ARROW types_list D_LBRACE statements_list D_RBRACE { 
-      $$ = new Cmm::Program::FunctionDeclarationNode(new Cmm::Program::FunctionNode(
-        dynamic_cast<Cmm::Program::FunctionArgumentListNode*>($4),
+      $$ = new Cmm::Functional::FunctionDeclarationNode(new Cmm::Functional::FunctionNode(
+        dynamic_cast<Cmm::Functional::FunctionArgumentListNode*>($4),
         dynamic_cast<Cmm::Program::StatementListNode*>($9),
         *$2,
         $7
@@ -204,25 +207,25 @@ func_def:
   ;
 
 func_arg:
-    ID D_COLON type_specifier                            { $$ = new Cmm::Program::FunctionArgumentNode(*$1, *$3); }
-  | ID D_COLON type_specifier OP_ASSIGN constant_value   { $$ = new Cmm::Program::FunctionArgumentNode(*$1, *$3, $5); }
+    ID D_COLON type_specifier                            { $$ = new Cmm::Functional::FunctionArgumentNode(*$1, *$3); }
+  | ID D_COLON type_specifier OP_ASSIGN constant_value   { $$ = new Cmm::Functional::FunctionArgumentNode(*$1, *$3, $5); }
   ;
 
 func_arg_list:
-    func_arg                                   { $$ = new Cmm::Program::FunctionArgumentListNode(nullptr, dynamic_cast<Cmm::Program::FunctionArgumentNode*>($1)); }
-  | func_arg_list D_COMMA func_arg             { $$ = new Cmm::Program::FunctionArgumentListNode(dynamic_cast<Cmm::Program::FunctionArgumentListNode*>($1), dynamic_cast<Cmm::Program::FunctionArgumentNode*>($3)); }
-  |                                            { $$ = new Cmm::Program::FunctionArgumentListNode(nullptr, nullptr); }
+    func_arg                                   { $$ = new Cmm::Functional::FunctionArgumentListNode(nullptr, dynamic_cast<Cmm::Functional::FunctionArgumentNode*>($1)); }
+  | func_arg_list D_COMMA func_arg             { $$ = new Cmm::Functional::FunctionArgumentListNode(dynamic_cast<Cmm::Functional::FunctionArgumentListNode*>($1), dynamic_cast<Cmm::Functional::FunctionArgumentNode*>($3)); }
+  |                                            { $$ = new Cmm::Functional::FunctionArgumentListNode(nullptr, nullptr); }
   ;
 
 
 func_call:
-    ID D_LPAREN func_param_list D_RPAREN       { $$ = new Cmm::Program::FunctionCallNode(*$1, dynamic_cast<Cmm::Program::FunctionParamListNode*>($3)); }
-  | ID D_LPAREN D_RPAREN                       { $$ = new Cmm::Program::FunctionCallNode(*$1, nullptr); }
+    ID D_LPAREN func_param_list D_RPAREN       { $$ = new Cmm::Functional::FunctionCallNode(*$1, dynamic_cast<Cmm::Functional::FunctionParamListNode*>($3)); }
+  | ID D_LPAREN D_RPAREN                       { $$ = new Cmm::Functional::FunctionCallNode(*$1, nullptr); }
   ;
 
 func_param_list:
-    func_param                                 { $$ = new Cmm::Program::FunctionParamListNode(nullptr, $1); }
-  | func_param_list D_COMMA func_param         { $$ = new Cmm::Program::FunctionParamListNode(dynamic_cast<Cmm::Program::FunctionParamListNode*>($1), $3); }
+    func_param                                 { $$ = new Cmm::Functional::FunctionParamListNode(nullptr, $1); }
+  | func_param_list D_COMMA func_param         { $$ = new Cmm::Functional::FunctionParamListNode(dynamic_cast<Cmm::Functional::FunctionParamListNode*>($1), $3); }
   ;
 
 func_param:

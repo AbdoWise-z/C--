@@ -14,25 +14,23 @@
 #include "Control.h"
 #include "Typing.h"
 
+// forward declare function node since it's used in the scope type
+namespace Namespace::Functional {
+    class FunctionNode;
+}
 
 namespace Namespace::Program {
 
-    class FunctionNode;
-    class FunctionArgumentListNode;
-    class FunctionArgumentNode;
-    class FunctionDeclarationNode;
     class StatementListNode;
-    class VariableAssignmentNode;
     class ExpressionStatementNode;
-    class VariableDeclarationNode;
-    class FunctionCallNode;
     class ScopeNode;
 
+    extern std::vector<ValueType> conversionPriority;
     typedef std::pair<std::string, std::vector<ValueType>> function_sig;
 
     struct Scope {
         std::map<std::string, Cmm::ValueObject> variables;
-        std::map<function_sig, FunctionNode*> functions;
+        std::map<function_sig, Functional::FunctionNode*> functions;
         ASTNode* owner;
     };
 
@@ -61,7 +59,7 @@ namespace Namespace::Program {
     void createVariable(const std::string& name, Cmm::ValueObject);
     ValueObject& getVariable(const std::string& name);
 
-    void createFunction(const function_sig &signature, FunctionNode*);
+    void createFunction(const function_sig &signature, Functional::FunctionNode*);
     ValueObject callFunction(const function_sig& signature, const std::vector<ValueObject>&);
 
     // ========================= ERRORS =========================
@@ -110,28 +108,10 @@ namespace Namespace::Program {
         void exec() override;
     };
 
-    class VariableDeclarationNode: public ExecutableNode {
-    public:
-        bool isConst;
-        std::string name;
-        std::string type;
-        EvaluableNode* value;
-        VariableDeclarationNode(bool isConst, std::string name, std::string type, EvaluableNode* value);
-        void exec() override;
-    };
-
     class ExpressionStatementNode: public ExecutableNode {
     public:
         EvaluableNode* expr;
         explicit ExpressionStatementNode(EvaluableNode* value);
-        void exec() override;
-    };
-
-    class VariableAssignmentNode: public ExecutableNode {
-    public:
-        std::string name;
-        EvaluableNode* expr;
-        VariableAssignmentNode(std::string name, EvaluableNode* value);
         void exec() override;
     };
 
@@ -141,64 +121,6 @@ namespace Namespace::Program {
         StatementListNode(StatementListNode* node, ExecutableNode* next);
         ~StatementListNode() override;
         void exec() override;
-    };
-
-    class FunctionDeclarationNode: public ExecutableNode {
-    public:
-        FunctionNode* node;
-        explicit FunctionDeclarationNode(FunctionNode* node);
-        void exec() override;
-        ~FunctionDeclarationNode() override;
-    };
-
-    class FunctionArgumentNode: public ASTNode {
-    public:
-        std::string id;
-        std::string type;
-        EvaluableNode* defaultValue;
-        FunctionArgumentNode(std::string id, std::string type);
-        FunctionArgumentNode(std::string id, std::string type, EvaluableNode* defaultValue);
-        [[nodiscard]] ValueObject getDefaultValue() const;
-        [[nodiscard]] bool hasDefaultValue() const;
-        ~FunctionArgumentNode() override;
-    };
-
-    class FunctionArgumentListNode: public ASTNode {
-    public:
-        std::vector<FunctionArgumentNode*> arguments;
-        FunctionArgumentListNode(FunctionArgumentListNode* other, FunctionArgumentNode* next);
-        ~FunctionArgumentListNode() override;
-    };
-
-    class FunctionParamListNode: public ASTNode {
-    public:
-        std::vector<EvaluableNode*> params;
-        FunctionParamListNode(FunctionParamListNode* other, EvaluableNode* next);
-        [[nodiscard]] std::vector<ValueObject> getParams() const;
-        ~FunctionParamListNode() override;
-    };
-
-    class FunctionCallNode: public EvaluableNode {
-    public:
-        std::string id;
-        FunctionParamListNode* funcParam;
-        explicit FunctionCallNode(std::string id, FunctionParamListNode* funcParam);
-        ~FunctionCallNode() override;
-        ValueObject eval() override;
-    };
-
-    class FunctionNode: public Control::ReturnPointNode {
-    public:
-        FunctionArgumentListNode* arguments;
-        StatementListNode* function;
-        std::string id;
-        Typing::TypeListNode* returnType;
-
-        FunctionNode(FunctionArgumentListNode* arguments, StatementListNode* function, std::string id, Typing::TypeListNode* returnType);
-
-        virtual void decl();
-        virtual ValueObject exec(const std::vector<ValueObject>&);
-        ~FunctionNode() override;
     };
 
     class ScopeNode: public ExecutableNode {

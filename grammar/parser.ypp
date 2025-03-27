@@ -278,7 +278,7 @@ expr_casted_term:
 expr_term:
     expr_value                                  { $$ = $1; }
   | expr_term OP_MULT expr_value                { $$ = new Cmm::Expressions::TermNode($1, $3, *$2); }
-  | expr_term OP_DIV  expr_value                { $$ = new Cmm::Expressions::TermNode($1, $3, *$2); }
+  | expr_term OP_DIV expr_value                 { $$ = new Cmm::Expressions::TermNode($1, $3, *$2); }
   | expr_term OP_LS expr_value                  { $$ = new Cmm::Expressions::TermNode($1, $3, *$2); }
   | expr_term OP_RS expr_value                  { $$ = new Cmm::Expressions::TermNode($1, $3, *$2); }
   | expr_term OP_BOR expr_value                 { $$ = new Cmm::Expressions::TermNode($1, $3, *$2); }

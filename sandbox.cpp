@@ -11,9 +11,9 @@ int main() {
     std::string text = NanoEditor::edit();
     
     if (!text.empty()) {
-        std::cout << "\nSaved Text:\n" << text;
+        std::cout << "Saved Text:\n" << text;
     } else {
-        std::cout << "\nNo text saved.\n";
+        std::cout << "No text saved.\n";
     }
 
     return 0;

@@ -11,13 +11,9 @@
 std::string NanoEditor::edit() {
     std::string tempFileName = "/tmp/nano_temp_" + std::to_string(getpid()) + ".cmm";
 
-    // Construct the nano command
     std::string command = "xterm -fa \"DejaVu Sans Mono\" -fs 16 -e nano -i -Y java -T 4 " + tempFileName;
-
-    // Open nano
     int result = system(command.c_str());
 
-    // Read the contents of the file
     std::ifstream file(tempFileName);
     std::string content;
     std::string line;

@@ -76,6 +76,8 @@ void remove_first_and_last_char(std::string* str_ptr) {
 "bool"    { return TYPE_BOOL; }
 "void"    { return TYPE_VOID; }
 
+"--"      { std::string* val = new std::string(yytext); yylval.str = val; return OP_DEC; }
+"++"      { std::string* val = new std::string(yytext); yylval.str = val; return OP_INC; }
 "+="      { std::string* val = new std::string(yytext); yylval.str = val; return OP_APLUS; }
 "-="      { std::string* val = new std::string(yytext); yylval.str = val; return OP_AMINUS; }
 "*="      { std::string* val = new std::string(yytext); yylval.str = val; return OP_AMULT; }

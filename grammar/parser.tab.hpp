@@ -98,34 +98,36 @@ extern int yydebug;
     OP_ABOR = 299,                 /* OP_ABOR  */
     OP_ABAND = 300,                /* OP_ABAND  */
     OP_AXOR = 301,                 /* OP_AXOR  */
-    D_SEMICOLON = 302,             /* D_SEMICOLON  */
-    D_LPAREN = 303,                /* D_LPAREN  */
-    D_RPAREN = 304,                /* D_RPAREN  */
-    D_LBRACE = 305,                /* D_LBRACE  */
-    D_RBRACE = 306,                /* D_RBRACE  */
-    D_COLON = 307,                 /* D_COLON  */
-    D_COMMA = 308,                 /* D_COMMA  */
-    D_ARROW = 309,                 /* D_ARROW  */
-    CONTROL_IF = 310,              /* CONTROL_IF  */
-    CONTROL_ELSE = 311,            /* CONTROL_ELSE  */
-    CONTROL_WHILE = 312,           /* CONTROL_WHILE  */
-    CONTROL_FOR = 313,             /* CONTROL_FOR  */
-    CONTROL_SWITCH = 314,          /* CONTROL_SWITCH  */
-    CONTROL_CASE = 315,            /* CONTROL_CASE  */
-    CONTROL_DEFAULT = 316,         /* CONTROL_DEFAULT  */
-    CONTROL_DO = 317,              /* CONTROL_DO  */
-    CONTROL_RETURN = 318,          /* CONTROL_RETURN  */
-    CONTROL_BREAK = 319,           /* CONTROL_BREAK  */
-    CONTROL_CONTINUE = 320,        /* CONTROL_CONTINUE  */
-    MISC_FUNC = 321,               /* MISC_FUNC  */
-    MISC_FROM = 322,               /* MISC_FROM  */
-    MISC_VAR = 323,                /* MISC_VAR  */
-    MISC_CONST = 324,              /* MISC_CONST  */
-    MISC_IMPORT = 325,             /* MISC_IMPORT  */
-    MISC_EXPORT = 326,             /* MISC_EXPORT  */
-    MISC_NATIVE = 327,             /* MISC_NATIVE  */
-    OP_UNARY_MINUS = 328,          /* OP_UNARY_MINUS  */
-    LOWER_THAN_ELSE = 329          /* LOWER_THAN_ELSE  */
+    OP_INC = 302,                  /* OP_INC  */
+    OP_DEC = 303,                  /* OP_DEC  */
+    D_SEMICOLON = 304,             /* D_SEMICOLON  */
+    D_LPAREN = 305,                /* D_LPAREN  */
+    D_RPAREN = 306,                /* D_RPAREN  */
+    D_LBRACE = 307,                /* D_LBRACE  */
+    D_RBRACE = 308,                /* D_RBRACE  */
+    D_COLON = 309,                 /* D_COLON  */
+    D_COMMA = 310,                 /* D_COMMA  */
+    D_ARROW = 311,                 /* D_ARROW  */
+    CONTROL_IF = 312,              /* CONTROL_IF  */
+    CONTROL_ELSE = 313,            /* CONTROL_ELSE  */
+    CONTROL_WHILE = 314,           /* CONTROL_WHILE  */
+    CONTROL_FOR = 315,             /* CONTROL_FOR  */
+    CONTROL_SWITCH = 316,          /* CONTROL_SWITCH  */
+    CONTROL_CASE = 317,            /* CONTROL_CASE  */
+    CONTROL_DEFAULT = 318,         /* CONTROL_DEFAULT  */
+    CONTROL_DO = 319,              /* CONTROL_DO  */
+    CONTROL_RETURN = 320,          /* CONTROL_RETURN  */
+    CONTROL_BREAK = 321,           /* CONTROL_BREAK  */
+    CONTROL_CONTINUE = 322,        /* CONTROL_CONTINUE  */
+    MISC_FUNC = 323,               /* MISC_FUNC  */
+    MISC_FROM = 324,               /* MISC_FROM  */
+    MISC_VAR = 325,                /* MISC_VAR  */
+    MISC_CONST = 326,              /* MISC_CONST  */
+    MISC_IMPORT = 327,             /* MISC_IMPORT  */
+    MISC_EXPORT = 328,             /* MISC_EXPORT  */
+    MISC_NATIVE = 329,             /* MISC_NATIVE  */
+    OP_UNARY_MINUS = 330,          /* OP_UNARY_MINUS  */
+    LOWER_THAN_ELSE = 331          /* LOWER_THAN_ELSE  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -142,7 +144,7 @@ union YYSTYPE
     Cmm::ASTNode* node;
     Cmm::Typing::TypeListNode* tlist;
 
-#line 146 "parser.tab.hpp"
+#line 148 "parser.tab.hpp"
 
 };
 typedef union YYSTYPE YYSTYPE;

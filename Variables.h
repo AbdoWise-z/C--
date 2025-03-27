@@ -47,6 +47,15 @@ namespace Namespace::Variables {
         ~PreIncNode() override;
     };
 
+    class PostIncNode: public EvaluableNode {
+    public:
+        Expressions::TermNode* _internal;
+        std::string name;
+        PostIncNode(const std::string& name, const std::string &op);
+        ValueObject eval() override;
+        ~PostIncNode() override;
+    };
+
 };
 
 

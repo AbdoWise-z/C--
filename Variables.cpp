@@ -78,7 +78,7 @@ namespace Cmm::Variables {
         this->_internal = new Expressions::TermNode(
             new Expressions::VariableNode(name),
             new Expressions::ConstantValueNode(Integer(1)),
-            op);
+            op == "++" ? "+" : "-");
     }
 
     ValueObject PreIncNode::eval() {
@@ -92,8 +92,40 @@ namespace Cmm::Variables {
         }
 
         ValuesHelper::Delete(original);
-        original = result;
+        original = ValuesHelper::clone(result);
         std::cout << "[u]> " << name << "=" << ValuesHelper::toString(result) << std::endl;
         return result;
+    }
+
+    PreIncNode::~PreIncNode() {
+        delete _internal;
+    }
+
+    PostIncNode::PostIncNode(const std::string &name, const std::string &op) {
+        this->name = name;
+        this->_internal = new Expressions::TermNode(
+            new Expressions::VariableNode(name),
+            new Expressions::ConstantValueNode(Integer(1)),
+            op == "++" ? "+" : "-");
+    }
+
+    ValueObject PostIncNode::eval() {
+        auto result = _internal->eval();
+        ValueObject& original = Program::getVariable(name);
+        ValueObject _before = original;
+
+        if (result.type != original.type) {
+            auto temp = ValuesHelper::castTo(result, original.type);
+            ValuesHelper::Delete(result);
+            result = temp;
+        }
+
+        original = result;
+        std::cout << "[u]> " << name << "=" << ValuesHelper::toString(result) << std::endl;
+        return _before;
+    }
+
+    PostIncNode::~PostIncNode() {
+        delete _internal;
     }
 }

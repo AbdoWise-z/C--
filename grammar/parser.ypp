@@ -57,6 +57,8 @@ extern Cmm::Program::ProgramNode* root;
 
 %token OP_APLUS OP_AMINUS OP_AMULT OP_ADIV OP_AMOD
 %token OP_ARS OP_ALS OP_ABOR OP_ABAND OP_AXOR
+
+%token OP_INC OP_DEC
  
 %token D_SEMICOLON D_LPAREN D_RPAREN D_LBRACE D_RBRACE D_COLON D_COMMA D_ARROW
 %token CONTROL_IF CONTROL_ELSE CONTROL_WHILE CONTROL_FOR CONTROL_SWITCH
@@ -67,6 +69,7 @@ extern Cmm::Program::ProgramNode* root;
 %type <str> OP_EQUAL OP_ASSIGN OP_PLUS OP_MINUS OP_MULT OP_DIV OP_MOD OP_LS OP_RS OP_BOR OP_BAND OP_XOR OP_OR OP_AND OP_NOT OP_INVERT
 %type <str> OP_APLUS OP_AMINUS OP_AMULT OP_ADIV OP_AMOD OP_ARS OP_ALS OP_ABOR OP_ABAND OP_AXOR
 %type <str> OP_GREATER OP_LESS OP_GE OP_LE OP_NEQUAL
+%type <str> OP_INC OP_DEC
 
 %type <str> compoundable_operator
 
@@ -82,7 +85,7 @@ extern Cmm::Program::ProgramNode* root;
 %type <evaluable>  func_param func_call 
 %type <node>       func_param_list
 
-%type <executable> if_stmt for_stmt break_stmt continue_stmt while_stmt
+%type <executable> if_stmt for_stmt break_stmt continue_stmt while_stmt unwrapped_stmt
 
 %left OP_PLUS OP_MINUS
 %left OP_MULT OP_DIV
@@ -151,11 +154,15 @@ if_stmt:
     { $$ = new Cmm::Control::IFNode($3, $5, $7); } 
   ;
 
+unwrapped_stmt:
+    var_assign_stmt
+  | expr                             { $$ = new Cmm::Program::ExpressionStatementNode($1);}
+
 for_stmt:
-    CONTROL_FOR D_LPAREN var_decl_stmt D_SEMICOLON expr D_SEMICOLON var_assign_stmt D_RPAREN statement { $$ = new Cmm::Control::ForNode($5, $3, $7, $9); }
+    CONTROL_FOR D_LPAREN var_decl_stmt D_SEMICOLON expr D_SEMICOLON unwrapped_stmt D_RPAREN statement { $$ = new Cmm::Control::ForNode($5, $3, $7, $9); }
   | CONTROL_FOR D_LPAREN D_SEMICOLON expr D_SEMICOLON D_RPAREN statement                               { $$ = new Cmm::Control::ForNode($4, nullptr, nullptr, $7); }
   | CONTROL_FOR D_LPAREN D_SEMICOLON D_SEMICOLON D_RPAREN statement                                    { $$ = new Cmm::Control::ForNode(nullptr, nullptr, nullptr, $6); }
-  | CONTROL_FOR D_LPAREN D_SEMICOLON expr D_SEMICOLON var_assign_stmt D_RPAREN statement               { $$ = new Cmm::Control::ForNode($4, nullptr, $6, $8); }
+  | CONTROL_FOR D_LPAREN D_SEMICOLON expr D_SEMICOLON unwrapped_stmt D_RPAREN statement               { $$ = new Cmm::Control::ForNode($4, nullptr, $6, $8); }
   ; 
 
 while_stmt: 
@@ -297,6 +304,10 @@ expr_value:
   | OP_PLUS   expr_value %prec OP_UNARY_MINUS  { $$ = $2; }
   | OP_NOT    expr_value %prec OP_UNARY_MINUS  { $$ = new Cmm::Expressions::NotNode($2); }
   | OP_INVERT expr_value %prec OP_UNARY_MINUS  { $$ = new Cmm::Expressions::InvertNode($2); }
+  | OP_INC    ID                               { $$ = new Cmm::Variables::PreIncNode(*$2, *$1); }
+  | OP_DEC    ID                               { $$ = new Cmm::Variables::PreIncNode(*$2, *$1); }
+  | ID        OP_INC                           { $$ = new Cmm::Variables::PostIncNode(*$1, *$2); }
+  | ID        OP_DEC                           { $$ = new Cmm::Variables::PostIncNode(*$1, *$2); }
   ;
 
 constant_value:

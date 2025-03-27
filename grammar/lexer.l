@@ -138,6 +138,7 @@ void remove_first_and_last_char(std::string* str_ptr) {
 "native"  { return MISC_NATIVE; }
 
 "//".*        { /* Ignore single-line comments */ }
+"#".*         { /* Ignore single-line comments */ }
 
 [a-zA-Z_][a-zA-Z0-9_]*  { 
     std::string* val = new std::string(yytext);

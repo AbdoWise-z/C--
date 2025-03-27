@@ -350,6 +350,60 @@ Cmm::ValueObject Cmm::MathHelper::div(ValueObject &left, ValueObject &right) {
     return result;
 }
 
+Cmm::ValueObject Cmm::MathHelper::mod(ValueObject &left, ValueObject &right) {
+    auto cIt = _cMap.find({left.type, right.type});
+
+    if (cIt == _cMap.end()) {
+        throw MathHelper::OperationError(left.type, right.type, "\"&\"");
+    }
+
+    auto common = cIt->second;
+    ValueObject* l_ptr;
+    ValueObject* r_ptr;
+
+    if (common == V_String || common == V_Bool || common == Cmm::V_Real || common == Cmm::V_Complex) {
+        throw MathHelper::OperationError(left.type, right.type, "\"&\"");
+    }
+
+    if (left.type != common) {
+        l_ptr = new ValueObject{ ValuesHelper::castTo(left, common) };
+    } else {
+        l_ptr = &left;
+    }
+
+    if (right.type != common) {
+        r_ptr = new ValueObject{ ValuesHelper::castTo(right, common) };
+    } else {
+        r_ptr = &right;
+    }
+
+    ValueObject result {
+        .type = common,
+        .value = nullptr,
+    };
+
+    switch (common) {
+        case Cmm::V_Integer:
+            result.value = new Integer(
+                *static_cast<Integer*>(l_ptr->value) % *static_cast<Integer*>(r_ptr->value)
+                );
+        break;
+        default: result.value = nullptr;
+    }
+
+    if (l_ptr != &left) {
+        ValuesHelper::Delete(*l_ptr);
+        delete l_ptr;
+    }
+
+    if (r_ptr != &right) {
+        ValuesHelper::Delete(*r_ptr);
+        delete r_ptr;
+    }
+
+    return result;
+}
+
 Cmm::ValueObject Cmm::MathHelper::lshift(ValueObject &left, ValueObject &right) {
 
     auto cIt = _cMap.find({left.type, right.type});

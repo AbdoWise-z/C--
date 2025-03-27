@@ -11,6 +11,7 @@
 #include <utility>
 #include <vector>
 
+#include "Control.h"
 #include "Expressions.h"
 
 namespace Namespace::Program {
@@ -96,9 +97,18 @@ namespace Namespace::Program {
         return nullptr;
     }
 
-    FunctionNode* getNearestFunctionScopeOwner() {
-        return getNearstScopeOwnerOfType<FunctionNode>();
+    Control::BreakPointNode * getNearestBreakPointScopeOwner() {
+        return getNearstScopeOwnerOfType<Control::BreakPointNode>();
     }
+
+    Control::ContinuePointNode * getNearestContinuePointScopeOwner() {
+        return getNearstScopeOwnerOfType<Control::ContinuePointNode>();
+    }
+
+    Control::ReturnPointNode * getNearestReturnPointScopeOwner() {
+        return getNearstScopeOwnerOfType<Control::ReturnPointNode>();
+    }
+
 
     void createVariable(const std::string& name, Cmm::ValueObject val) {
         ProgramBlock& block = getCurrentProgram();
@@ -301,7 +311,8 @@ namespace Namespace::Program {
             delete other;
         }
 
-        statements.push_back(next);
+        if (next)
+            statements.push_back(next);
     }
 
     StatementListNode::~StatementListNode() {
@@ -311,11 +322,14 @@ namespace Namespace::Program {
     }
 
     void StatementListNode::exec() {
-        auto func = getNearestFunctionScopeOwner();
+        auto ret = getNearestReturnPointScopeOwner();
+        auto brk = getNearestBreakPointScopeOwner();
+        auto cnt = getNearestContinuePointScopeOwner();
 
         for (auto item: statements) {
-            if (func && func->_shouldReturn) break;
-
+            if (ret && ret->_shouldReturn)   break;
+            if (brk && brk->_shouldBreak)    break;
+            if (cnt && cnt->_shouldContinue) break;
             item->exec();
         }
     }
@@ -329,26 +343,6 @@ namespace Namespace::Program {
     FunctionDeclarationNode::~FunctionDeclarationNode() {
         delete node;
     }
-
-    ReturnStatementNode::ReturnStatementNode(EvaluableNode *expr) {
-        this->expr = expr;
-    }
-
-    void ReturnStatementNode::exec() {
-        auto func = getNearestFunctionScopeOwner();
-        if (func == nullptr) {
-            throw ControlError("Return cannot be used outside a function scope");
-        }
-
-        auto result = expr->eval();
-        func->_returnValue = result;
-        func->_shouldReturn = true;
-    }
-
-    ReturnStatementNode::~ReturnStatementNode() {
-        delete expr;
-    }
-
 
     FunctionArgumentNode::FunctionArgumentNode(std::string id, std::string type) : id(std::move(id)), type(type) {
         defaultValue = nullptr;
@@ -511,7 +505,7 @@ namespace Namespace::Program {
 
     void ScopeNode::exec() {
         beginScope(nullptr);
-        statements->exec();
+        if (statements) statements->exec();
         endScope();
     }
 

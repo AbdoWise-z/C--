@@ -7,8 +7,6 @@
 
 #include "config.h"
 #include "AST.h"
-#include "Program.h"
-
 
 namespace Namespace::Control {
     class IFNode: public ExecutableNode {
@@ -20,6 +18,58 @@ namespace Namespace::Control {
         IFNode(EvaluableNode* condition, ExecutableNode* if_true, ExecutableNode* if_false);
         void exec() override;
         ~IFNode() override;
+    };
+
+    class ReturnPointNode: virtual public ASTNode {
+    public:
+        bool _shouldReturn;
+        ValueObject _returnValue;
+    };
+
+    class BreakPointNode: virtual public ASTNode {
+    public:
+        bool _shouldBreak;
+    };
+
+    class ContinuePointNode: virtual public ASTNode {
+    public:
+        bool _shouldContinue;
+    };
+
+    class ForNode: public ExecutableNode, ContinuePointNode, BreakPointNode {
+    public:
+        ExecutableNode* init;
+        ExecutableNode* inc;
+        EvaluableNode* condition;
+        ExecutableNode* body;
+        bool _executeOnce = false;
+
+        ForNode(EvaluableNode* condition, ExecutableNode* init, ExecutableNode* inc, ExecutableNode* body);
+        ForNode(EvaluableNode* condition, ExecutableNode* init, ExecutableNode* inc, ExecutableNode* body, bool _executeOnce);
+        void exec() override;
+        ~ForNode() override;
+    };
+
+    class ReturnStatementNode: public ExecutableNode {
+    public:
+        EvaluableNode* expr;
+        explicit ReturnStatementNode(EvaluableNode* expr);
+        void exec() override;
+        ~ReturnStatementNode() override;
+    };
+
+    class BreakStatementNode: public ExecutableNode {
+    public:
+        BreakStatementNode();
+        void exec() override;
+        ~BreakStatementNode() override;
+    };
+
+    class ContinueStatementNode: public ExecutableNode {
+    public:
+        ContinueStatementNode();
+        void exec() override;
+        ~ContinueStatementNode() override;
     };
 }
 

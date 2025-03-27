@@ -22,9 +22,9 @@ extern int yylineno;
 extern int yydebug;
 
 void yyerror(const char* s) {
-    std::cerr << "Error at line " << yylineno << ": " << s 
+  std::cout << "\033[31m" << "Error at line " << yylineno << ": " << s 
               << " (unexpected token: '" << yytext << "')" 
-              << std::endl;
+              << "\033[0m" << std::endl;
 }
 
 extern Cmm::Program::ProgramNode* root;
@@ -73,7 +73,7 @@ extern Cmm::Program::ProgramNode* root;
 %type <evaluable>  func_param func_call 
 %type <node>       func_param_list
 
-%type <executable> if_stmt
+%type <executable> if_stmt for_stmt break_stmt continue_stmt while_stmt
 
 %left OP_PLUS OP_MINUS
 %left OP_MULT OP_DIV
@@ -125,18 +125,45 @@ statement:
   | func_def                         { $$ = $1; }
   | scope_stmt                       { $$ = $1; }
   | if_stmt                          { $$ = $1; }
+  | for_stmt                         { $$ = $1; }
+  | while_stmt                       { $$ = $1; }
+  | continue_stmt D_SEMICOLON        { $$ = $1; }
+  | break_stmt D_SEMICOLON           { $$ = $1; }
+  | D_SEMICOLON                      { $$ = nullptr; } // just a semicolon
   ;
 
 //               ==============  CONTROL   ==============
 if_stmt:
-    CONTROL_IF D_LPAREN expr D_RPAREN statement %prec LOWER_THAN_ELSE CONTROL_ELSE statement    { 
-    $$ = new Cmm::Control::IFNode($3, $5, $7);
-  }
-  | CONTROL_IF D_LPAREN expr D_RPAREN statement                           { $$ = new Cmm::Control::IFNode($3, $5, nullptr); }
+    CONTROL_IF D_LPAREN expr D_RPAREN statement %prec LOWER_THAN_ELSE
+    { $$ = new Cmm::Control::IFNode($3, $5, nullptr); }
+  | CONTROL_IF D_LPAREN expr D_RPAREN statement CONTROL_ELSE statement
+    { $$ = new Cmm::Control::IFNode($3, $5, $7); } 
   ;
 
+for_stmt:
+    CONTROL_FOR D_LPAREN var_decl_stmt D_SEMICOLON expr D_SEMICOLON var_assign_stmt D_RPAREN statement { $$ = new Cmm::Control::ForNode($5, $3, $7, $9); }
+  | CONTROL_FOR D_LPAREN D_SEMICOLON expr D_SEMICOLON D_RPAREN statement                               { $$ = new Cmm::Control::ForNode($4, nullptr, nullptr, $7); }
+  | CONTROL_FOR D_LPAREN D_SEMICOLON D_SEMICOLON D_RPAREN statement                                    { $$ = new Cmm::Control::ForNode(nullptr, nullptr, nullptr, $6); }
+  | CONTROL_FOR D_LPAREN D_SEMICOLON expr D_SEMICOLON var_assign_stmt D_RPAREN statement               { $$ = new Cmm::Control::ForNode($4, nullptr, $6, $8); }
+  ; 
+
+while_stmt: 
+    CONTROL_WHILE D_LPAREN expr D_RPAREN statement                               { $$ = new Cmm::Control::ForNode($3, nullptr, nullptr, $5); }
+  | CONTROL_DO statement CONTROL_WHILE D_LPAREN expr D_RPAREN D_SEMICOLON        { $$ = new Cmm::Control::ForNode($5, nullptr, nullptr, $2, true); }
+  ;
+
+break_stmt:
+    CONTROL_BREAK                                         { $$ = new Cmm::Control::BreakStatementNode(); } 
+  ;
+
+continue_stmt:
+    CONTROL_CONTINUE                                      { $$ = new Cmm::Control::ContinueStatementNode(); } 
+  ;
+
+
 return_stmt:
-    CONTROL_RETURN expr                                   { $$ = new Cmm::Program::ReturnStatementNode($2); } 
+    CONTROL_RETURN expr                                   { $$ = new Cmm::Control::ReturnStatementNode($2); } 
+  | CONTROL_RETURN                                        { $$ = new Cmm::Control::ReturnStatementNode(nullptr); } 
   ;
 
 //               ============== VARIABLES  ==============
@@ -153,6 +180,9 @@ var_assign_stmt:
 scope_stmt:
     D_LBRACE statements_list D_RBRACE {
       $$ = new Cmm::Program::ScopeNode($2);
+    }
+    | D_LBRACE D_RBRACE {
+      $$ = new Cmm::Program::ScopeNode(nullptr); // empty scope
     }
   ;
 func_def:
@@ -230,6 +260,7 @@ expr_term:
   | expr_term OP_LE expr_value                  { $$ = new Cmm::Expressions::TermNode($1, $3, *$2); }
   | expr_term OP_GE expr_value                  { $$ = new Cmm::Expressions::TermNode($1, $3, *$2); }
   | expr_term OP_NEQUAL expr_value              { $$ = new Cmm::Expressions::TermNode($1, $3, *$2); }
+  | expr_term OP_MOD expr_value                 { $$ = new Cmm::Expressions::TermNode($1, $3, *$2); }
   ;
 
 expr_value:

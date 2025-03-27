@@ -32,6 +32,11 @@ Cmm::ValueType Cmm::ValuesHelper::StringToValueType(const std::string& v) {
 }
 
 std::string Cmm::ValuesHelper::toString(ValueObject v) {
+    //TODO: maybe fix this later ...
+    if (v.type == V_Void) return "void";
+    if (v.type == V_Error) return "err";
+    if (v.type == V_Ref) return "ref";
+
     ValueObject temp = castTo(v, V_String);
     auto str = static_cast<String*>(temp.value);
     std::string result = *str;

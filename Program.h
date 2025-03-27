@@ -11,6 +11,7 @@
 #include <map>
 #include <vector>
 
+#include "Control.h"
 #include "Typing.h"
 
 
@@ -24,7 +25,6 @@ namespace Namespace::Program {
     class VariableAssignmentNode;
     class ExpressionStatementNode;
     class VariableDeclarationNode;
-    class ReturnStatementNode;
     class FunctionCallNode;
     class ScopeNode;
 
@@ -53,7 +53,9 @@ namespace Namespace::Program {
     void endScope();
 
     // todo: add other types
-    FunctionNode* getNearestFunctionScopeOwner();
+    Control::BreakPointNode* getNearestBreakPointScopeOwner();
+    Control::ContinuePointNode* getNearestContinuePointScopeOwner();
+    Control::ReturnPointNode* getNearestReturnPointScopeOwner();
 
 
     void createVariable(const std::string& name, Cmm::ValueObject);
@@ -149,14 +151,6 @@ namespace Namespace::Program {
         ~FunctionDeclarationNode() override;
     };
 
-    class ReturnStatementNode: public ExecutableNode {
-    public:
-        EvaluableNode* expr;
-        explicit ReturnStatementNode(EvaluableNode* expr);
-        void exec() override;
-        ~ReturnStatementNode() override;
-    };
-
     class FunctionArgumentNode: public ASTNode {
     public:
         std::string id;
@@ -193,15 +187,12 @@ namespace Namespace::Program {
         ValueObject eval() override;
     };
 
-    class FunctionNode: public ASTNode {
+    class FunctionNode: public Control::ReturnPointNode {
     public:
         FunctionArgumentListNode* arguments;
         StatementListNode* function;
         std::string id;
         Typing::TypeListNode* returnType;
-
-        bool _shouldReturn;
-        ValueObject _returnValue{};
 
         FunctionNode(FunctionArgumentListNode* arguments, StatementListNode* function, std::string id, Typing::TypeListNode* returnType);
 

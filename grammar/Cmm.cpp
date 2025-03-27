@@ -12,6 +12,7 @@
 #include "../Program.h"
 
 #include "parser.tab.hpp"
+#include "../editor/NanoEditor.h"
 
 extern int yyparse();
 extern void yy_scan_string(const char* str);
@@ -19,40 +20,39 @@ extern void yylex_destroy();
 
 Cmm::Program::ProgramNode* root;
 
-//fixme: Error with input "1; else 2;"
 
 int main() {
+    std::ios::sync_with_stdio(false);
+
     yydebug = 0;
     std::string input;
     std::cout << "Copyright © 2025 xAbdoMo. All rights reserved." << std::endl;
     std::cout << "Unauthorized copying, reproduction, or distribution of this software is strictly prohibited." << std::endl;
+    std::cout << "Type 'editor' to open code editor, 'quit' to exit, or any Cmm statement to execute." << std::endl;
 
     Cmm::Program::beginScope();
     while (true) {
 
         std::cout << ">>> ";
-
         std::getline(std::cin, input);
-        
+
+        if (input == "editor") {
+            input = NanoEditor::edit();
+        }
+
         if (input == "quit") break;
-        
-        // Prepare input for parsing
+        if (input.empty()) break;
+
         yy_scan_string(input.c_str());
         
-        // Parse the input
         int parse_result = yyparse();
-        
 
-        if (parse_result != 0) {
-            std::cerr << "Parsing failed." << std::endl;
-        } else {
-            // parsing is fine .. the result should in root node
+        if (parse_result == 0) {
             root->source->exec();
         }
 
         // Clean up lexer
         yylex_destroy();
-
     }
 
     Cmm::Program::endScope();

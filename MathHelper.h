@@ -29,6 +29,7 @@ namespace Namespace {
         ValueObject sub(ValueObject& left, ValueObject& right);
         ValueObject mul(ValueObject& left, ValueObject& right);
         ValueObject div(ValueObject& left, ValueObject& right);
+        ValueObject mod(ValueObject& left, ValueObject& right);
 
         // bits operations
         ValueObject lshift(ValueObject& left, ValueObject& right);

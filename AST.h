@@ -22,12 +22,12 @@ namespace Namespace {
         virtual ~ASTNode() = default;
     };
 
-    class EvaluableNode: public ASTNode {
+    class EvaluableNode: virtual public ASTNode {
     public:
         virtual ValueObject eval() = 0;
     };
 
-    class ExecutableNode: public ASTNode {
+    class ExecutableNode: virtual public ASTNode {
     public:
         virtual void exec() = 0;
     };

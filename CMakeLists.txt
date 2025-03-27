@@ -48,10 +48,12 @@ add_executable(
         Control.cpp
         Control.h
 
+        editor/NanoEditor.cpp
+        editor/NanoEditor.h
+
         ${PARSER_HDR}
         ${PARSER_CPP_SRC}
         ${PARSER_C_SRC}
-
 )
 
 add_custom_target(
@@ -93,6 +95,9 @@ add_executable(Sandbox
         Typing.h
         Control.cpp
         Control.h
+
+        editor/NanoEditor.cpp
+        editor/NanoEditor.h
 )
 
 target_link_libraries(

@@ -91,6 +91,9 @@ Cmm::ValueObject Cmm::Expressions::TermNode::eval() {
     else if (op == "!=") {
         result = MathHelper::not_equal(left, right);
     }
+    else if (op == "%") {
+        result = MathHelper::mod(left, right);
+    }
 
     else {
         throw std::invalid_argument("Invalid operation");

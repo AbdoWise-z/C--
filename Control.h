@@ -5,6 +5,8 @@
 #ifndef CONTROL_H
 #define CONTROL_H
 
+#include <vector>
+
 #include "config.h"
 #include "AST.h"
 
@@ -70,6 +72,36 @@ namespace Namespace::Control {
         ContinueStatementNode();
         void exec() override;
         ~ContinueStatementNode() override;
+    };
+
+    class SwitchBodyNode;
+
+    class SwitchNode: public ExecutableNode, BreakPointNode {
+    public:
+        EvaluableNode* value;
+        SwitchBodyNode* body;
+        SwitchNode(EvaluableNode* value, SwitchBodyNode* body);
+        void exec() override;
+        ~SwitchNode() override;
+    };
+
+    class SwitchCaseNode;
+
+    class SwitchBodyNode: public ASTNode {
+    public:
+        std::vector<SwitchCaseNode*> cases;
+        SwitchBodyNode(SwitchBodyNode* prev, SwitchCaseNode* next);
+        void exec(ValueObject) const;
+        ~SwitchBodyNode() override;
+    };
+
+    class SwitchCaseNode: public ASTNode {
+    public:
+        ExecutableNode* body;
+        EvaluableNode* value;
+        SwitchCaseNode(ExecutableNode* body, EvaluableNode* value);
+        bool exec(ValueObject, bool) const;
+        ~SwitchCaseNode() override;
     };
 }
 

@@ -52,8 +52,6 @@ namespace Namespace {
         ValueObject less_equal(ValueObject& left, ValueObject& right);
         ValueObject not_equal(ValueObject& left, ValueObject& right);
 
-
-
     }
 
 }

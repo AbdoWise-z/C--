@@ -40,6 +40,8 @@ extern Cmm::Program::ProgramNode* root;
     Cmm::ExecutableNode* executable;
     Cmm::ASTNode* node;
     Cmm::Typing::TypeListNode* tlist;
+    Cmm::Control::SwitchCaseNode* sw_case_t;
+    Cmm::Control::SwitchBodyNode* sw_body_t;
 }
 
 %token END
@@ -85,7 +87,9 @@ extern Cmm::Program::ProgramNode* root;
 %type <evaluable>  func_param func_call 
 %type <node>       func_param_list
 
-%type <executable> if_stmt for_stmt break_stmt continue_stmt while_stmt unwrapped_stmt
+%type <executable> if_stmt for_stmt break_stmt continue_stmt while_stmt unwrapped_stmt switch_stmt
+%type <sw_case_t> switch_case
+%type <sw_body_t> switch_body
 
 %left OP_PLUS OP_MINUS
 %left OP_MULT OP_DIV
@@ -141,6 +145,7 @@ statement:
   | if_stmt                          { $$ = $1; }
   | for_stmt                         { $$ = $1; }
   | while_stmt                       { $$ = $1; }
+  | switch_stmt                      { $$ = $1; }
   | continue_stmt D_SEMICOLON        { $$ = $1; }
   | break_stmt D_SEMICOLON           { $$ = $1; }
   | D_SEMICOLON                      { $$ = nullptr; } // just a semicolon
@@ -160,8 +165,8 @@ unwrapped_stmt:
 
 for_stmt:
     CONTROL_FOR D_LPAREN var_decl_stmt D_SEMICOLON expr D_SEMICOLON unwrapped_stmt D_RPAREN statement { $$ = new Cmm::Control::ForNode($5, $3, $7, $9); }
-  | CONTROL_FOR D_LPAREN D_SEMICOLON expr D_SEMICOLON D_RPAREN statement                               { $$ = new Cmm::Control::ForNode($4, nullptr, nullptr, $7); }
-  | CONTROL_FOR D_LPAREN D_SEMICOLON D_SEMICOLON D_RPAREN statement                                    { $$ = new Cmm::Control::ForNode(nullptr, nullptr, nullptr, $6); }
+  | CONTROL_FOR D_LPAREN D_SEMICOLON expr D_SEMICOLON D_RPAREN statement                              { $$ = new Cmm::Control::ForNode($4, nullptr, nullptr, $7); }
+  | CONTROL_FOR D_LPAREN D_SEMICOLON D_SEMICOLON D_RPAREN statement                                   { $$ = new Cmm::Control::ForNode(nullptr, nullptr, nullptr, $6); }
   | CONTROL_FOR D_LPAREN D_SEMICOLON expr D_SEMICOLON unwrapped_stmt D_RPAREN statement               { $$ = new Cmm::Control::ForNode($4, nullptr, $6, $8); }
   ; 
 
@@ -183,6 +188,23 @@ return_stmt:
     CONTROL_RETURN expr                                   { $$ = new Cmm::Control::ReturnStatementNode($2); } 
   | CONTROL_RETURN                                        { $$ = new Cmm::Control::ReturnStatementNode(nullptr); } 
   ;
+
+switch_stmt:
+    CONTROL_SWITCH D_LPAREN expr D_RPAREN D_LBRACE switch_body D_RBRACE {
+      $$ = new Cmm::Control::SwitchNode($3, $6);
+    }
+  ;
+
+switch_body:
+    switch_case                                 { $$ = new Cmm::Control::SwitchBodyNode(nullptr, $1); }
+  | switch_body switch_case                     { $$ = new Cmm::Control::SwitchBodyNode($1, $2); }
+  ;
+
+switch_case:
+    CONTROL_CASE expr D_COLON statements_list   { $$ = new Cmm::Control::SwitchCaseNode($4, $2); }
+  | CONTROL_DEFAULT D_COLON statements_list     { $$ = new Cmm::Control::SwitchCaseNode($3, nullptr); }
+  ;
+
 
 //               ============== VARIABLES  ==============
 var_decl_stmt:

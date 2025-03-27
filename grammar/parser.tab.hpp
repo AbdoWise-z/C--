@@ -143,8 +143,10 @@ union YYSTYPE
     Cmm::ExecutableNode* executable;
     Cmm::ASTNode* node;
     Cmm::Typing::TypeListNode* tlist;
+    Cmm::Control::SwitchCaseNode* sw_case_t;
+    Cmm::Control::SwitchBodyNode* sw_body_t;
 
-#line 148 "parser.tab.hpp"
+#line 150 "parser.tab.hpp"
 
 };
 typedef union YYSTYPE YYSTYPE;

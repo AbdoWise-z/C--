@@ -7,6 +7,8 @@
 
 #include <iostream>
 
+#include "MathHelper.h"
+
 Cmm::Control::IFNode::IFNode(EvaluableNode *condition, ExecutableNode *if_true, ExecutableNode *if_false) {
     this->condition = condition;
     this->if_true = if_true;
@@ -153,4 +155,81 @@ namespace Cmm::Control {
     }
 
     ContinueStatementNode::~ContinueStatementNode() = default;
+
+    SwitchNode::SwitchNode(EvaluableNode *value, SwitchBodyNode *body) {
+        this->body = body;
+        this->value = value;
+    }
+
+    void SwitchNode::exec() {
+        auto val = value->eval();
+        Program::beginScope(this);
+        body->exec(val);
+        Program::endScope();
+        ValuesHelper::Delete(val);
+    }
+
+    SwitchNode::~SwitchNode() {
+        delete body;
+        delete value;
+    }
+
+    SwitchBodyNode::SwitchBodyNode(SwitchBodyNode *prev, SwitchCaseNode *next) {
+        cases.clear();
+
+        if (prev) {
+            cases = prev->cases;
+            prev->cases.clear();
+            delete prev;
+        }
+
+        if (next) cases.push_back(next);
+    }
+
+    void SwitchBodyNode::exec(ValueObject v) const {
+        bool found_match = false;
+        auto break_point = Program::getNearestBreakPointScopeOwner();
+
+        if (break_point == nullptr) {
+            throw Program::ControlError("Switch body cannot be used outside a switch scope");
+        }
+
+        for (const auto _c : cases) {
+            if (break_point->_shouldBreak) break;
+            found_match = _c->exec(v, found_match);
+        }
+    }
+
+    SwitchBodyNode::~SwitchBodyNode() {
+        for (const auto _c : cases) {
+            delete _c;
+        }
+    }
+
+    SwitchCaseNode::SwitchCaseNode(ExecutableNode *body, EvaluableNode *value) {
+        this->body = body;
+        this->value = value;
+    }
+
+    bool SwitchCaseNode::exec(ValueObject v, bool b) const {
+        if (!b && this->value) { // if no other case above us has matched, and we are not the default case
+            // then we must check
+            auto val = this->value->eval();
+            if (!MathHelper::equal(v, val).value) {
+                // not this case .. sadge
+                ValuesHelper::Delete(val);
+                return false;
+            }
+
+            ValuesHelper::Delete(val);
+        }
+
+        body->exec();
+        return true;
+    }
+
+    SwitchCaseNode::~SwitchCaseNode() {
+        delete body;
+        delete value;
+    }
 }

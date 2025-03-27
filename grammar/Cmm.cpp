@@ -43,6 +43,10 @@ int main() {
         if (input == "quit") break;
         if (input.empty()) break;
 
+        if (!input.ends_with(';')) {
+            input += ";"; // even if we shouldn't it wont make a problem
+        }
+
         yy_scan_string(input.c_str());
         
         int parse_result = yyparse();

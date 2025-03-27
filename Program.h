@@ -28,8 +28,13 @@ namespace Namespace::Program {
     extern std::vector<ValueType> conversionPriority;
     typedef std::pair<std::string, std::vector<ValueType>> function_sig;
 
+    struct VariableBlock {
+        Cmm::ValueObject Value;
+        bool isConst;
+    };
+
     struct Scope {
-        std::map<std::string, Cmm::ValueObject> variables;
+        std::map<std::string, VariableBlock> variables;
         std::map<function_sig, Functional::FunctionNode*> functions;
         ASTNode* owner;
     };
@@ -56,8 +61,8 @@ namespace Namespace::Program {
     Control::ReturnPointNode* getNearestReturnPointScopeOwner();
 
 
-    void createVariable(const std::string& name, Cmm::ValueObject);
-    ValueObject& getVariable(const std::string& name);
+    void createVariable(const std::string& name, Cmm::ValueObject, bool isConst = false);
+    VariableBlock& getVariable(const std::string& name);
 
     void createFunction(const function_sig &signature, Functional::FunctionNode*);
     ValueObject callFunction(const function_sig& signature, const std::vector<ValueObject>&);
@@ -74,6 +79,13 @@ namespace Namespace::Program {
         std::string id;
     public:
         explicit AlreadyDefinedError(std::string  id);
+        [[nodiscard]] const char *what() const noexcept override;
+    };
+
+    class ConstantAssignmentError : public std::exception {
+        std::string id;
+    public:
+        explicit ConstantAssignmentError(std::string  id);
         [[nodiscard]] const char *what() const noexcept override;
     };
 

@@ -111,7 +111,7 @@ namespace Namespace::Program {
     }
 
 
-    void createVariable(const std::string& name, Cmm::ValueObject val) {
+    void createVariable(const std::string& name, Cmm::ValueObject val, bool isConst) {
         ProgramBlock& block = getCurrentProgram();
         if (block.stack.empty()) {
             throw NoStackError();
@@ -123,19 +123,24 @@ namespace Namespace::Program {
             throw AlreadyDefinedError(name);
         }
 
-        scope.variables[name] = val;
+        scope.variables[name] = {
+            .Value = val,
+            .isConst = isConst
+        };
     }
 
-    static ValueObject& resolveRef(int scope, ValueObject val) {
+    static VariableBlock& resolveRef(int scope, ValueObject val) {
         ProgramBlock& block = getCurrentProgram();
         while (scope >= 0) {
             std::string next_target = *static_cast<std::string*>(val.value);
             Scope& _s = block.stack[scope];
             auto it = _s.variables.find(next_target);
             if (it != _s.variables.end()) {
-                ValueObject& obj = it->second;
+                VariableBlock& block = it->second;
+                ValueObject& obj = block.Value;
+
                 if (obj.type != V_Ref) {
-                    return obj;  // found the target
+                    return block;  // found the target
                 }
                 val = obj;
             }
@@ -148,7 +153,7 @@ namespace Namespace::Program {
         throw VariableNotFoundError("[Ref: " + next_target + "]");
     }
 
-    ValueObject & getVariable(const std::string &name) {
+    VariableBlock & getVariable(const std::string &name) {
         ProgramBlock& block = getCurrentProgram();
 
         // search scopes from bottom to top. and try to find the variable
@@ -156,9 +161,11 @@ namespace Namespace::Program {
         while (scope >= 0) {
             auto it = block.stack[scope].variables.find(name);
             if (it != block.stack[scope].variables.end()) {
-                ValueObject& obj = it->second;
+                VariableBlock& block = it->second;
+                ValueObject& obj = block.Value;
+
                 if (obj.type != V_Ref) {
-                    return obj;
+                    return block;
                 }
                 return resolveRef(scope - 1, obj);
             }
@@ -212,6 +219,13 @@ namespace Namespace::Program {
 
     const char * AlreadyDefinedError::what() const noexcept {
         static std::string err = "Object with id: " + id + " already defined.";
+        return err.c_str();
+    }
+
+    ConstantAssignmentError::ConstantAssignmentError(std::string id) : id(std::move(id)) {}
+
+    const char * ConstantAssignmentError::what() const noexcept {
+        static std::string err = "Object with id: " + id + " is constant, unable to re-assign.";
         return err.c_str();
     }
 

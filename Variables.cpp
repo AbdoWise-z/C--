@@ -30,9 +30,7 @@ namespace Cmm::Variables {
 
         // now that we have the name and value
         // we try to push it to the scope
-        Program::createVariable(name, mValue);
-        // fixme: constants are treated as normal values .. which is well .. wrong ..
-
+        Program::createVariable(name, mValue, isConst);
         std::cout << "[+]> " << name << "=" << ValuesHelper::toString(mValue) << std::endl;
     }
 
@@ -45,7 +43,12 @@ namespace Cmm::Variables {
     }
 
     void VariableAssignmentNode::exec() {
-        ValueObject& original = Program::getVariable(name);
+        Program::VariableBlock& block = Program::getVariable(name);
+        ValueObject& original = block.Value;
+        if (block.isConst) {
+            throw Program::ConstantAssignmentError(name);
+        }
+
         auto mValue = this->expr->eval();
         if (mValue.type != original.type) {
             auto temp = ValuesHelper::castTo(mValue, original.type);
@@ -83,7 +86,11 @@ namespace Cmm::Variables {
 
     ValueObject PreIncNode::eval() {
         auto result = _internal->eval();
-        ValueObject& original = Program::getVariable(name);
+        Program::VariableBlock& block = Program::getVariable(name);
+        ValueObject& original = block.Value;
+        if (block.isConst) {
+            throw Program::ConstantAssignmentError(name);
+        }
 
         if (result.type != original.type) {
             auto temp = ValuesHelper::castTo(result, original.type);
@@ -111,7 +118,12 @@ namespace Cmm::Variables {
 
     ValueObject PostIncNode::eval() {
         auto result = _internal->eval();
-        ValueObject& original = Program::getVariable(name);
+        Program::VariableBlock& block = Program::getVariable(name);
+        ValueObject& original = block.Value;
+        if (block.isConst) {
+            throw Program::ConstantAssignmentError(name);
+        }
+
         ValueObject _before = original;
 
         if (result.type != original.type) {

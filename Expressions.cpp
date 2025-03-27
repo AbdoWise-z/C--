@@ -199,7 +199,7 @@ Cmm::Expressions::VariableNode::VariableNode(const std::string &n) {
 }
 
 Cmm::ValueObject Cmm::Expressions::VariableNode::eval() {
-    return ValuesHelper::clone(Program::getVariable(name));
+    return ValuesHelper::clone(Program::getVariable(name).Value);
 }
 
 // nothing to do here

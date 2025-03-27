@@ -6,6 +6,8 @@
 
 #include <iostream>
 
+#include "Expressions.h"
+
 
 namespace Cmm::Variables {
     VariableDeclarationNode::VariableDeclarationNode(bool isConst, std::string name, std::string type,
@@ -47,7 +49,7 @@ namespace Cmm::Variables {
         auto mValue = this->expr->eval();
         if (mValue.type != original.type) {
             auto temp = ValuesHelper::castTo(mValue, original.type);
-            ValuesHelper::Delete(original);
+            ValuesHelper::Delete(mValue);
             mValue = temp;
         }
 
@@ -57,4 +59,41 @@ namespace Cmm::Variables {
     }
 
     VariableAssignmentNode::~VariableAssignmentNode() = default;
+
+    CompoundAssignmentNode::CompoundAssignmentNode(const std::string& name, const std::string &op, EvaluableNode *value) {
+        auto term = new Expressions::TermNode(new Expressions::VariableNode(name), value, op);
+        this->_internal = new VariableAssignmentNode(name, term);
+    }
+
+    void CompoundAssignmentNode::exec() {
+        this->_internal->exec();
+    }
+
+    CompoundAssignmentNode::~CompoundAssignmentNode() {
+        delete this->_internal;
+    }
+
+    PreIncNode::PreIncNode(const std::string &name, const std::string &op) {
+        this->name = name;
+        this->_internal = new Expressions::TermNode(
+            new Expressions::VariableNode(name),
+            new Expressions::ConstantValueNode(Integer(1)),
+            op);
+    }
+
+    ValueObject PreIncNode::eval() {
+        auto result = _internal->eval();
+        ValueObject& original = Program::getVariable(name);
+
+        if (result.type != original.type) {
+            auto temp = ValuesHelper::castTo(result, original.type);
+            ValuesHelper::Delete(result);
+            result = temp;
+        }
+
+        ValuesHelper::Delete(original);
+        original = result;
+        std::cout << "[u]> " << name << "=" << ValuesHelper::toString(result) << std::endl;
+        return result;
+    }
 }

@@ -73,58 +73,59 @@ extern int yydebug;
     OP_MULT = 274,                 /* OP_MULT  */
     OP_DIV = 275,                  /* OP_DIV  */
     OP_MOD = 276,                  /* OP_MOD  */
-    OP_APLUS = 277,                /* OP_APLUS  */
-    OP_AMINUS = 278,               /* OP_AMINUS  */
-    OP_AMULT = 279,                /* OP_AMULT  */
-    OP_ADIV = 280,                 /* OP_ADIV  */
-    OP_LS = 281,                   /* OP_LS  */
-    OP_RS = 282,                   /* OP_RS  */
-    OP_BOR = 283,                  /* OP_BOR  */
-    OP_BAND = 284,                 /* OP_BAND  */
-    OP_XOR = 285,                  /* OP_XOR  */
-    OP_ALS = 286,                  /* OP_ALS  */
-    OP_ARS = 287,                  /* OP_ARS  */
-    OP_ABOR = 288,                 /* OP_ABOR  */
-    OP_ABAND = 289,                /* OP_ABAND  */
-    OP_AXOR = 290,                 /* OP_AXOR  */
-    OP_OR = 291,                   /* OP_OR  */
-    OP_AND = 292,                  /* OP_AND  */
-    OP_NOT = 293,                  /* OP_NOT  */
-    OP_INVERT = 294,               /* OP_INVERT  */
-    OP_EQUAL = 295,                /* OP_EQUAL  */
-    OP_GREATER = 296,              /* OP_GREATER  */
-    OP_LESS = 297,                 /* OP_LESS  */
-    OP_GE = 298,                   /* OP_GE  */
-    OP_LE = 299,                   /* OP_LE  */
-    OP_NEQUAL = 300,               /* OP_NEQUAL  */
-    D_SEMICOLON = 301,             /* D_SEMICOLON  */
-    D_LPAREN = 302,                /* D_LPAREN  */
-    D_RPAREN = 303,                /* D_RPAREN  */
-    D_LBRACE = 304,                /* D_LBRACE  */
-    D_RBRACE = 305,                /* D_RBRACE  */
-    D_COLON = 306,                 /* D_COLON  */
-    D_COMMA = 307,                 /* D_COMMA  */
-    D_ARROW = 308,                 /* D_ARROW  */
-    CONTROL_IF = 309,              /* CONTROL_IF  */
-    CONTROL_ELSE = 310,            /* CONTROL_ELSE  */
-    CONTROL_WHILE = 311,           /* CONTROL_WHILE  */
-    CONTROL_FOR = 312,             /* CONTROL_FOR  */
-    CONTROL_SWITCH = 313,          /* CONTROL_SWITCH  */
-    CONTROL_CASE = 314,            /* CONTROL_CASE  */
-    CONTROL_DEFAULT = 315,         /* CONTROL_DEFAULT  */
-    CONTROL_DO = 316,              /* CONTROL_DO  */
-    CONTROL_RETURN = 317,          /* CONTROL_RETURN  */
-    CONTROL_BREAK = 318,           /* CONTROL_BREAK  */
-    CONTROL_CONTINUE = 319,        /* CONTROL_CONTINUE  */
-    MISC_FUNC = 320,               /* MISC_FUNC  */
-    MISC_FROM = 321,               /* MISC_FROM  */
-    MISC_VAR = 322,                /* MISC_VAR  */
-    MISC_CONST = 323,              /* MISC_CONST  */
-    MISC_IMPORT = 324,             /* MISC_IMPORT  */
-    MISC_EXPORT = 325,             /* MISC_EXPORT  */
-    MISC_NATIVE = 326,             /* MISC_NATIVE  */
-    OP_UNARY_MINUS = 327,          /* OP_UNARY_MINUS  */
-    LOWER_THAN_ELSE = 328          /* LOWER_THAN_ELSE  */
+    OP_LS = 277,                   /* OP_LS  */
+    OP_RS = 278,                   /* OP_RS  */
+    OP_BOR = 279,                  /* OP_BOR  */
+    OP_BAND = 280,                 /* OP_BAND  */
+    OP_XOR = 281,                  /* OP_XOR  */
+    OP_OR = 282,                   /* OP_OR  */
+    OP_AND = 283,                  /* OP_AND  */
+    OP_NOT = 284,                  /* OP_NOT  */
+    OP_INVERT = 285,               /* OP_INVERT  */
+    OP_EQUAL = 286,                /* OP_EQUAL  */
+    OP_GREATER = 287,              /* OP_GREATER  */
+    OP_LESS = 288,                 /* OP_LESS  */
+    OP_GE = 289,                   /* OP_GE  */
+    OP_LE = 290,                   /* OP_LE  */
+    OP_NEQUAL = 291,               /* OP_NEQUAL  */
+    OP_APLUS = 292,                /* OP_APLUS  */
+    OP_AMINUS = 293,               /* OP_AMINUS  */
+    OP_AMULT = 294,                /* OP_AMULT  */
+    OP_ADIV = 295,                 /* OP_ADIV  */
+    OP_AMOD = 296,                 /* OP_AMOD  */
+    OP_ARS = 297,                  /* OP_ARS  */
+    OP_ALS = 298,                  /* OP_ALS  */
+    OP_ABOR = 299,                 /* OP_ABOR  */
+    OP_ABAND = 300,                /* OP_ABAND  */
+    OP_AXOR = 301,                 /* OP_AXOR  */
+    D_SEMICOLON = 302,             /* D_SEMICOLON  */
+    D_LPAREN = 303,                /* D_LPAREN  */
+    D_RPAREN = 304,                /* D_RPAREN  */
+    D_LBRACE = 305,                /* D_LBRACE  */
+    D_RBRACE = 306,                /* D_RBRACE  */
+    D_COLON = 307,                 /* D_COLON  */
+    D_COMMA = 308,                 /* D_COMMA  */
+    D_ARROW = 309,                 /* D_ARROW  */
+    CONTROL_IF = 310,              /* CONTROL_IF  */
+    CONTROL_ELSE = 311,            /* CONTROL_ELSE  */
+    CONTROL_WHILE = 312,           /* CONTROL_WHILE  */
+    CONTROL_FOR = 313,             /* CONTROL_FOR  */
+    CONTROL_SWITCH = 314,          /* CONTROL_SWITCH  */
+    CONTROL_CASE = 315,            /* CONTROL_CASE  */
+    CONTROL_DEFAULT = 316,         /* CONTROL_DEFAULT  */
+    CONTROL_DO = 317,              /* CONTROL_DO  */
+    CONTROL_RETURN = 318,          /* CONTROL_RETURN  */
+    CONTROL_BREAK = 319,           /* CONTROL_BREAK  */
+    CONTROL_CONTINUE = 320,        /* CONTROL_CONTINUE  */
+    MISC_FUNC = 321,               /* MISC_FUNC  */
+    MISC_FROM = 322,               /* MISC_FROM  */
+    MISC_VAR = 323,                /* MISC_VAR  */
+    MISC_CONST = 324,              /* MISC_CONST  */
+    MISC_IMPORT = 325,             /* MISC_IMPORT  */
+    MISC_EXPORT = 326,             /* MISC_EXPORT  */
+    MISC_NATIVE = 327,             /* MISC_NATIVE  */
+    OP_UNARY_MINUS = 328,          /* OP_UNARY_MINUS  */
+    LOWER_THAN_ELSE = 329          /* LOWER_THAN_ELSE  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -141,7 +142,7 @@ union YYSTYPE
     Cmm::ASTNode* node;
     Cmm::Typing::TypeListNode* tlist;
 
-#line 145 "parser.tab.hpp"
+#line 146 "parser.tab.hpp"
 
 };
 typedef union YYSTYPE YYSTYPE;

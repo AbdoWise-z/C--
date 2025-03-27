@@ -49,20 +49,26 @@ extern Cmm::Program::ProgramNode* root;
 %token <str> ID
 
 %token TYPE_REAL TYPE_INT TYPE_STR TYPE_COMPLEX TYPE_BOOL TYPE_VOID
+
 %token OP_ASSIGN OP_PLUS OP_MINUS OP_MULT OP_DIV OP_MOD
-%token OP_APLUS OP_AMINUS OP_AMULT OP_ADIV
 %token OP_LS OP_RS OP_BOR OP_BAND OP_XOR
-%token OP_ALS OP_ARS OP_ABOR OP_ABAND OP_AXOR
 %token OP_OR OP_AND OP_NOT OP_INVERT OP_EQUAL
 %token OP_GREATER OP_LESS OP_GE OP_LE OP_NEQUAL
+
+%token OP_APLUS OP_AMINUS OP_AMULT OP_ADIV OP_AMOD
+%token OP_ARS OP_ALS OP_ABOR OP_ABAND OP_AXOR
+ 
 %token D_SEMICOLON D_LPAREN D_RPAREN D_LBRACE D_RBRACE D_COLON D_COMMA D_ARROW
 %token CONTROL_IF CONTROL_ELSE CONTROL_WHILE CONTROL_FOR CONTROL_SWITCH
 %token CONTROL_CASE CONTROL_DEFAULT CONTROL_DO CONTROL_RETURN CONTROL_BREAK CONTROL_CONTINUE
 %token MISC_FUNC MISC_FROM MISC_VAR MISC_CONST MISC_IMPORT MISC_EXPORT MISC_NATIVE
 
 // Type declarations
-%type <str> OP_EQUAL OP_ASSIGN OP_PLUS OP_MINUS OP_MULT OP_DIV OP_MOD OP_APLUS OP_AMINUS OP_AMULT OP_ADIV OP_LS OP_RS OP_BOR OP_BAND OP_XOR OP_ALS OP_ARS OP_ABOR OP_ABAND OP_AXOR OP_OR OP_AND OP_NOT OP_INVERT
+%type <str> OP_EQUAL OP_ASSIGN OP_PLUS OP_MINUS OP_MULT OP_DIV OP_MOD OP_LS OP_RS OP_BOR OP_BAND OP_XOR OP_OR OP_AND OP_NOT OP_INVERT
+%type <str> OP_APLUS OP_AMINUS OP_AMULT OP_ADIV OP_AMOD OP_ARS OP_ALS OP_ABOR OP_ABAND OP_AXOR
 %type <str> OP_GREATER OP_LESS OP_GE OP_LE OP_NEQUAL
+
+%type <str> compoundable_operator
 
 %type <str> type_specifier
 %type <evaluable> constant_value expr expr_value expr_term expr_casted_term
@@ -81,6 +87,8 @@ extern Cmm::Program::ProgramNode* root;
 %left OP_PLUS OP_MINUS
 %left OP_MULT OP_DIV
 %precedence OP_UNARY_MINUS
+
+%right OP_ASSIGN
 
 %nonassoc CONTROL_IF
 %nonassoc LOWER_THAN_ELSE
@@ -176,7 +184,21 @@ var_decl_stmt:
   ;
 
 var_assign_stmt:
-    ID OP_ASSIGN expr                                   { $$ = new Cmm::Variables::VariableAssignmentNode(*$1, $3); }
+    ID OP_ASSIGN expr                                   { $$ = new Cmm::Variables::VariableAssignmentNode(*$1, $3); } 
+  | ID compoundable_operator expr                       { $$ = new Cmm::Variables::CompoundAssignmentNode(*$1, *$2, $3); }
+  ;
+
+compoundable_operator:
+    OP_APLUS  { $1->pop_back(); $$ = $1; }
+  | OP_AMINUS { $1->pop_back(); $$ = $1; }
+  | OP_AMULT  { $1->pop_back(); $$ = $1; }
+  | OP_ADIV   { $1->pop_back(); $$ = $1; }
+  | OP_AMOD   { $1->pop_back(); $$ = $1; }
+  | OP_ARS    { $1->pop_back(); $$ = $1; }
+  | OP_ALS    { $1->pop_back(); $$ = $1; }
+  | OP_ABOR   { $1->pop_back(); $$ = $1; }
+  | OP_ABAND  { $1->pop_back(); $$ = $1; }
+  | OP_AXOR   { $1->pop_back(); $$ = $1; }
   ;
 
 //               ============== FUNCSTIONS ==============

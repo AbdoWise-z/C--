@@ -76,28 +76,29 @@ void remove_first_and_last_char(std::string* str_ptr) {
 "bool"    { return TYPE_BOOL; }
 "void"    { return TYPE_VOID; }
 
+"+="      { std::string* val = new std::string(yytext); yylval.str = val; return OP_APLUS; }
+"-="      { std::string* val = new std::string(yytext); yylval.str = val; return OP_AMINUS; }
+"*="      { std::string* val = new std::string(yytext); yylval.str = val; return OP_AMULT; }
+"/="      { std::string* val = new std::string(yytext); yylval.str = val; return OP_ADIV; }
+"%="      { std::string* val = new std::string(yytext); yylval.str = val; return OP_AMOD; }
+
 "+"       { std::string* val = new std::string(yytext); yylval.str = val; return OP_PLUS; }
 "-"       { std::string* val = new std::string(yytext); yylval.str = val; return OP_MINUS; }
 "*"       { std::string* val = new std::string(yytext); yylval.str = val; return OP_MULT; }
 "/"       { std::string* val = new std::string(yytext); yylval.str = val; return OP_DIV; }
 "%"       { std::string* val = new std::string(yytext); yylval.str = val; return OP_MOD; }
 
-"+="      { std::string* val = new std::string(yytext); yylval.str = val; return OP_APLUS; }
-"-="      { std::string* val = new std::string(yytext); yylval.str = val; return OP_AMINUS; }
-"*="      { std::string* val = new std::string(yytext); yylval.str = val; return OP_AMULT; }
-"/="      { std::string* val = new std::string(yytext); yylval.str = val; return OP_ADIV; }
+">>="     { std::string* val = new std::string(yytext); yylval.str = val; return OP_ARS; }
+"<<="     { std::string* val = new std::string(yytext); yylval.str = val; return OP_ALS; }
+"|="      { std::string* val = new std::string(yytext); yylval.str = val; return OP_ABOR; }
+"&="      { std::string* val = new std::string(yytext); yylval.str = val; return OP_ABAND; }
+"^="      { std::string* val = new std::string(yytext); yylval.str = val; return OP_AXOR; }
 
 ">>"      { std::string* val = new std::string(yytext); yylval.str = val; return OP_RS; }
 "<<"      { std::string* val = new std::string(yytext); yylval.str = val; return OP_LS; }
 "|"       { std::string* val = new std::string(yytext); yylval.str = val; return OP_BOR; }
 "&"       { std::string* val = new std::string(yytext); yylval.str = val; return OP_BAND; }
 "^"       { std::string* val = new std::string(yytext); yylval.str = val; return OP_XOR; }
-
-">>="     { std::string* val = new std::string(yytext); yylval.str = val; return OP_ARS; }
-"<<="     { std::string* val = new std::string(yytext); yylval.str = val; return OP_ALS; }
-"|="      { std::string* val = new std::string(yytext); yylval.str = val; return OP_ABOR; }
-"&="      { std::string* val = new std::string(yytext); yylval.str = val; return OP_ABAND; }
-"^="      { std::string* val = new std::string(yytext); yylval.str = val; return OP_AXOR; }
 
 "||"      { std::string* val = new std::string(yytext); yylval.str = val; return OP_OR; }
 "&&"      { std::string* val = new std::string(yytext); yylval.str = val; return OP_AND; }

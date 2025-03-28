@@ -55,12 +55,15 @@ namespace Namespace {
 
         Integer operator- () const;
         Integer operator^ (const Integer& b) const;
+        Integer pow(const Integer& b) const;
         Integer operator! () const;
         Integer operator~ () const;
         Integer operator>> (const Integer& b) const;
         Integer operator<< (const Integer& b) const;
         Integer operator| (const Integer& b) const;
         Integer operator& (const Integer& b) const;
+
+        Integer sqrt() const;
 
         [[nodiscard]] std::string toString(int base) const;
 

@@ -1,0 +1,37 @@
+bind "libs/libmath.so"
+
+// calculates the sqrt of a value
+func sqrt(n: real)    -> real          = native
+func sqrt(n: int )    -> int           = native
+
+// returns the absolute value
+func abs(n: real)     -> real          = native
+func abs(n: int)      -> int           = native
+func abs(n: complex)  -> complex       = native
+
+// returns the magnitude
+func mag(n: real)     -> real          = native
+func mag(n: int)      -> int           = native
+func mag(n: complex)  -> complex       = native
+
+// returns the real part of a complex number
+func rel(n: complex)  -> real          = native
+
+// returns the imaginary part of a complex number
+func img(n: complex)  -> real          = native
+
+// calculates a^b
+func pow(a: real, b: real) -> real     = native
+func pow(a: int , b: int ) -> int      = native
+
+
+// random generation
+func rand() -> real = native
+
+func rand(a: real, b: real) -> real {
+    return rand() * (b - a) + a;
+}
+
+func rand(a: int, b: int) -> int {
+    return (int) rand((real) a, (real) b);
+}

@@ -151,6 +151,41 @@ Integer Integer::operator^(const Integer &b) const {
     return temp;
 }
 
+static void mpz_pow(mpz_t result, const mpz_t base, const mpz_t exp) {
+    if (mpz_sgn(exp) < 0) {
+        mpz_set_ui(result, 0);  // Default behavior (or throw an error)
+        return;
+    }
+
+    if (mpz_fits_ulong_p(exp)) {
+        // If exponent is small enough, use mpz_pow_ui
+        unsigned long int exp_ui = mpz_get_ui(exp);
+        mpz_pow_ui(result, base, exp_ui);
+    } else {
+        // If exponent is too large, iterative approach
+        mpz_t temp_base, temp_exp;
+        mpz_init_set(temp_base, base);
+        mpz_init_set(temp_exp, exp);
+        mpz_set_ui(result, 1);  // result = 1
+
+        while (mpz_sgn(temp_exp) > 0) {
+            if (mpz_odd_p(temp_exp)) {
+                mpz_mul(result, result, temp_base);
+            }
+            mpz_mul(temp_base, temp_base, temp_base);
+            mpz_fdiv_q_2exp(temp_exp, temp_exp, 1);
+        }
+
+        mpz_clear(temp_base);
+        mpz_clear(temp_exp);
+    }
+}
+Integer Integer::pow(const Integer &b) const {
+    Integer temp;
+    mpz_pow(temp.mValue , mValue, b.mValue);
+    return temp;
+}
+
 Integer Integer::operator!() const {
     return *this == 0;
 }
@@ -191,6 +226,12 @@ Integer Integer::operator|(const Integer &b) const {
 Integer Integer::operator&(const Integer &b) const {
     Integer t1;
     mpz_and(t1.mValue , mValue , b.mValue);
+    return t1;
+}
+
+Integer Integer::sqrt() const {
+    Integer t1;
+    mpz_sqrt(t1.mValue , mValue );
     return t1;
 }
 

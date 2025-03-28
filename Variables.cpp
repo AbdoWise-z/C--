@@ -31,7 +31,10 @@ namespace Cmm::Variables {
         // now that we have the name and value
         // we try to push it to the scope
         Program::createVariable(name, mValue, isConst);
+#ifdef CMM_DEBUG
         std::cout << "[+]> " << name << "=" << ValuesHelper::toString(mValue) << std::endl;
+#endif
+
     }
 
     VariableDeclarationNode::~VariableDeclarationNode() = default;
@@ -58,7 +61,9 @@ namespace Cmm::Variables {
 
         ValuesHelper::Delete(original);
         original = mValue;
+#ifdef CMM_DEBUG
         std::cout << "[u]> " << name << "=" << ValuesHelper::toString(mValue) << std::endl;
+#endif
     }
 
     VariableAssignmentNode::~VariableAssignmentNode() = default;
@@ -100,7 +105,9 @@ namespace Cmm::Variables {
 
         ValuesHelper::Delete(original);
         original = ValuesHelper::clone(result);
+#ifdef CMM_DEBUG
         std::cout << "[u]> " << name << "=" << ValuesHelper::toString(result) << std::endl;
+#endif
         return result;
     }
 
@@ -133,7 +140,9 @@ namespace Cmm::Variables {
         }
 
         original = result;
+#ifdef CMM_DEBUG
         std::cout << "[u]> " << name << "=" << ValuesHelper::toString(result) << std::endl;
+#endif
         return _before;
     }
 

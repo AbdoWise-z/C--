@@ -12,8 +12,7 @@ file(GLOB PARSER_HDR     "${CMAKE_SOURCE_DIR}/grammar/*.hpp")
 message("Sources: " ${PARSER_CPP_SRC} ${PARSER_C_SRC})
 message("Headers: " ${PARSER_HDR})
 
-add_executable(
-        Cmm
+add_executable(Cmm
         config.h
 
         primitives/Integer.cpp
@@ -34,6 +33,7 @@ add_executable(
 
         MathHelper.cpp
         MathHelper.h
+
         Values.cpp
         Values.h
 
@@ -57,9 +57,16 @@ add_executable(
         editor/NanoEditor.cpp
         editor/NanoEditor.h
 
+        NativeLoader.cpp
+        NativeLoader.h
+
+        PreProcessor.cpp
+        PreProcessor.h
+
         ${PARSER_HDR}
         ${PARSER_CPP_SRC}
         ${PARSER_C_SRC}
+
 )
 
 add_custom_target(
@@ -108,14 +115,60 @@ add_executable(Sandbox
         Variables.h
         Functional.cpp
         Functional.h
+        common.h
+)
+
+add_library(io SHARED
+        Cmm/std/cpp/io.cpp
+        common.h
+        primitives/Integer.cpp
+        primitives/Integer.h
+        primitives/Real.cpp
+        primitives/Real.h
+        primitives/Complex.cpp
+        primitives/Complex.h
+        primitives/Bool.h
+        primitives/String.h
+        primitives.h
+
+        Values.h
+        Values.cpp
+
+        MathHelper.h
+        MathHelper.cpp
+)
+
+add_library(math SHARED
+        Cmm/std/cpp/math.cpp
+        common.h
+        primitives/Integer.cpp
+        primitives/Integer.h
+        primitives/Real.cpp
+        primitives/Real.h
+        primitives/Complex.cpp
+        primitives/Complex.h
+        primitives/Bool.h
+        primitives/String.h
+        primitives.h
+
+        Values.h
+        Values.cpp
+
+        MathHelper.h
+        MathHelper.cpp
+)
+
+target_link_libraries(
+        io
+        gmp mpfr
 )
 
 target_link_libraries(
         Sandbox
-        gmp
+        gmp mpfr
 )
 
 target_link_libraries(
         Cmm
-        gmp
+        gmp mpfr
 )

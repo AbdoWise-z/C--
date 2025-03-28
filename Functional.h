@@ -23,6 +23,17 @@ namespace Namespace::Functional {
         ~FunctionDeclarationNode() override;
     };
 
+    class NativeFunctionDeclarationNode: public ExecutableNode {
+    public:
+        FunctionArgumentListNode* arguments;
+        Typing::TypeListNode* returnType;
+        std::string id;
+
+        explicit NativeFunctionDeclarationNode(FunctionArgumentListNode* arguments, Typing::TypeListNode* returnType, std::string id);
+        void exec() override;
+        ~NativeFunctionDeclarationNode() override;
+    };
+
     class FunctionArgumentNode: public ASTNode {
     public:
         std::string id;

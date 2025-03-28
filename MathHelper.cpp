@@ -1169,6 +1169,7 @@ Cmm::ValueObject Cmm::MathHelper::not_equal(ValueObject &left, ValueObject &righ
     return result;
 }
 
+
 Cmm::ValueObject Cmm::MathHelper::logical_not(ValueObject &left) {
     auto common = V_Bool;
     ValueObject* l_ptr;
@@ -1218,4 +1219,3 @@ Cmm::ValueObject Cmm::MathHelper::bitwise_not(ValueObject &left) {
 
     return result;
 }
-

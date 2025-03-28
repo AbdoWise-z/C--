@@ -1,0 +1,16 @@
+bind "libs/libio.so"
+
+// read value from input stream
+func input(type: str = "str") -> str | int | real | complex | bool = native
+
+// reads a line from input
+func getLine() -> str = native
+
+// output a value to the output stream
+func print(v: str)      -> void = native
+func print(v: int)      -> void = native
+func print(v: real)     -> void = native
+func print(v: bool)     -> void = native
+func print(v: complex)  -> void = native
+
+func endl() -> str = native

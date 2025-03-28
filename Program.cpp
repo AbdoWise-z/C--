@@ -27,7 +27,7 @@ namespace Namespace::Program {
         V_Bool
     };
 
-    static std::string stringfy(function_sig sig) {
+    static std::string stringfy(FunctionSignature sig) {
         std::string args;
         for (int i = 0;i < sig.second.size();i++) {
             args += ValuesHelper::ValueTypeAsString(sig.second[i]);
@@ -175,7 +175,7 @@ namespace Namespace::Program {
         throw VariableNotFoundError(name);
     }
 
-    void createFunction(const function_sig &signature, Functional::FunctionNode* node) {
+    void createFunction(const FunctionSignature &signature, Functional::FunctionNode* node) {
         ProgramBlock& block = getCurrentProgram();
         if (block.stack.empty()) {
             throw NoStackError();
@@ -188,10 +188,71 @@ namespace Namespace::Program {
             throw AlreadyDefinedError(stringfy(signature));
         }
 
+        auto it2 = block.native_functions.find(signature);
+        if (it2 != block.native_functions.end()) {
+            throw AlreadyDefinedError(stringfy(signature));
+        }
+
         scope.functions[signature] = node;
     }
 
-    ValueObject callFunction(const function_sig& signature, const std::vector<ValueObject>& params) {
+    void createFunction(const FunctionSignature &signature, NativeFunction handler) {
+        ProgramBlock& block = getCurrentProgram();
+        if (block.stack.empty()) {
+            throw NoStackError();
+        }
+
+        Scope& scope = block.stack.back();
+
+        auto it1 = block.native_functions.find(signature);
+        if (it1 != block.native_functions.end()) {
+            throw AlreadyDefinedError(stringfy(signature));
+        }
+
+        auto it2 = scope.functions.find(signature);
+        if (it2 != scope.functions.end()) {
+            throw AlreadyDefinedError(stringfy(signature));
+        }
+
+        block.native_functions[signature] = handler;
+    }
+
+    void validateNativeExists(const FunctionSignature &signature) {
+        ProgramBlock& block = getCurrentProgram();
+        if (block.stack.size() > 1) {
+            // not in the top level
+            throw NativeError("Native functions can only be created on the top level of the program.");
+        }
+
+        auto it = block.native_functions.find(signature);
+        if (it == block.native_functions.end()) {
+            throw FunctionNotFoundError(stringfy(signature) + ":native");
+        }
+    }
+
+    static ValueObject callFunctionNative(const FunctionSignature& signature, const std::vector<ValueObject>& params) {
+        ProgramBlock& block = getCurrentProgram();
+
+        auto it = block.native_functions.find(signature);
+        if (it != block.native_functions.end()) {
+            const NativeFunction obj = it->second;
+            // do the actual calling
+            const ValueObject result = obj(signature, params);
+            return result;
+        }
+
+        throw FunctionNotFoundError(stringfy(signature));
+    }
+
+
+    ValueObject callFunction(const FunctionSignature& signature, const std::vector<ValueObject>& params) {
+
+        try {
+            return callFunctionNative(signature, params);
+        } catch (FunctionNotFoundError& e) {
+            // do nothing
+        }
+
         // bottom up search the function signature
         ProgramBlock& block = getCurrentProgram();
         int scope = block.stack.size() - 1;
@@ -244,10 +305,18 @@ namespace Namespace::Program {
     }
 
     ControlError::ControlError(std::string msg) {
-        this->msg = msg;
+        this->msg = std::move(msg);
     }
 
     const char * ControlError::what() const noexcept {
+        return msg.c_str();
+    }
+
+    NativeError::NativeError(std::string msg) {
+        this->msg = std::move(msg);
+    }
+
+    const char * NativeError::what() const noexcept {
         return msg.c_str();
     }
 
@@ -272,7 +341,9 @@ namespace Namespace::Program {
 
     void ExpressionStatementNode::exec() {
         auto mValue = this->expr->eval();
+#ifdef CMM_DEBUG
         std::cout << "[e]> expr[" << ValuesHelper::ValueTypeAsString(mValue.type) << "]" << "=" << ValuesHelper::toString(mValue) << std::endl;
+#endif
     }
 
     StatementListNode::StatementListNode(StatementListNode *other, ExecutableNode *next) {

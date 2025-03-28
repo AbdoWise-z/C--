@@ -4,6 +4,8 @@
 
 #include "Functional.h"
 
+#include <utility>
+
 
 namespace Cmm::Functional {
     FunctionDeclarationNode::FunctionDeclarationNode(FunctionNode *node) : node(node) {}
@@ -16,7 +18,31 @@ namespace Cmm::Functional {
         delete node;
     }
 
-    FunctionArgumentNode::FunctionArgumentNode(std::string id, std::string type) : id(std::move(id)), type(type) {
+    NativeFunctionDeclarationNode::NativeFunctionDeclarationNode(FunctionArgumentListNode *arguments,
+        Typing::TypeListNode *returnType, std::string id) {
+        this->id = std::move(id);
+        this->arguments = arguments;
+        this->returnType = returnType;
+    }
+
+    void NativeFunctionDeclarationNode::exec() {
+        // validation only the actual binging happens on the c-code side
+        std::vector<ValueType> args;
+        for (auto item: arguments->arguments) {
+            args.push_back(ValuesHelper::StringToValueType(item->type));
+        }
+
+        std::pair sig = { id, args};
+
+        Program::validateNativeExists(sig);
+    }
+
+    NativeFunctionDeclarationNode::~NativeFunctionDeclarationNode() {
+        delete arguments;
+        delete returnType;
+    }
+
+    FunctionArgumentNode::FunctionArgumentNode(std::string id, std::string type) : id(std::move(id)), type(std::move(type)) {
         defaultValue = nullptr;
     }
 

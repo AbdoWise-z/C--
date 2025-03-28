@@ -8,26 +8,9 @@
 #include <string>
 
 #include "config.h"
+#include "common.h"
 
 namespace Namespace {
-    enum ValueType {
-        V_Integer,
-        V_Real,
-        V_String,
-        V_Complex,
-        V_Bool,
-        V_Void,
-        V_Error,
-        V_Ref
-    };
-
-
-    struct ValueObject {
-        ValueType type;
-        void* value;
-    };
-
-
     namespace ValuesHelper {
         class ConversionError: public std::exception {
         private:

@@ -21,12 +21,13 @@ namespace Namespace::Functional {
 
 namespace Namespace::Program {
 
+
     class StatementListNode;
     class ExpressionStatementNode;
     class ScopeNode;
 
     extern std::vector<ValueType> conversionPriority;
-    typedef std::pair<std::string, std::vector<ValueType>> function_sig;
+
 
     struct VariableBlock {
         Cmm::ValueObject Value;
@@ -35,7 +36,7 @@ namespace Namespace::Program {
 
     struct Scope {
         std::map<std::string, VariableBlock> variables;
-        std::map<function_sig, Functional::FunctionNode*> functions;
+        std::map<FunctionSignature, Functional::FunctionNode*> functions;
         ASTNode* owner;
     };
 
@@ -43,6 +44,7 @@ namespace Namespace::Program {
         std::vector<Scope> stack;
         std::vector<std::string> moduleStack;
         ASTNode* programCode;
+        std::map<FunctionSignature, NativeFunction> native_functions;
     };
 
     ProgramBlock& getCurrentProgram();
@@ -64,8 +66,10 @@ namespace Namespace::Program {
     void createVariable(const std::string& name, Cmm::ValueObject, bool isConst = false);
     VariableBlock& getVariable(const std::string& name);
 
-    void createFunction(const function_sig &signature, Functional::FunctionNode*);
-    ValueObject callFunction(const function_sig& signature, const std::vector<ValueObject>&);
+    void createFunction(const FunctionSignature &signature, Functional::FunctionNode*);
+    void createFunction(const FunctionSignature &signature, NativeFunction handler);
+    void validateNativeExists(const FunctionSignature& signature);
+    ValueObject callFunction(const FunctionSignature& signature, const std::vector<ValueObject>&);
 
     // ========================= ERRORS =========================
 
@@ -110,6 +114,13 @@ namespace Namespace::Program {
         [[nodiscard]] const char *what() const noexcept override;
     };
 
+    class NativeError : public std::exception {
+        std::string msg;
+    public:
+        explicit NativeError(std::string  msg);
+        [[nodiscard]] const char *what() const noexcept override;
+    };
+
     // ========================= NODES =========================
 
     class ProgramNode: public ExecutableNode {
@@ -142,7 +153,6 @@ namespace Namespace::Program {
         void exec() override;
         ~ScopeNode() override;
     };
-
 }
 
 #endif //PROGRAM_H

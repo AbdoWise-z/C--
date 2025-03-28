@@ -4,6 +4,8 @@
 
 #include "Real.h"
 
+#include <ctime>
+
 #include "Complex.h"
 #include "Integer.h"
 
@@ -93,6 +95,35 @@ Real Real::operator*(const Real &other) const {
     return temp;
 }
 
+#include <mpfr.h>
+
+static void mpfr_pow(mpf_t result, const mpf_t base, const mpf_t exp) {
+    mpfr_t log_a, temp, res, b, a;
+    
+    mpfr_init2(log_a, 256);
+    mpfr_init2(temp, 256);
+    mpfr_init2(res, 256);
+    mpfr_init2(a, 256);
+    mpfr_init2(b, 256);
+
+    mpfr_set_f(a, base, MPFR_RNDN);
+    mpfr_set_f(b, exp, MPFR_RNDN);
+
+    mpfr_log(log_a, a, MPFR_RNDN);    // log(a)
+    mpfr_mul(temp, b, log_a, MPFR_RNDN); // b * log(a)
+    mpfr_exp(res, temp, MPFR_RNDN);    // exp(b * log(a))
+
+    mpfr_get_f(result, res, MPFR_RNDN);
+
+    mpfr_clears(log_a, temp, res, a, b, NULL);
+}
+
+Real Real::operator^(const Real &b) const {
+    Real result;
+    mpfr_pow(result.mValue, mValue, b.mValue);
+    return result;
+}
+
 Real Real::operator/(const Real &other) const {
     Real temp;
     mpf_div(temp.mValue, mValue, other.mValue);
@@ -174,6 +205,18 @@ std::string Real::toString(int base) const {
     return mpfToString(mValue, base);
 }
 
+Real Real::abs() const {
+    Real t1;
+    mpf_abs(t1.mValue, mValue);
+    return t1;
+}
+
+Real Real::sqrt() const {
+    Real t1;
+    mpf_sqrt(t1.mValue, mValue);
+    return t1;
+}
+
 Real::Real(Real &&other) noexcept {
     memcpy(&mValue, &other.mValue, sizeof(mValue));
     other.del = false;
@@ -201,6 +244,25 @@ std::istream &Cmm::operator>>(std::istream &stream, Real &n) {
 std::ostream &Cmm::operator<<(std::ostream &stream, const Real &n) {
     stream << n.toString(10);
     return stream;
+}
+
+static void random_mpf(mpf_t result) {
+    static gmp_randstate_t state;
+    static bool initialized = false;
+
+    if (!initialized) {
+        gmp_randinit_mt(state); // Mersenne Twister RNG
+        gmp_randseed_ui(state, time(nullptr)); // Seed with current time
+        initialized = true;
+    }
+
+    mpf_urandomb(result, state, 64); // Generate a number in [0,1)
+}
+
+Real Real::rand() {
+    Real r;
+    random_mpf(r.mValue);
+    return r;
 }
 
 

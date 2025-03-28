@@ -9,6 +9,7 @@
 
 #include "config.h"
 #include "Values.h"
+#include "primitives/Real.h"
 
 namespace Namespace {
 

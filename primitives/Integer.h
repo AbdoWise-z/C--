@@ -63,6 +63,9 @@ namespace Namespace {
         Integer operator| (const Integer& b) const;
         Integer operator& (const Integer& b) const;
 
+        explicit operator int() const;
+        explicit operator long() const;
+
         Integer sqrt() const;
 
         [[nodiscard]] std::string toString(int base) const;

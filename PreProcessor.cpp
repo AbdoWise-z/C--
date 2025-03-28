@@ -20,6 +20,9 @@ static std::optional<std::string> findFile(const std::string& filename, const st
         if (fs::exists(filePath)) {
             return filePath.string();
         }
+
+        if (fs::exists(filePath.string() + ".cmm"))
+            return filePath.string() + ".cmm";
     }
     return std::nullopt;
 }

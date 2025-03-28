@@ -229,6 +229,14 @@ Integer Integer::operator&(const Integer &b) const {
     return t1;
 }
 
+Integer::operator int() const {
+    return mpz_get_si(mValue);
+}
+
+Integer::operator long() const {
+    return mpz_get_si(mValue);
+}
+
 Integer Integer::sqrt() const {
     Integer t1;
     mpz_sqrt(t1.mValue , mValue );

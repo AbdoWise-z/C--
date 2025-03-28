@@ -158,8 +158,38 @@ add_library(math SHARED
         MathHelper.cpp
 )
 
+add_library(str SHARED
+        Cmm/std/cpp/str.cpp
+        common.h
+        primitives/Integer.cpp
+        primitives/Integer.h
+        primitives/Real.cpp
+        primitives/Real.h
+        primitives/Complex.cpp
+        primitives/Complex.h
+        primitives/Bool.h
+        primitives/String.h
+        primitives.h
+
+        Values.h
+        Values.cpp
+
+        MathHelper.h
+        MathHelper.cpp
+)
+
 target_link_libraries(
         io
+        gmp mpfr
+)
+
+target_link_libraries(
+        math
+        gmp mpfr
+)
+
+target_link_libraries(
+        str
         gmp mpfr
 )
 

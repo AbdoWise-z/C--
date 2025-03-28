@@ -1,2 +1,3 @@
 import "io.cmm"
 import "math.cmm"
+import "string.cmm"

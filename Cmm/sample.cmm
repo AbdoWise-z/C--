@@ -1,4 +1,4 @@
-import "io.cmm"
+import "std"
 
 print("Enter a number: ");
 var n1: real = input("real");

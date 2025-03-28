@@ -31,7 +31,9 @@ static bool loadLibraryAndInitialize(const std::string& libPath) {
 #endif
 
     if (!handle) {
+#ifdef CMM_DEBUG
         std::cerr << "Failed to load library: " << dlerror() << std::endl;
+#endif
         return false;
     }
 
@@ -46,7 +48,9 @@ static bool loadLibraryAndInitialize(const std::string& libPath) {
 #endif
 
     if (!init) {
+#ifdef CMM_DEBUG
         std::cerr << "Failed to load function `init`: " << dlerror() << std::endl;
+#endif
 #ifdef _WIN32
         FreeLibrary(handle);
 #else

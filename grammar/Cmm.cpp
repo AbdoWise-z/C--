@@ -58,7 +58,7 @@ int main() {
 
         auto [code, load] = Cmm::PreProcessor::processContent(input, {"./Cmm/std" , "."});
 
-        for (auto lib: load) {
+        for (const auto& lib: load) {
             Cmm::NativeLoader::LoadNative(lib);
         }
 

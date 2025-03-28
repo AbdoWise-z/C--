@@ -6,7 +6,7 @@
 
 #include <ranges>
 
-#include "MathHelper.h"
+#include "../MathHelper.h"
 #include "Program.h"
 
 Cmm::Expressions::ExpressionNode::ExpressionNode() = default;

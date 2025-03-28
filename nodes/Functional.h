@@ -5,7 +5,7 @@
 #ifndef FUNCTIONAL_H
 #define FUNCTIONAL_H
 
-#include "config.h"
+#include "../config.h"
 #include "Program.h"
 
 namespace Namespace::Functional {

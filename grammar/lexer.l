@@ -4,16 +4,16 @@
 
 #include "../config.h"
 #include "../forward.h"
-#include "../AST.h"
+#include "../nodes/AST.h"
 #include "../primitives.h"
 #include "../MathHelper.h"
 #include "../Values.h"
-#include "../Expressions.h"
-#include "../Program.h"
-#include "../Typing.h"
-#include "../Control.h"
-#include "../Variables.h"
-#include "../Functional.h"
+#include "../nodes/Expressions.h"
+#include "../nodes/Program.h"
+#include "../nodes/Typing.h"
+#include "../nodes/Control.h"
+#include "../nodes/Variables.h"
+#include "../nodes/Functional.h"
 
 #include "parser.tab.hpp"
 

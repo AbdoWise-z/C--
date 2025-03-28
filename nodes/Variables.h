@@ -5,7 +5,7 @@
 #ifndef VARIABLES_H
 #define VARIABLES_H
 
-#include "config.h"
+#include "../config.h"
 #include "Expressions.h"
 #include "Program.h"
 

@@ -5,7 +5,7 @@
 #ifndef PROGRAM_H
 #define PROGRAM_H
 
-#include "config.h"
+#include "../config.h"
 #include "AST.h"
 
 #include <map>

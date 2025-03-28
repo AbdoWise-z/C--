@@ -7,7 +7,7 @@
 
 #include <iostream>
 
-#include "MathHelper.h"
+#include "../MathHelper.h"
 
 Cmm::Control::IFNode::IFNode(EvaluableNode *condition, ExecutableNode *if_true, ExecutableNode *if_false) {
     this->condition = condition;

@@ -7,8 +7,8 @@
 
 #include <map>
 
-#include "config.h"
-#include "Values.h"
+#include "../config.h"
+#include "../Values.h"
 
 namespace Namespace {
 

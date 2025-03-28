@@ -7,8 +7,8 @@
 
 #include <vector>
 
-#include "primitives.h"
-#include "config.h"
+#include "../primitives.h"
+#include "../config.h"
 #include "AST.h"
 
 

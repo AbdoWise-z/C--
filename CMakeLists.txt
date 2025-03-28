@@ -25,11 +25,11 @@ add_executable(Cmm
         primitives/String.h
         primitives.h
 
-        AST.cpp
-        AST.h
+        nodes/AST.cpp
+        nodes/AST.h
 
-        Expressions.cpp
-        Expressions.h
+        nodes/Expressions.cpp
+        nodes/Expressions.h
 
         MathHelper.cpp
         MathHelper.h
@@ -39,20 +39,20 @@ add_executable(Cmm
 
         forward.h
 
-        Program.cpp
-        Program.h
+        nodes/Program.cpp
+        nodes/Program.h
 
-        Typing.cpp
-        Typing.h
+        nodes/Typing.cpp
+        nodes/Typing.h
 
-        Control.cpp
-        Control.h
+        nodes/Control.cpp
+        nodes/Control.h
 
-        Variables.cpp
-        Variables.h
+        nodes/Variables.cpp
+        nodes/Variables.h
 
-        Functional.cpp
-        Functional.h
+        nodes/Functional.cpp
+        nodes/Functional.h
 
         editor/NanoEditor.cpp
         editor/NanoEditor.h
@@ -92,29 +92,29 @@ add_executable(Sandbox
         primitives/String.h
         primitives.h
 
-        AST.cpp
-        AST.h
+        nodes/AST.cpp
+        nodes/AST.h
 
         MathHelper.cpp
         MathHelper.h
         Values.cpp
         Values.h
-        Expressions.cpp
-        Expressions.h
+        nodes/Expressions.cpp
+        nodes/Expressions.h
         forward.h
-        Program.cpp
-        Program.h
-        Typing.cpp
-        Typing.h
-        Control.cpp
-        Control.h
+        nodes/Program.cpp
+        nodes/Program.h
+        nodes/Typing.cpp
+        nodes/Typing.h
+        nodes/Control.cpp
+        nodes/Control.h
 
         editor/NanoEditor.cpp
         editor/NanoEditor.h
-        Variables.cpp
-        Variables.h
-        Functional.cpp
-        Functional.h
+        nodes/Variables.cpp
+        nodes/Variables.h
+        nodes/Functional.cpp
+        nodes/Functional.h
         common.h
 )
 

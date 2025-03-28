@@ -7,7 +7,7 @@
 
 #include <vector>
 
-#include "config.h"
+#include "../config.h"
 #include "AST.h"
 
 namespace Namespace::Control {

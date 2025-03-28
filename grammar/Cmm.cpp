@@ -4,12 +4,12 @@
 // ========== must have these includes before including parser.tab ==========
 #include "../config.h"
 #include "../forward.h"
-#include "../AST.h"
+#include "../nodes/AST.h"
 #include "../primitives.h"
 #include "../MathHelper.h"
 #include "../Values.h"
-#include "../Expressions.h"
-#include "../Program.h"
+#include "../nodes/Expressions.h"
+#include "../nodes/Program.h"
 
 #include "parser.tab.hpp"
 #include "../NativeLoader.h"

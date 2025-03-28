@@ -6,7 +6,7 @@
 #include <dlfcn.h>
 #include <iostream>
 
-#include "Program.h"
+#include "nodes/Program.h"
 #ifdef _WIN32
 #include <windows.h>
 #endif

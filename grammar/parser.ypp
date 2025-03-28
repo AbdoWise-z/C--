@@ -4,16 +4,16 @@
 
 #include "../config.h"
 #include "../forward.h"
-#include "../AST.h"
+#include "../nodes/AST.h"
 #include "../primitives.h"
 #include "../MathHelper.h"
 #include "../Values.h"
-#include "../Expressions.h"
-#include "../Program.h"
-#include "../Typing.h"
-#include "../Control.h"
-#include "../Variables.h"
-#include "../Functional.h"
+#include "../nodes/Expressions.h"
+#include "../nodes/Program.h"
+#include "../nodes/Typing.h"
+#include "../nodes/Control.h"
+#include "../nodes/Variables.h"
+#include "../nodes/Functional.h"
 
 #include "parser.tab.hpp"
 
@@ -257,11 +257,6 @@ func_def:
         *$2
       );
    }
-    // export func input(type: str = "str") -> str | int | real | complex | bool { .. } 
-  /* | MISC_EXPORT MISC_FUNC ID D_LPAREN func_arg_list D_RPAREN D_ARROW types_list D_LBRACE statements_list D_RBRACE { $$ = nullptr; } // will deal with you later ..
-    // export func input(type: str = "str") -> str | int | real | complex | bool = native
-  | MISC_EXPORT MISC_FUNC ID D_LPAREN func_arg_list D_RPAREN D_ARROW types_list OP_ASSIGN MISC_NATIVE D_SEMICOLON { $$ = nullptr; }
-  ; */
   ;
 
 func_arg:

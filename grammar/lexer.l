@@ -31,7 +31,7 @@ void remove_first_and_last_char(std::string* str_ptr) {
 
 %%
 
-\"([^\"]*)\"      {
+\"([^"\\]*(\\.[^"\\]*)*)\" {
     std::string* val = new std::string(yytext);
     remove_first_and_last_char(val);
     yylval.str = val;

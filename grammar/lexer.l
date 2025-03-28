@@ -132,11 +132,8 @@ void remove_first_and_last_char(std::string* str_ptr) {
 
 "func"    { return MISC_FUNC; }
 "fun"     { return MISC_FUNC; }
-"from"    { return MISC_FROM; }
 "var"     { return MISC_VAR; }
 "const"   { return MISC_CONST; }
-"import"  { return MISC_IMPORT; }
-"export"  { return MISC_EXPORT; }
 "native"  { return MISC_NATIVE; }
 
 "//".*        { /* Ignore single-line comments */ }
@@ -158,3 +155,11 @@ void remove_first_and_last_char(std::string* str_ptr) {
 }
 
 %%
+
+/*
+Ignore these rules
+
+"import"  { return MISC_IMPORT; }
+"export"  { return MISC_EXPORT; }
+"from"    { return MISC_FROM; }
+*/

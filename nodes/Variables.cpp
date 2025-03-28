@@ -37,7 +37,25 @@ namespace Cmm::Variables {
 
     }
 
-    VariableDeclarationNode::~VariableDeclarationNode() = default;
+    VariableDeclarationNode::~VariableDeclarationNode() {
+        delete value;
+    }
+
+    InferredVariableDeclarationNode::InferredVariableDeclarationNode(bool isConst, std::string name,
+        EvaluableNode *value) {
+        this->isConst = isConst;
+        this->name = std::move(name);
+        this->value = value;
+    }
+
+    void InferredVariableDeclarationNode::exec() {
+        auto mValue = this->value->eval();
+        Program::createVariable(name, mValue, isConst);
+    }
+
+    InferredVariableDeclarationNode::~InferredVariableDeclarationNode() {
+        delete value;
+    }
 
 
     VariableAssignmentNode::VariableAssignmentNode(std::string name, EvaluableNode *value) {

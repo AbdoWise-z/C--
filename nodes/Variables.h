@@ -21,6 +21,16 @@ namespace Namespace::Variables {
         ~VariableDeclarationNode() override;
     };
 
+    class InferredVariableDeclarationNode: public ExecutableNode {
+    public:
+        bool isConst;
+        std::string name;
+        EvaluableNode* value;
+        InferredVariableDeclarationNode(bool isConst, std::string name, EvaluableNode* value);
+        void exec() override;
+        ~InferredVariableDeclarationNode() override;
+    };
+
     class VariableAssignmentNode: public ExecutableNode {
     public:
         std::string name;

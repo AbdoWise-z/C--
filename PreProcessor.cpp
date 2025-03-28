@@ -17,11 +17,11 @@ namespace fs = std::filesystem;
 static std::optional<std::string> findFile(const std::string& filename, const std::vector<std::string>& searchPaths) {
     for (const auto& path : searchPaths) {
         fs::path filePath = fs::path(path) / filename;
-        if (fs::exists(filePath)) {
+        if (fs::exists(filePath) && !fs::is_directory(filePath)) {
             return filePath.string();
         }
 
-        if (fs::exists(filePath.string() + ".cmm"))
+        if (fs::exists(filePath.string() + ".cmm") && !fs::is_directory(filePath.string() + ".cmm"))
             return filePath.string() + ".cmm";
     }
     return std::nullopt;
@@ -48,13 +48,13 @@ static std::pair<std::string, std::vector<std::string>> processFile(const std::s
 
     std::string line;
     while (std::getline(file, line)) {
-        if (line.find("import \"") == 0 && line.back() == '"') {
-            std::string importPath = line.substr(8, line.size() - 9);
+        if (line.find("#import \"") == 0 && line.back() == '"') {
+            std::string importPath = line.substr(9, line.size() - 10);
             auto [importedContent, importedToBind] = processFile(importPath, searchPaths);
             processedContent << importedContent;
             toBindList.insert(toBindList.end(), importedToBind.begin(), importedToBind.end());
-        } else if (line.find("bind \"") == 0 && line.back() == '"') {
-            std::string bindPath = line.substr(6, line.size() - 7);
+        } else if (line.find("#bind \"") == 0 && line.back() == '"') {
+            std::string bindPath = line.substr(7, line.size() - 8);
             auto foundBindFile = findFile(bindPath, searchPaths);
             if (!foundBindFile) {
                 throw std::runtime_error("Bind file not found: " + bindPath);
@@ -76,13 +76,14 @@ static std::pair<std::string, std::vector<std::string>> _processContent(const st
 
     std::string line;
     while (std::getline(file, line)) {
-        if (line.find("import \"") == 0 && line.back() == '"') {
-            std::string importPath = line.substr(8, line.size() - 9);
+        if (line.find("#import \"") == 0 && line.back() == '"') {
+
+            std::string importPath = line.substr(9, line.size() - 10);
             auto [importedContent, importedToBind] = processFile(importPath, searchPaths);
             processedContent << importedContent;
             toBindList.insert(toBindList.end(), importedToBind.begin(), importedToBind.end());
-        } else if (line.find("bind \"") == 0 && line.back() == '"') {
-            std::string bindPath = line.substr(6, line.size() - 7);
+        } else if (line.find("#bind \"") == 0 && line.back() == '"') {
+            std::string bindPath = line.substr(7, line.size() - 8);
             auto foundBindFile = findFile(bindPath, searchPaths);
             if (!foundBindFile) {
                 throw std::runtime_error("Bind file not found: " + bindPath);

@@ -1,0 +1,18 @@
+#import "std"
+
+var speed: real = 0;
+var eps: real = 0.8;
+
+print("0 it/s");
+
+while (true) {
+    var t: int = second();
+    var it: int = 0;
+    while (t == second()) {
+        it++;
+    }
+
+    speed = speed + (it - speed) * eps;
+    print("\r");
+    print(speed + " it/s");
+}

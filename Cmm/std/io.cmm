@@ -1,4 +1,4 @@
-bind "libs/libio.so"
+#bind "libs/libio.so"
 
 // read value from input stream
 func input(type: str = "str") -> str | int | real | complex | bool = native

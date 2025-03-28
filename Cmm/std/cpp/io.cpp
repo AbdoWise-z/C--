@@ -82,6 +82,7 @@ Cmm::ValueObject input(const Cmm::FunctionSignature& sig, std::vector<Cmm::Value
 
 Cmm::ValueObject print(const Cmm::FunctionSignature& sig, std::vector<Cmm::ValueObject>& params) {
     std::cout << Cmm::ValuesHelper::toString(params[0]);
+    std::cout.flush();
 
     Cmm::ValueObject result = {
         .type = Cmm::V_Void,

@@ -210,6 +210,8 @@ switch_case:
 var_decl_stmt:
     MISC_VAR   ID D_COLON type_specifier OP_ASSIGN expr { $$ = new Cmm::Variables::VariableDeclarationNode(false, *$2, *$4, $6); }
   | MISC_CONST ID D_COLON type_specifier OP_ASSIGN expr { $$ = new Cmm::Variables::VariableDeclarationNode(true , *$2, *$4, $6); }
+  | MISC_VAR   ID OP_ASSIGN expr { $$ = new Cmm::Variables::InferredVariableDeclarationNode(false, *$2, $4); }
+  | MISC_CONST ID OP_ASSIGN expr { $$ = new Cmm::Variables::InferredVariableDeclarationNode(true , *$2, $4); }
   ;
 
 var_assign_stmt:

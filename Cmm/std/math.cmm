@@ -1,4 +1,4 @@
-bind "libs/libmath.so"
+#bind "libs/libmath.so"
 
 // calculates the sqrt of a value
 func sqrt(n: real)    -> real          = native

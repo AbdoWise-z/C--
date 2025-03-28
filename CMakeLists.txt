@@ -178,6 +178,26 @@ add_library(str SHARED
         MathHelper.cpp
 )
 
+add_library(time SHARED
+        Cmm/std/cpp/time.cpp
+        common.h
+        primitives/Integer.cpp
+        primitives/Integer.h
+        primitives/Real.cpp
+        primitives/Real.h
+        primitives/Complex.cpp
+        primitives/Complex.h
+        primitives/Bool.h
+        primitives/String.h
+        primitives.h
+
+        Values.h
+        Values.cpp
+
+        MathHelper.h
+        MathHelper.cpp
+)
+
 target_link_libraries(
         io
         gmp mpfr
@@ -190,6 +210,11 @@ target_link_libraries(
 
 target_link_libraries(
         str
+        gmp mpfr
+)
+
+target_link_libraries(
+        time
         gmp mpfr
 )
 

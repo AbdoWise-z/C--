@@ -91,11 +91,7 @@ extern Cmm::Program::ProgramNode* root;
 %type <sw_case_t> switch_case
 %type <sw_body_t> switch_body
 
-%left OP_PLUS OP_MINUS
-%left OP_MULT OP_DIV
 %precedence OP_UNARY_MINUS
-
-%right OP_ASSIGN
 
 %nonassoc CONTROL_IF
 %nonassoc LOWER_THAN_ELSE
@@ -104,21 +100,6 @@ extern Cmm::Program::ProgramNode* root;
 %start program
 
 %%
-
-
- /* expr {
-        try {
-          auto result = $1->eval();
-          auto asStr = Cmm::ValuesHelper::castTo(result, Cmm::V_String);
-          auto str_ptr = static_cast<Cmm::String*>(asStr.value);
-          std::cout << *str_ptr << std::endl;
-        } catch (std::exception& e) {
-          std::cerr << e.what() << std::endl;
-          std::cerr << std::endl;
-        }
-        YYACCEPT;
-      } */
-
 //               ============== Program ==============
 
 program:
@@ -242,8 +223,7 @@ scope_stmt:
     }
   ;
 func_def:
-    // func input(type: str = "str") -> str | int | real | complex | bool { .. }
-    MISC_FUNC ID D_LPAREN func_arg_list D_RPAREN D_ARROW types_list D_LBRACE statements_list D_RBRACE { 
+    MISC_FUNC ID D_LPAREN func_arg_list D_RPAREN D_ARROW types_list D_LBRACE statements_list D_RBRACE {
       $$ = new Cmm::Functional::FunctionDeclarationNode(new Cmm::Functional::FunctionNode(
         dynamic_cast<Cmm::Functional::FunctionArgumentListNode*>($4),
         dynamic_cast<Cmm::Program::StatementListNode*>($9),
@@ -251,8 +231,7 @@ func_def:
         $7
       ));
   }
-    // func input(type: str = "str") -> str | int | real | complex | bool = native
-  | MISC_FUNC ID D_LPAREN func_arg_list D_RPAREN D_ARROW types_list OP_ASSIGN MISC_NATIVE { 
+  | MISC_FUNC ID D_LPAREN func_arg_list D_RPAREN D_ARROW types_list OP_ASSIGN MISC_NATIVE {
       $$ = new Cmm::Functional::NativeFunctionDeclarationNode(
         dynamic_cast<Cmm::Functional::FunctionArgumentListNode*>($4),
         $7,

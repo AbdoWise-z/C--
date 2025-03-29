@@ -341,9 +341,9 @@ namespace Namespace::Program {
 
     void ExpressionStatementNode::exec() {
         auto mValue = this->expr->eval();
-#ifdef CMM_DEBUG
-        std::cout << "[e]> expr[" << ValuesHelper::ValueTypeAsString(mValue.type) << "]" << "=" << ValuesHelper::toString(mValue) << std::endl;
-#endif
+        if (mValue.type != V_Void && mValue.type != V_Ref && mValue.type != V_Error)
+            std::cout << "[e]> expr[" << ValuesHelper::ValueTypeAsString(mValue.type) << "]" << "=" << ValuesHelper::toString(mValue) << std::endl;
+        ValuesHelper::Delete(mValue);
     }
 
     StatementListNode::StatementListNode(StatementListNode *other, ExecutableNode *next) {

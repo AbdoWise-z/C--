@@ -494,7 +494,7 @@ Cmm::ValueObject Cmm::MathHelper::rshift(ValueObject &left, ValueObject &right) 
     switch (common) {
         case Cmm::V_Integer:
             result.value = new Integer(
-                *static_cast<Integer*>(l_ptr->value) << *static_cast<Integer*>(r_ptr->value)
+                *static_cast<Integer*>(l_ptr->value) >> *static_cast<Integer*>(r_ptr->value)
                 );
         break;
         default: result.value = nullptr;

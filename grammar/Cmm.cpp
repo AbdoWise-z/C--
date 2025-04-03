@@ -54,7 +54,10 @@ int main() {
         }
 
         if (input == "quit") break;
-        if (input.empty()) break;
+        if (input.empty()) {
+            std::cout << "\r";
+            continue;
+        }
 
         auto [code, load] = Cmm::PreProcessor::processContent(input, {"./Cmm/std" , "."});
 

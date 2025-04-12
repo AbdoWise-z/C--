@@ -329,6 +329,11 @@ namespace Namespace::Program {
         this->source.clear();
     }
 
+    ProgramNode::~ProgramNode() {
+        for (auto s: source)
+            delete s;
+    }
+
     void ProgramNode::exec() {
         beginScope();
 

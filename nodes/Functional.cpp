@@ -194,6 +194,6 @@ namespace Cmm::Functional {
     FunctionNode::~FunctionNode() {
         delete this->function;
         delete this->returnType;
-        delete this->returnType;
+        delete this->arguments;
     }
 }

@@ -70,7 +70,7 @@ static void do_step_once(Cmm::ASTNode* node) {
         }
 
         executionStack.pop();
-        
+
         if (!executionStack.empty()) {
             do_step_once(executionStack.top());
         }
@@ -95,9 +95,12 @@ void Cmm::CmmDebugger::exec(std::string code) {
 
         if (debuggerEnabled) {
             start_debugged(program->source[0]);
+            program->source.clear();
+            delete program;
         } else {
             // Program::beginScope();
             program->source[0]->exec();
+            delete program;
             // Program::endScope();
         }
     }

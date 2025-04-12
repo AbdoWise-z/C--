@@ -130,6 +130,7 @@ namespace Namespace::Program {
         std::vector<ExecutableNode*> source;
         explicit ProgramNode(ExecutableNode* source);
         explicit ProgramNode();
+        ~ProgramNode() override;
 
         void exec() override;
     };

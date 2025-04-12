@@ -14,6 +14,7 @@
 #include "parser.tab.hpp"
 #include "../NativeLoader.h"
 #include "../PreProcessor.h"
+#include "../debugger/Core.h"
 #include "../editor/NanoEditor.h"
 
 extern int yyparse();
@@ -39,7 +40,8 @@ int main() {
     std::cout << "Unauthorized copying, reproduction, or distribution of this software is strictly prohibited." << std::endl;
     std::cout << "Type 'editor' to open code editor, 'quit' to exit, or any Cmm statement to execute." << std::endl;
 
-    Cmm::Program::beginScope();
+    Cmm::CmmDebugger::beginSession();
+    Cmm::CmmDebugger::enableDebugger();
 
     // Cmm::NativeLoader::LoadNative("./Cmm/libstd.so");
     // Cmm:Cmm::Program::createFunction({"send_help", {}}, super_cool_function);
@@ -65,23 +67,18 @@ int main() {
             Cmm::NativeLoader::LoadNative(lib);
         }
 
-        if (!code.ends_with(';')) {
-            code += ";"; // even if we shouldn't it wont make a problem
-        }
+        // if (!code.ends_with(';')) {
+        //     code += ";"; // even if we shouldn't it wont make a problem
+        // }
 
-        yy_scan_string(code.c_str());
-        
-        int parse_result = yyparse();
+        Cmm::CmmDebugger::exec(code);
 
-        if (parse_result == 0) {
-            root->source->exec();
-        }
-
-        // Clean up lexer
-        yylex_destroy();
     }
 
-    Cmm::Program::endScope();
-    
+    // Clean up lexer
+    yylex_destroy();
+
+    Cmm::CmmDebugger::endSession();
+
     return 0;
 }

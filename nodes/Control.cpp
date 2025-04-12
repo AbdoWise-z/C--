@@ -56,6 +56,9 @@ void Cmm::Control::ForNode::exec() {
     // they shouldn't be accessible outsize the for loop
     Program::beginScope(nullptr);
 
+    auto _inc = dynamic_cast<Program::ExpressionStatementNode*>(this->inc);
+    if (_inc) _inc->_silent = true; // if it's an expression node make it silent because I hate spamming :)
+
     if (init) init->exec();
 
     bool cond = false;

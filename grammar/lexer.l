@@ -145,7 +145,8 @@ void remove_first_and_last_char(std::string* str_ptr) {
     return ID;
 }
 
-[ \t\n]   { /* Skip whitespace */ }
+[ \t]+    { /* Skip spaces and tabs only */ }
+\n        { ++yylineno; }
 
 <<EOF>>         { return END; }
 

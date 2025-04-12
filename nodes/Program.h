@@ -53,6 +53,7 @@ namespace Namespace::Program {
     void popModule();
 
     std::string getModule();
+    std::string stringfy(FunctionSignature);
 
     void beginScope(ASTNode* owner = nullptr);
     void endScope();
@@ -126,24 +127,29 @@ namespace Namespace::Program {
     class ProgramNode: public ExecutableNode {
     public:
 
-        ExecutableNode* source;
+        std::vector<ExecutableNode*> source;
         explicit ProgramNode(ExecutableNode* source);
+        explicit ProgramNode();
+
         void exec() override;
     };
 
     class ExpressionStatementNode: public ExecutableNode {
     public:
         EvaluableNode* expr;
+        bool _silent = false;
         explicit ExpressionStatementNode(EvaluableNode* value);
         void exec() override;
     };
 
-    class StatementListNode: public ExecutableNode {
+    class StatementListNode: public ExecutableNode, public StepOverNode {
     public:
         std::vector<ExecutableNode*> statements;
+        int _curr_step_pos = 0;
         StatementListNode(StatementListNode* node, ExecutableNode* next);
         ~StatementListNode() override;
         void exec() override;
+        ASTNode* step() override;
     };
 
     class ScopeNode: public ExecutableNode {

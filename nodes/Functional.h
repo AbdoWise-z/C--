@@ -15,6 +15,8 @@ namespace Namespace::Functional {
     class FunctionCallNode;
     class FunctionNode;
 
+
+
     class FunctionDeclarationNode: public ExecutableNode {
     public:
         FunctionNode* node;

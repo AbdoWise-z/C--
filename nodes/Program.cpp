@@ -27,7 +27,7 @@ namespace Namespace::Program {
         V_Bool
     };
 
-    static std::string stringfy(FunctionSignature sig) {
+    std::string stringfy(FunctionSignature sig) {
         std::string args;
         for (int i = 0;i < sig.second.size();i++) {
             args += ValuesHelper::ValueTypeAsString(sig.second[i]);
@@ -322,13 +322,19 @@ namespace Namespace::Program {
 
 
     ProgramNode::ProgramNode(ExecutableNode *source) {
-        this->source = source;
+        this->source = {source};
+    }
+
+    ProgramNode::ProgramNode() {
+        this->source.clear();
     }
 
     void ProgramNode::exec() {
         beginScope();
 
-        source->exec();
+        for (const auto item: source) {
+            item->exec();
+        }
 
         endScope();
     }
@@ -341,7 +347,7 @@ namespace Namespace::Program {
 
     void ExpressionStatementNode::exec() {
         auto mValue = this->expr->eval();
-        if (mValue.type != V_Void && mValue.type != V_Ref && mValue.type != V_Error)
+        if (!_silent && mValue.type != V_Void && mValue.type != V_Ref && mValue.type != V_Error)
             std::cout << "[e]> expr[" << ValuesHelper::ValueTypeAsString(mValue.type) << "]" << "=" << ValuesHelper::toString(mValue) << std::endl;
         ValuesHelper::Delete(mValue);
     }
@@ -375,6 +381,21 @@ namespace Namespace::Program {
             if (cnt && cnt->_shouldContinue) break;
             item->exec();
         }
+    }
+
+    ASTNode * StatementListNode::step() {
+        auto ret = getNearestReturnPointScopeOwner();
+        auto brk = getNearestBreakPointScopeOwner();
+        auto cnt = getNearestContinuePointScopeOwner();
+
+        if (ret && ret->_shouldReturn)   return nullptr;
+        if (brk && brk->_shouldBreak)    return nullptr;
+        if (cnt && cnt->_shouldContinue) return nullptr;
+
+        if (_curr_step_pos < statements.size())
+            return statements[_curr_step_pos++];
+
+        return nullptr;
     }
 
     ScopeNode::ScopeNode(ExecutableNode *node) {

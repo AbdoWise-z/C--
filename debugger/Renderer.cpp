@@ -1,3 +1,8 @@
+//
+// Created by xabdomo on 4/12/25.
+//
+
+#include "Renderer.h"
 #include <iostream>
 #include <vector>
 #include <string>
@@ -9,6 +14,9 @@
 #include <cstdlib>    // for system("clear")
 #include <algorithm>
 
+#include "Core.h"
+#include "../nodes/Functional.h"
+
 // ANSI escape codes for colors and cursor control.
 #define SELECT_BG "\033[48;5;240m"  // Dark gray background for selected variable.
 #define HEADER_BG "\033[41m"        // Red background for stack headers.
@@ -18,7 +26,7 @@
 #define HIDE_CURSOR "\033[?25l"
 #define SHOW_CURSOR "\033[?25h"
 
-// Data structure for a variable inside a stack frame.
+// // Data structure for a variable inside a stack frame.
 struct Var {
     std::string name;
     std::string type;
@@ -35,32 +43,35 @@ struct stack {
 struct termios orig_termios;
 
 // --- Terminal Raw Mode Setup ---
-void enableRawMode() {
+static void enableRawMode() {
     tcgetattr(STDIN_FILENO, &orig_termios);
     struct termios raw = orig_termios;
     raw.c_lflag &= ~(ECHO | ICANON | ISIG); // disable echo, canonical mode, and signals
     tcsetattr(STDIN_FILENO, TCSANOW, &raw);
 }
-void disableRawMode() {
+
+static void disableRawMode() {
     tcsetattr(STDIN_FILENO, TCSANOW, &orig_termios);
 }
-void hideCursor() {
+
+static void hideCursor() {
     std::cout << HIDE_CURSOR;
 }
-void showCursor() {
+
+static void showCursor() {
     std::cout << SHOW_CURSOR;
 }
 
 // --- Terminal Dimensions ---
 // Returns width (minimum 80 columns).
-int getConsoleWidth() {
+static int getConsoleWidth() {
     struct winsize w;
     ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
     int totalWidth = w.ws_col;
     return (totalWidth < 80) ? 80 : totalWidth;
 }
 // Returns height (minimum 20 rows).
-int getConsoleHeight() {
+static int getConsoleHeight() {
     struct winsize w;
     ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
     int totalHeight = w.ws_row;
@@ -69,7 +80,7 @@ int getConsoleHeight() {
 }
 
 // --- Helper Function ---
-std::vector<std::string> splitLines(const std::string &str) {
+static std::vector<std::string> splitLines(const std::string &str) {
     std::istringstream iss(str);
     std::vector<std::string> lines;
     std::string line;
@@ -90,7 +101,7 @@ enum Mode { CODE_MODE, STACK_VARIABLE_MODE };
 // For each stack, output its header (rendered with a red background) and its variable lines.
 // Each header is indented by (2 * stack_index) spaces,
 // and each variable line is rendered with the same indent plus an additional 3-space indent.
-void buildStackView(const std::vector<stack>& stacks, int paneWidth,
+static void buildStackView(const std::vector<stack>& stacks, int paneWidth,
                     std::vector<std::string>& stackViewLines,
                     std::vector<bool>& isHeaderLine,
                     std::vector<int>& stackLineOffsets)
@@ -100,7 +111,11 @@ void buildStackView(const std::vector<stack>& stacks, int paneWidth,
     stackLineOffsets.clear();
 
     for (size_t i = 0; i < stacks.size(); ++i) {
-        std::string indent(i * 2, ' ');
+        auto depth = i;
+        if (stacks[0].header == "Native") {
+            if (depth > 0) depth--;
+        }
+        std::string indent(depth * 2, ' ');
         std::string headerLine = indent + stacks[i].header;
         if ((int)headerLine.size() > paneWidth)
             headerLine = headerLine.substr(0, paneWidth);
@@ -121,7 +136,7 @@ void buildStackView(const std::vector<stack>& stacks, int paneWidth,
 
 // --- Redraw Function ---
 // Clears the screen using system("clear") and redraws both panes.
-void redraw(const std::vector<std::string>& code_lines,
+static void redraw(const std::vector<std::string>& code_lines,
             const std::vector<stack>& stacks,
             int current_code_line,
             int current_variable_index,
@@ -165,6 +180,9 @@ void redraw(const std::vector<std::string>& code_lines,
     if (totalStackLines > visibleRows) {
         if (selected_stack_line != -1)
             stack_top = selected_stack_line - visibleRows/2;
+        else
+            stack_top = totalStackLines; // pin to end if not in stack mode
+
         if (stack_top < 0)
             stack_top = 0;
         if (stack_top + visibleRows > totalStackLines)
@@ -228,12 +246,96 @@ void redraw(const std::vector<std::string>& code_lines,
 }
 
 // --- Input Helper ---
-char readKey() {
+static char readKey() {
     char c;
     ssize_t n = read(STDIN_FILENO, &c, 1);
     if (n < 1)
         return '\0';
     return c;
+}
+
+static std::string getStackName(Cmm::Program::Scope* scope) {
+    auto i = scope->owner;
+    if (dynamic_cast<Cmm::Control::IFNode*>(i)) {
+        return "if";
+    }
+
+    if (dynamic_cast<Cmm::Control::IFNode*>(i)) {
+        return "For";
+    }
+
+    if (dynamic_cast<Cmm::Functional::FunctionNode*>(i)) {
+        return dynamic_cast<Cmm::Functional::FunctionNode*>(i)->id;
+    }
+
+    return "Scope";
+}
+
+static std::string listTypes(Cmm::Typing::TypeListNode* n) {
+    std::stringstream ss;
+    int i = 0;
+    for (auto t: n->types) {
+        i++;
+        ss << Cmm::ValuesHelper::ValueTypeAsString(t);
+        if (i != n->types.size() == i) ss << ", ";
+    }
+
+    return ss.str();
+}
+
+static void buildStack(std::vector<stack>& stacks) {
+    stacks.clear();
+    auto program = Cmm::Program::getCurrentProgram();
+
+    if (program.native_functions.size() > 0) {
+        stack _stack;
+        _stack.header = "Native";
+
+        for (const auto& func: program.native_functions) {
+
+            _stack.variables.push_back({
+                .name = Cmm::Program::stringfy(func.first),
+                .type = "func",
+                .value = "native"
+            });
+        }
+
+        stacks.push_back(_stack);
+    }
+
+    std::string lastName = "Global";
+    for (auto i: program.stack) {
+        stack _stack;
+        auto name = getStackName(&i);
+        if (name != "Scope") {
+            lastName = name;
+        }
+
+        if (i.functions.empty() && i.variables.empty()) {
+            continue; // nothing in this stack
+        }
+
+        _stack.header = lastName;
+
+        for (const auto& func: i.functions) {
+
+            _stack.variables.push_back({
+                .name = Cmm::Program::stringfy(func.first),
+                .type = "func",
+                .value = "(" + listTypes(func.second->returnType) + ")"
+            });
+        }
+
+        for (const auto& var: i.variables) {
+            _stack.variables.push_back({
+                .name = var.first,
+                .type = Cmm::ValuesHelper::ValueTypeAsString(var.second.Value.type),
+                .value = Cmm::ValuesHelper::toString(var.second.Value)
+            });
+        }
+
+        stacks.push_back(_stack);
+    }
 }
 
 // --- Interactive Loop ---
@@ -250,7 +352,7 @@ char readKey() {
 //   - F9: Step Into (handle with an empty comment)
 //   - F10: Continue (handle with an empty comment)
 //   - F11: Pause    (handle with an empty comment)
-void interactive_debug_terminal(const std::string &code, const std::vector<stack> &stacks, int current_code_line) {
+static void interactive_debug_terminal(const std::string &code) {
     std::vector<std::string> code_lines = splitLines(code);
 
     Mode mode = CODE_MODE;
@@ -258,14 +360,15 @@ void interactive_debug_terminal(const std::string &code, const std::vector<stack
     // Remember the last selected variable index per stack.
     int current_variable_index = 0;
     int current_stack_index = 0;
+    int current_code_line = Cmm::CmmDebugger::getCurrentLine();
+    std::vector<stack> stacks;
 
     enableRawMode();
     hideCursor();  // Disable the built-in cursor.
-    atexit([](){ showCursor(); disableRawMode(); }); // Restore cursor and terminal mode on exit.
-
+    buildStack(stacks);
     redraw(code_lines, stacks, current_code_line, current_variable_index, current_stack_index, mode);
 
-    while (true) {
+    while (!Cmm::CmmDebugger::isDone()) {
         char c = readKey();
         // Exit if Ctrl+C (ASCII 3) is pressed.
         if (c == '\003')
@@ -285,9 +388,15 @@ void interactive_debug_terminal(const std::string &code, const std::vector<stack
                         number.push_back(next);
                     }
                     // Handle function keys based on the numeric code.
-                    if (number == "19") {
+                    if (number == "18") {
                         // F8 pressed: Step
                         // [F8 handler goes here]
+                        Cmm::CmmDebugger::step();
+                        current_code_line = Cmm::CmmDebugger::getCurrentLine();
+                    } else if (number == "19") {
+                        // F8 pressed: Step
+                        // [F8 handler goes here]
+                        Cmm::CmmDebugger::step();
                     } else if (number == "20") {
                         // F9 pressed: Step Into
                         // [F9 handler goes here]
@@ -333,10 +442,7 @@ void interactive_debug_terminal(const std::string &code, const std::vector<stack
                         }
                     } else if (seq2 == 'C') { // Right arrow.
                         if (mode == CODE_MODE) {
-                            // Enter STACK_VARIABLE_MODE if the current code line's stack exists and has variables.
-                            if (current_code_line < (int) stacks.size() && !stacks[current_code_line].variables.empty()) {
-                                mode = STACK_VARIABLE_MODE;
-                            }
+                            mode = STACK_VARIABLE_MODE;
                         }
                     } else if (seq2 == 'D') { // Left arrow.
                         if (mode == STACK_VARIABLE_MODE) {
@@ -348,37 +454,16 @@ void interactive_debug_terminal(const std::string &code, const std::vector<stack
         } else if (c == 'q') {
             break;
         }
+        buildStack(stacks);
         redraw(code_lines, stacks, current_code_line, current_variable_index, current_stack_index, mode);
     }
+
+    system("clear");
+    showCursor();
+    disableRawMode();
 }
 
-/////////////////////
-// Sample Usage /////
-/////////////////////
-int main() {
-    // Sample code (left pane).
-    std::string code = R"(#include <iostream>
-using namespace std;
-int main() {
-    int a = 5;
-    int b = 10;
-    int c = a + b;
-    cout << c << endl;
-    return 0;
-})";
 
-    // Sample stacks (one per code line).
-    std::vector<stack> stacks = {
-        { "Initialization", { { "argc", "int", "1" } } },
-        { "Arguments", { { "argv", "char**", "0x7ffee" } } },
-        { "Variables1", { { "a", "int", "5" }, { "temp", "int", "0" } } },
-        { "Variables2", { { "a", "int", "5" }, { "b", "int", "10" } } },
-        { "Computation", { { "a", "int", "5" }, { "b", "int", "10" }, { "c", "int", "15" } } },
-        { "Output", { { "a", "int", "5" }, { "b", "int", "10" }, { "c", "int", "15" } } },
-        { "Return", { { "a", "int", "5" }, { "b", "int", "10" }, { "c", "int", "15" } } }
-    };
-
-    // Start the interactive debug terminal at code line 3 (zero-indexed).
-    interactive_debug_terminal(code, stacks, 3);
-    return 0;
+void Cmm::CmmDebugger::launch() {
+    interactive_debug_terminal(getCode());
 }

@@ -63,6 +63,12 @@ add_executable(Cmm
         PreProcessor.cpp
         PreProcessor.h
 
+        debugger/Core.cpp
+        debugger/Core.h
+
+        debugger/Renderer.cpp
+        debugger/Renderer.h
+
         ${PARSER_HDR}
         ${PARSER_CPP_SRC}
         ${PARSER_C_SRC}

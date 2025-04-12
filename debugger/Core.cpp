@@ -83,6 +83,9 @@ static void do_step_once(Cmm::ASTNode* node) {
 
 static void start_debugged(Cmm::ExecutableNode* exec) {
     executionStack.push(exec);
+    while (dynamic_cast<Cmm::StepOverNode*>(executionStack.top())) {
+        executionStack.push(dynamic_cast<Cmm::StepOverNode*>(executionStack.top())->step());
+    }
     Cmm::CmmDebugger::launch();
 }
 

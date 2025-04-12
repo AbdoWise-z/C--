@@ -13,6 +13,7 @@
 namespace Namespace::CmmDebugger {
     void enableDebugger();
     void disableDebugger();
+    bool isEnabled();
 
     void beginSession(); // begins a new program
     void endSession();

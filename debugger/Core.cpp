@@ -27,6 +27,10 @@ void Cmm::CmmDebugger::disableDebugger() {
     debuggerEnabled = false;
 }
 
+bool Cmm::CmmDebugger::isEnabled() {
+    return debuggerEnabled;
+}
+
 void Cmm::CmmDebugger::beginSession() {
     if (started) {
         throw std::runtime_error("CmmDebugger::beginSession() called while in active session");

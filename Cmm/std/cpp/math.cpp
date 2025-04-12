@@ -172,7 +172,7 @@ Cmm::ValueObject pow_i(const Cmm::FunctionSignature& sig, std::vector<Cmm::Value
 
     Cmm::ValueObject result = {
         .type = Cmm::V_Integer,
-        .value = new Cmm::Integer(a ^ b),
+        .value = new Cmm::Integer(a.pow(b)),
     };
 
     return result;

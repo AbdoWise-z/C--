@@ -38,10 +38,10 @@ int main() {
     std::string input;
     std::cout << "Copyright © 2025 xAbdoMo. All rights reserved." << std::endl;
     std::cout << "Unauthorized copying, reproduction, or distribution of this software is strictly prohibited." << std::endl;
-    std::cout << "Type 'editor' to open code editor, 'quit' to exit, or any Cmm statement to execute." << std::endl;
+    std::cout << "Type 'editor' to open code editor, 'quit' to exit, 'debugger' to toggle debugging, or any Cmm \n"
+                 "statement to execute." << std::endl;
 
     Cmm::CmmDebugger::beginSession();
-    Cmm::CmmDebugger::enableDebugger();
 
     // Cmm::NativeLoader::LoadNative("./Cmm/libstd.so");
     // Cmm:Cmm::Program::createFunction({"send_help", {}}, super_cool_function);
@@ -53,6 +53,18 @@ int main() {
 
         if (input == "editor") {
             input = NanoEditor::edit();
+        }
+
+        if (input == "debugger") {
+            if (Cmm::CmmDebugger::isEnabled()) {
+                std::cout << "Debugger disabled\n";
+                Cmm::CmmDebugger::disableDebugger();
+            } else {
+                std::cout << "Debugger enabled\n";
+                Cmm::CmmDebugger::enableDebugger();
+            }
+
+            continue;
         }
 
         if (input == "quit") break;

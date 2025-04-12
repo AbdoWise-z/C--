@@ -37,7 +37,7 @@ void Cmm::CmmDebugger::beginSession() {
     }
 
     started = true;
-    Program::beginScope();
+    Program::beginScope(nullptr, "Global");
 }
 
 void Cmm::CmmDebugger::endSession() {
@@ -64,17 +64,27 @@ static void do_step_once(Cmm::ASTNode* node) {
 
     if (step) {
         auto exec = step->step();
-        if (exec)
-            executionStack.emplace(exec);
-        else
+        if (exec) {
+
+            executionStack.push(exec);
+            while (dynamic_cast<Cmm::StepOverNode*>(executionStack.top())) {
+                auto n = dynamic_cast<Cmm::StepOverNode*>(executionStack.top());
+                n->prepare();
+                executionStack.push(n->step());
+            }
+
+        } else {
             executionStack.pop(); // done with this step over node
+            if (!executionStack.empty()) {
+                do_step_once(executionStack.top());
+            }
+        }
     } else {
         if (dynamic_cast<Cmm::ExecutableNode*>(node)) {
             dynamic_cast<Cmm::ExecutableNode*>(node)->exec();
         }
 
         executionStack.pop();
-
         if (!executionStack.empty()) {
             do_step_once(executionStack.top());
         }
@@ -84,19 +94,21 @@ static void do_step_once(Cmm::ASTNode* node) {
 static void start_debugged(Cmm::ExecutableNode* exec) {
     executionStack.push(exec);
     while (dynamic_cast<Cmm::StepOverNode*>(executionStack.top())) {
-        executionStack.push(dynamic_cast<Cmm::StepOverNode*>(executionStack.top())->step());
+        auto n = dynamic_cast<Cmm::StepOverNode*>(executionStack.top());
+        n->prepare();
+        executionStack.push(n->step());
     }
     Cmm::CmmDebugger::launch();
 }
 
 void Cmm::CmmDebugger::exec(std::string code) {
-    codeString += code;
 
     yy_scan_string(code.c_str());
 
     int parse_result = yyparse();
 
     if (parse_result == 0) {
+        codeString += code;
         auto program = root;
         ::code.push_back(root->source[0]);
 

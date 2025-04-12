@@ -37,6 +37,7 @@ namespace Namespace {
     class StepOverNode: virtual public ASTNode {
     public:
         virtual ASTNode* step() = 0;
+        virtual void prepare() = 0;
     };
 
     class StepInNode: virtual public ASTNode, virtual public StepOverNode {

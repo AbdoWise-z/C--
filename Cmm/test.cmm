@@ -1,0 +1,13 @@
+#import "std"
+
+var i  = rand(100, 500);
+
+do {
+    var j = -rand(1, 15);
+    i = i + j;
+
+    for (var k = 0;k < 4;k ++) {
+        var g = rand(1, 10);
+        if (g == 1) i++;
+    }
+} while (i > 0);

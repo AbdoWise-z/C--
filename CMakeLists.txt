@@ -87,41 +87,6 @@ add_dependencies(Cmm GenerateGrammar)
 add_executable(Sandbox
         sandbox.cpp
         config.h
-
-        primitives/Integer.cpp
-        primitives/Integer.h
-        primitives/Real.cpp
-        primitives/Real.h
-        primitives/Complex.cpp
-        primitives/Complex.h
-        primitives/Bool.h
-        primitives/String.h
-        primitives.h
-
-        nodes/AST.cpp
-        nodes/AST.h
-
-        MathHelper.cpp
-        MathHelper.h
-        Values.cpp
-        Values.h
-        nodes/Expressions.cpp
-        nodes/Expressions.h
-        forward.h
-        nodes/Program.cpp
-        nodes/Program.h
-        nodes/Typing.cpp
-        nodes/Typing.h
-        nodes/Control.cpp
-        nodes/Control.h
-
-        editor/NanoEditor.cpp
-        editor/NanoEditor.h
-        nodes/Variables.cpp
-        nodes/Variables.h
-        nodes/Functional.cpp
-        nodes/Functional.h
-        common.h
 )
 
 add_library(io SHARED

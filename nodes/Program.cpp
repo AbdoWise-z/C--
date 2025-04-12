@@ -70,11 +70,12 @@ namespace Namespace::Program {
         return getCurrentProgram().moduleStack.back();
     }
 
-    void beginScope(ASTNode *owner) {
+    void beginScope(ASTNode *owner, std::string name) {
         getCurrentProgram().stack.push_back({
             .variables = {},
             .functions = {},
             .owner = owner,
+            .name = std::move(name)
         });
     }
 
@@ -403,6 +404,10 @@ namespace Namespace::Program {
         return nullptr;
     }
 
+    void StatementListNode::prepare() {
+        _curr_step_pos = 0;
+    }
+
     ScopeNode::ScopeNode(ExecutableNode *node) {
         this->statements = node;
     }
@@ -415,5 +420,21 @@ namespace Namespace::Program {
 
     ScopeNode::~ScopeNode() {
         delete statements;
+    }
+
+    void ScopeNode::prepare() {
+        _curr_step_pos = 0;
+    }
+
+    ASTNode * ScopeNode::step() {
+        if (_curr_step_pos == 0) {
+            beginScope(this, "LocalScope");
+            _curr_step_pos = 1;
+            return statements;
+        } else {
+            endScope();
+            _curr_step_pos = 0;
+            return nullptr;
+        }
     }
 }

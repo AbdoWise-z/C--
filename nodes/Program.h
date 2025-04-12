@@ -38,6 +38,7 @@ namespace Namespace::Program {
         std::map<std::string, VariableBlock> variables;
         std::map<FunctionSignature, Functional::FunctionNode*> functions;
         ASTNode* owner;
+        std::string name;
     };
 
     struct ProgramBlock {
@@ -55,7 +56,7 @@ namespace Namespace::Program {
     std::string getModule();
     std::string stringfy(FunctionSignature);
 
-    void beginScope(ASTNode* owner = nullptr);
+    void beginScope(ASTNode* owner = nullptr, std::string name = "");
     void endScope();
 
     // todo: add other types
@@ -151,14 +152,19 @@ namespace Namespace::Program {
         ~StatementListNode() override;
         void exec() override;
         ASTNode* step() override;
+        void prepare() override;
     };
 
-    class ScopeNode: public ExecutableNode {
+    class ScopeNode: public virtual ExecutableNode, public virtual StepOverNode {
     public:
+        int _curr_step_pos = 0;
+
         ExecutableNode* statements;
         explicit ScopeNode(ExecutableNode* node);
         void exec() override;
         ~ScopeNode() override;
+        void prepare() override;
+        ASTNode *step() override;
     };
 }
 

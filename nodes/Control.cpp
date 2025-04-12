@@ -27,6 +27,30 @@ void Cmm::Control::IFNode::exec() {
     }
 }
 
+Cmm::ASTNode* Cmm::Control::IFNode::step() {
+    if (_curr_step_pos == 0) {
+        _curr_step_pos++;
+        return this->condition;
+    }
+
+    if (_curr_step_pos > 1) return nullptr;
+
+    auto result = condition->eval();
+    auto bool_result = ValuesHelper::castTo(result, V_Bool);
+    ValuesHelper::Delete(result);
+
+    _curr_step_pos++;
+
+    if (bool_result.value)
+        return if_true;
+
+    return if_false;
+}
+
+void Cmm::Control::IFNode::prepare() {
+    _curr_step_pos = 0;
+}
+
 Cmm::Control::IFNode::~IFNode() {
     delete condition;
     delete if_true;
@@ -63,6 +87,17 @@ void Cmm::Control::ForNode::exec() {
 
     bool cond = false;
 
+    if (_executeOnce) { // basically a do-while loop
+        Program::beginScope(this);
+        this->_shouldBreak = false;
+        this->_shouldContinue = false;
+
+        body->exec();
+        Program::endScope();
+
+        if (this->_shouldBreak) return;
+    }
+
     if (condition) {
         auto result = condition->eval();
         auto bool_result = ValuesHelper::castTo(result, V_Bool);
@@ -70,12 +105,6 @@ void Cmm::Control::ForNode::exec() {
         cond = bool_result.value;
     } else {
         cond = true;
-    }
-
-    if (_executeOnce) { // basically a do-while loop
-        Program::beginScope(this);
-        body->exec();
-        Program::endScope();
     }
 
     while (cond) {
@@ -106,6 +135,97 @@ Cmm::Control::ForNode::~ForNode() {
     delete condition;
     delete init;
     delete inc;
+}
+
+Cmm::ASTNode * Cmm::Control::ForNode::step() {
+    if (_curr_step_pos == 0) {
+        // first we initialize the for-loop
+        Program::beginScope(nullptr, "For-wrapper (external)");
+        auto _inc = dynamic_cast<Program::ExpressionStatementNode*>(this->inc);
+        if (_inc) _inc->_silent = true;
+        _curr_step_pos = 1;
+
+        if (init) {
+            return init;
+        }
+    }
+
+    if (_curr_step_pos == 1) {
+        _curr_step_pos = 2;
+        if (_executeOnce) { // basically a do-while loop
+            Program::beginScope(this, "For-wrapper (internal)");
+            this->_shouldBreak = false;
+            this->_shouldContinue = false;
+            return body;
+        } else {
+            _curr_step_pos = 3;
+        }
+    }
+
+    if (_curr_step_pos == 2) {
+        // we did a do-while first loop, now close the scope
+        Program::endScope();
+        if (this->_shouldBreak) {
+            _curr_step_pos = 999;
+            Program::endScope();
+            return nullptr;
+        }
+        _curr_step_pos = 3;
+    }
+
+    before:
+    if (_curr_step_pos == 3) {
+        _curr_step_pos = 4;
+        return condition;
+    }
+
+    if (_curr_step_pos == 4) {
+        // now actually check the condition
+        bool cond = false;
+
+        if (condition) {
+            auto result = condition->eval();
+            auto bool_result = ValuesHelper::castTo(result, V_Bool);
+            ValuesHelper::Delete(result);
+            cond = bool_result.value;
+        } else {
+            cond = true;
+        }
+
+        if (!cond) {
+            _curr_step_pos = 999;
+            Program::endScope();
+            return nullptr;
+        }
+
+        _curr_step_pos = 5;
+        Program::beginScope(this, "For-wrapper (internal)");
+        this->_shouldBreak = false;
+        this->_shouldContinue = false;
+        return body;
+    }
+
+    if (_curr_step_pos == 5) {
+        Program::endScope();
+        if (this->_shouldBreak) {
+            _curr_step_pos = 999;
+            Program::endScope();
+            return nullptr;
+        }
+        _curr_step_pos = 3;
+        if (this->inc) {
+            return this->inc; // apply the increment
+        } else {
+            _curr_step_pos = 3;
+            goto before;
+        }
+    }
+
+    return nullptr;
+}
+
+void Cmm::Control::ForNode::prepare() {
+    _curr_step_pos = 0;
 }
 
 namespace Cmm::Control {

@@ -173,6 +173,69 @@ static inline std::string padString(const std::string& input, int width, Align a
     return input;  // Fallback
 }
 
+
+// Returns a new string that is rendered with exactly maxWidth columns.
+// ANSI escape sequences (starting with "\033[") are copied as-is but do not add to the displayed width.
+// Tabs are expanded using tabWidth (default is 4 columns). Control characters (ASCII < 32) are copied but assumed zero width.
+std::string limitRenderLength(const std::string &input, int maxWidth, int tabWidth = 4) {
+    std::ostringstream oss;
+    int rendered = 0;       // current rendered width (in columns)
+    size_t i = 0;
+    while (i < input.size() && rendered < maxWidth) {
+        char c = input[i];
+        // Check for an ANSI escape sequence.
+        if (c == '\033') { // ESC detected, copy full escape sequence.
+            oss << c;
+            i++;
+            if (i < input.size() && input[i] == '[') {
+                oss << input[i];
+                i++;
+                // ANSI sequence: copy until a letter in the range '@' to '~' appears.
+                while (i < input.size() && (input[i] < '@' || input[i] > '~')) {
+                    oss << input[i];
+                    i++;
+                }
+                if (i < input.size()) {
+                    oss << input[i];
+                    i++;
+                }
+            }
+            continue; // do not count escape sequence toward rendered width.
+        }
+        // Handle tab: Expand to spaces (up to next tab stop).
+        if (c == '\t') {
+            int spaces = tabWidth - (rendered % tabWidth);
+            if (rendered + spaces > maxWidth) {
+                spaces = maxWidth - rendered;
+            }
+            oss << std::string(spaces, ' ');
+            rendered += spaces;
+            i++;
+            continue;
+        }
+        // For control characters (ASCII < 32), copy them but do not count width.
+        if (static_cast<unsigned char>(c) < 32) {
+            oss << c;
+            i++;
+            continue;
+        }
+        // For any other character, assume it takes one column.
+        if (rendered + 1 > maxWidth)
+            break;
+        oss << c;
+        rendered++;
+        i++;
+    }
+
+    // If the rendered output is shorter than maxWidth, pad with spaces.
+    if (rendered < maxWidth) {
+        oss << std::string(maxWidth - rendered, ' ');
+    }
+
+    return oss.str();
+}
+
+
 // --- Modes ---
 // We use two modes: CODE_MODE and STACK_VARIABLE_MODE.
 enum Mode { CODE_MODE, STACK_VARIABLE_MODE };
@@ -209,8 +272,13 @@ static void buildStackView(const std::vector<stack>& stacks, int paneWidth,
         isHeaderLine.push_back(true);
         // Render each variable line.
         for (const auto &var : stacks[i].variables) {
-            std::string varLine = "";
-            if (var.type != "func")
+            std::string varLine;
+            if (var.type.empty())
+                varLine = indent
+                    + " "
+                    + padString(var.name, 14)
+                    ;
+            else if (var.type != "func")
                 varLine =
                     indent
                     + " "
@@ -237,9 +305,6 @@ static void buildStackView(const std::vector<stack>& stacks, int paneWidth,
                     + var.value
                 ;
 
-            std::string reset = RESET_FG;
-            if ((int)varLine.size() + reset.size() > paneWidth)
-                varLine = varLine.substr(0, paneWidth - reset.size());
             stackViewLines.push_back(varLine + RESET_FG);
             isHeaderLine.push_back(false);
         }
@@ -253,7 +318,8 @@ static void redraw(const std::vector<std::string>& code_lines,
             int current_code_line,
             int current_variable_index,
             int current_stack_index,
-            Mode mode)
+            Mode mode
+            )
 {
     int totalWidth = getConsoleWidth();
     int consoleHeight = getConsoleHeight() - 1;
@@ -322,10 +388,7 @@ static void redraw(const std::vector<std::string>& code_lines,
             if ((int)line.size() > (codeWidth - 2))
                 line = line.substr(0, codeWidth - 2);
             std::string plainCode = (code_index == Cmm::CmmDebugger::getCurrentLine()) ? ("> " + line) : ("  " + line);
-            if ((int)plainCode.size() < codeWidth)
-                plainCode.append(codeWidth - plainCode.size(), ' ');
-            else
-                plainCode = plainCode.substr(0, codeWidth);
+
             if (code_index == current_code_line && mode == CODE_MODE)
                 codeSegment = std::string(SELECT_BG) + plainCode + RESET_COLOR;
             else
@@ -338,10 +401,6 @@ static void redraw(const std::vector<std::string>& code_lines,
         int stack_index = stack_top + row;
         if (stack_index < totalStackLines) {
             std::string plainStack = stackViewLines[stack_index];
-            if ((int)plainStack.size() < stackWidth)
-                plainStack.append(stackWidth - plainStack.size(), ' ');
-            else
-                plainStack = plainStack.substr(0, stackWidth);
 
             // Always render header lines with red background.
             if (isHeaderLine[stack_index])
@@ -355,13 +414,18 @@ static void redraw(const std::vector<std::string>& code_lines,
             stackSegment.assign(stackWidth, ' ');
         }
 
-        std::cout << codeSegment << divider << stackSegment << "\n";
+        std::cout << limitRenderLength(codeSegment, codeWidth) << divider << limitRenderLength(stackSegment, stackWidth) + RESET_FG << "\n";
     }
 
     std::cout <<
         BRIGHT_CYAN_FG << UNDERLINE
         << "F7:" << RESET_ATTR << " Step"
         << "\t";
+
+    std::cout <<
+       BRIGHT_GREEN_FG << UNDERLINE
+       << "F10:" << RESET_ATTR << " Toggle empty"
+       << "\t";
 
     if (Cmm::CmmDebugger::isDone()) {
         std::cout << BRIGHT_RED_FG << UNDERLINE
@@ -383,23 +447,6 @@ static char readKey() {
     return c;
 }
 
-static std::string getStackName(Cmm::Program::Scope* scope) {
-    auto i = scope->owner;
-    if (dynamic_cast<Cmm::Control::IFNode*>(i)) {
-        return "if";
-    }
-
-    if (dynamic_cast<Cmm::Control::IFNode*>(i)) {
-        return "For";
-    }
-
-    if (dynamic_cast<Cmm::Functional::FunctionNode*>(i)) {
-        return dynamic_cast<Cmm::Functional::FunctionNode*>(i)->id;
-    }
-
-    return "Scope";
-}
-
 static std::string listTypes(Cmm::Typing::TypeListNode* n) {
     std::stringstream ss;
     int i = 0;
@@ -412,7 +459,7 @@ static std::string listTypes(Cmm::Typing::TypeListNode* n) {
     return ss.str();
 }
 
-static void buildStack(std::vector<stack>& stacks) {
+static void buildStack(std::vector<stack>& stacks, bool skip_empty = false) {
     stacks.clear();
     auto program = Cmm::Program::getCurrentProgram();
 
@@ -433,15 +480,24 @@ static void buildStack(std::vector<stack>& stacks) {
     }
 
     std::string lastName = "Global";
-    for (auto i: program.stack) {
+    for (auto& i: program.stack) {
         stack _stack;
-        auto name = getStackName(&i);
-        if (name != "Scope") {
-            lastName = name;
+        auto name = i.name;
+        if (name == "Dummy" && &i != &program.stack[0]) {
+            continue;
         }
 
+        if (name != "Dummy") lastName = name;
+
         if (i.functions.empty() && i.variables.empty()) {
-            continue; // nothing in this stack
+            if (!skip_empty)
+                _stack.variables.push_back({
+                    .name = "<empty>",
+                    .type = "",
+                    .value = ""
+                });
+            else
+                continue;
         }
 
         _stack.header = lastName;
@@ -494,11 +550,12 @@ static void interactive_debug_terminal(const std::string &code) {
     int current_variable_index = 0;
     int current_stack_index = 0;
     int current_code_line = Cmm::CmmDebugger::getCurrentLine();
+    bool skip_empty_stacks = true;
     std::vector<stack> stacks;
 
     enableRawMode();
     hideCursor();  // Disable the built-in cursor.
-    buildStack(stacks);
+    buildStack(stacks, skip_empty_stacks);
     redraw(code_lines, stacks, current_code_line, current_variable_index, current_stack_index, mode);
 
     while (true) {
@@ -535,8 +592,7 @@ static void interactive_debug_terminal(const std::string &code) {
                         // F9 pressed: Step Into
                         // [F9 handler goes here]
                     } else if (number == "21") {
-                        // F10 pressed: Continue
-                        // [F10 handler goes here]
+                        skip_empty_stacks = !skip_empty_stacks;
                     } else if (number == "23") {
                         if (Cmm::CmmDebugger::isDone()) {
                             break;
@@ -546,7 +602,8 @@ static void interactive_debug_terminal(const std::string &code) {
                     // Handle standard escape sequences for arrow keys.
                     if (seq2 == 'A') { // Up arrow.
                         if (mode == CODE_MODE) {
-                            current_code_line = (current_code_line - 1 + numCodeLines) % numCodeLines;
+                            if (numCodeLines > 0)
+                                current_code_line = (current_code_line - 1 + numCodeLines) % numCodeLines;
                         } else if (mode == STACK_VARIABLE_MODE) {
                             int cnt = stacks[current_stack_index].variables.size();
                             if (cnt > 0) {
@@ -560,7 +617,8 @@ static void interactive_debug_terminal(const std::string &code) {
                         }
                     } else if (seq2 == 'B') { // Down arrow.
                         if (mode == CODE_MODE) {
-                            current_code_line = (current_code_line + 1) % numCodeLines;
+                            if (numCodeLines > 0)
+                                current_code_line = (current_code_line + 1) % numCodeLines;
                         } else if (mode == STACK_VARIABLE_MODE) {
                             int cnt = stacks[current_stack_index].variables.size();
                             if (cnt > 0) {
@@ -589,7 +647,7 @@ static void interactive_debug_terminal(const std::string &code) {
         } else if (c == 'q') {
             break;
         }
-        buildStack(stacks);
+        buildStack(stacks, skip_empty_stacks);
         redraw(code_lines, stacks, current_code_line, current_variable_index, current_stack_index, mode);
     }
 

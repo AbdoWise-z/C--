@@ -11,14 +11,17 @@
 #include "AST.h"
 
 namespace Namespace::Control {
-    class IFNode: public ExecutableNode {
+    class IFNode: public virtual ExecutableNode, public virtual StepOverNode {
     public:
         ExecutableNode* if_true;
         ExecutableNode* if_false;
         EvaluableNode* condition;
+        int _curr_step_pos = 0;
 
         IFNode(EvaluableNode* condition, ExecutableNode* if_true, ExecutableNode* if_false);
         void exec() override;
+        ASTNode *step() override;
+        void prepare() override;
         ~IFNode() override;
     };
 
@@ -38,18 +41,22 @@ namespace Namespace::Control {
         bool _shouldContinue;
     };
 
-    class ForNode: public ExecutableNode, ContinuePointNode, BreakPointNode {
+    class ForNode: public ExecutableNode, ContinuePointNode, BreakPointNode, StepOverNode {
     public:
         ExecutableNode* init;
         ExecutableNode* inc;
         EvaluableNode* condition;
         ExecutableNode* body;
         bool _executeOnce = false;
+        int _curr_step_pos = 0;
 
         ForNode(EvaluableNode* condition, ExecutableNode* init, ExecutableNode* inc, ExecutableNode* body);
         ForNode(EvaluableNode* condition, ExecutableNode* init, ExecutableNode* inc, ExecutableNode* body, bool _executeOnce);
         void exec() override;
         ~ForNode() override;
+
+        ASTNode *step() override;
+        void prepare() override;
     };
 
     class ReturnStatementNode: public ExecutableNode {

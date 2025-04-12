@@ -105,10 +105,9 @@ void Cmm::CmmDebugger::exec(std::string code) {
             program->source.clear();
             delete program;
         } else {
-            // Program::beginScope();
             program->source[0]->exec();
+            program->source.clear();
             delete program;
-            // Program::endScope();
         }
     }
 }

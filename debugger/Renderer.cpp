@@ -132,6 +132,20 @@ static std::vector<std::string> splitLines(const std::string &str) {
     return lines;
 }
 
+static std::string getColorForType(std::string type) {
+    if (type == "func") {
+        return RED_FG;
+    }
+
+    if (type == "int") return CYAN_FG;
+    if (type == "real") return CYAN_FG;
+    if (type == "str") return GREEN_FG;
+    if (type == "bool") return YELLOW_FG;
+    if (type == "complex") return MAGENTA_FG;
+
+    return RESET_FG;
+}
+
 // --- Modes ---
 // We use two modes: CODE_MODE and STACK_VARIABLE_MODE.
 enum Mode { CODE_MODE, STACK_VARIABLE_MODE };
@@ -168,10 +182,38 @@ static void buildStackView(const std::vector<stack>& stacks, int paneWidth,
         isHeaderLine.push_back(true);
         // Render each variable line.
         for (const auto &var : stacks[i].variables) {
-            std::string varLine = indent + "   " + var.type + " " + var.name + "=" + var.value;
-            if ((int)varLine.size() > paneWidth)
-                varLine = varLine.substr(0, paneWidth);
-            stackViewLines.push_back(varLine);
+            std::string varLine = "";
+            if (var.type != "func")
+                varLine =
+                    indent
+                    + " "
+                    + var.name
+                    + ": "
+                    + getColorForType(var.type)
+                    + var.type
+                    + RESET_FG
+                    + "    "
+                    + BRIGHT_GREEN_FG
+                    + var.value
+                ;
+            else
+                varLine =
+                    indent
+                    + " "
+                    + var.name
+                    + ": "
+                    + getColorForType(var.type)
+                    + var.type
+                    + RESET_FG
+                    + " -> "
+                    + BRIGHT_GREEN_FG
+                    + var.value
+                ;
+
+            std::string reset = RESET_FG;
+            if ((int)varLine.size() + reset.size() > paneWidth)
+                varLine = varLine.substr(0, paneWidth - reset.size());
+            stackViewLines.push_back(varLine + RESET_FG);
             isHeaderLine.push_back(false);
         }
     }
@@ -189,7 +231,11 @@ static void redraw(const std::vector<std::string>& code_lines,
     int totalWidth = getConsoleWidth();
     int consoleHeight = getConsoleHeight() - 1;
     int dividerWidth = 3; // e.g. " ║ "
-    int codeWidth = totalWidth * 0.75;
+    int codeWidth = totalWidth * 0.6;
+    if (mode == STACK_VARIABLE_MODE) {
+        codeWidth = totalWidth * 0.4;
+    }
+
     int stackWidth = totalWidth - codeWidth - dividerWidth;
 
     // Build the complete stack view.
@@ -248,8 +294,7 @@ static void redraw(const std::vector<std::string>& code_lines,
             std::string line = code_lines[code_index];
             if ((int)line.size() > (codeWidth - 2))
                 line = line.substr(0, codeWidth - 2);
-            // Prepend marker for current code line (if in CODE_MODE).
-            std::string plainCode = (code_index == current_code_line && mode == CODE_MODE) ? ("> " + line) : ("  " + line);
+            std::string plainCode = (code_index == Cmm::CmmDebugger::getCurrentLine()) ? ("> " + line) : ("  " + line);
             if ((int)plainCode.size() < codeWidth)
                 plainCode.append(codeWidth - plainCode.size(), ' ');
             else
@@ -286,7 +331,19 @@ static void redraw(const std::vector<std::string>& code_lines,
         std::cout << codeSegment << divider << stackSegment << "\n";
     }
 
-    std::cout << BRIGHT_CYAN_FG << UNDERLINE << "F7:" << RESET_ATTR << " Step" << RESET_COLOR << std::endl;
+    std::cout <<
+        BRIGHT_CYAN_FG << UNDERLINE
+        << "F7:" << RESET_ATTR << " Step"
+        << "\t";
+
+    if (Cmm::CmmDebugger::isDone()) {
+        std::cout << BRIGHT_RED_FG << UNDERLINE
+        << "F11:" << RESET_ATTR << " Exit"
+        << "\t";
+    }
+
+    std::cout << RESET_ATTR;
+    std::cout << std::endl;
     std::cout.flush();
 }
 
@@ -322,7 +379,7 @@ static std::string listTypes(Cmm::Typing::TypeListNode* n) {
     for (auto t: n->types) {
         i++;
         ss << Cmm::ValuesHelper::ValueTypeAsString(t);
-        if (i != n->types.size() == i) ss << ", ";
+        if (i != n->types.size()) ss << ", ";
     }
 
     return ss.str();
@@ -377,6 +434,10 @@ static void buildStack(std::vector<stack>& stacks) {
                 .type = Cmm::ValuesHelper::ValueTypeAsString(var.second.Value.type),
                 .value = Cmm::ValuesHelper::toString(var.second.Value)
             });
+
+            if (_stack.variables[_stack.variables.size() - 1].type == "str") {
+                _stack.variables[_stack.variables.size() - 1].value = "\"" + _stack.variables[_stack.variables.size() - 1].value + "\"";
+            }
         }
 
         stacks.push_back(_stack);
@@ -413,7 +474,7 @@ static void interactive_debug_terminal(const std::string &code) {
     buildStack(stacks);
     redraw(code_lines, stacks, current_code_line, current_variable_index, current_stack_index, mode);
 
-    while (!Cmm::CmmDebugger::isDone()) {
+    while (true) {
         char c = readKey();
         // Exit if Ctrl+C (ASCII 3) is pressed.
         if (c == '\003')
@@ -436,12 +497,13 @@ static void interactive_debug_terminal(const std::string &code) {
                     if (number == "18") {
                         // F8 pressed: Step
                         // [F8 handler goes here]
-                        Cmm::CmmDebugger::step();
-                        current_code_line = Cmm::CmmDebugger::getCurrentLine();
+                        if (!Cmm::CmmDebugger::isDone()) {
+                            Cmm::CmmDebugger::step();
+                            current_code_line = Cmm::CmmDebugger::getCurrentLine();
+                        }
                     } else if (number == "19") {
                         // F8 pressed: Step
                         // [F8 handler goes here]
-                        Cmm::CmmDebugger::step();
                     } else if (number == "20") {
                         // F9 pressed: Step Into
                         // [F9 handler goes here]
@@ -449,8 +511,9 @@ static void interactive_debug_terminal(const std::string &code) {
                         // F10 pressed: Continue
                         // [F10 handler goes here]
                     } else if (number == "23") {
-                        // F11 pressed: Pause
-                        // [F11 handler goes here]
+                        if (Cmm::CmmDebugger::isDone()) {
+                            break;
+                        }
                     }
                 } else {
                     // Handle standard escape sequences for arrow keys.

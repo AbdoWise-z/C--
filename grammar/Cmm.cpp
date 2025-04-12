@@ -15,6 +15,7 @@
 #include "../NativeLoader.h"
 #include "../PreProcessor.h"
 #include "../debugger/Core.h"
+#include "../debugger/Renderer.h"
 #include "../editor/NanoEditor.h"
 
 extern int yyparse();
@@ -55,15 +56,20 @@ int main() {
             input = NanoEditor::edit();
         }
 
-        if (input == "debugger") {
-            if (Cmm::CmmDebugger::isEnabled()) {
-                std::cout << "Debugger disabled\n";
-                Cmm::CmmDebugger::disableDebugger();
-            } else {
-                std::cout << "Debugger enabled\n";
-                Cmm::CmmDebugger::enableDebugger();
-            }
+        if (input == "debugger enable") {
+            Cmm::CmmDebugger::enableDebugger();
+            std::cout << "Debugger enabled\n";
+            continue;
+        }
 
+        if (input == "debugger disable") {
+            Cmm::CmmDebugger::disableDebugger();
+            std::cout << "Debugger disabled\n";
+            continue;
+        }
+
+        if (input == "debugger") {
+            Cmm::CmmDebugger::launch();
             continue;
         }
 

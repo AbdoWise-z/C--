@@ -146,6 +146,33 @@ static std::string getColorForType(std::string type) {
     return RESET_FG;
 }
 
+enum class Align {
+    LEFT,
+    RIGHT,
+    CENTER
+};
+
+static inline std::string padString(const std::string& input, int width, Align align = Align::LEFT, char fill = ' ') {
+    if (static_cast<int>(input.length()) >= width) {
+        return input.substr(0, width);  // Truncate if too long
+    }
+
+    int padding = width - input.length();
+
+    switch (align) {
+        case Align::LEFT:
+            return input + std::string(padding, fill);
+        case Align::RIGHT:
+            return std::string(padding, fill) + input;
+        case Align::CENTER:
+            int left = padding / 2;
+            int right = padding - left;
+            return std::string(left, fill) + input + std::string(right, fill);
+    }
+
+    return input;  // Fallback
+}
+
 // --- Modes ---
 // We use two modes: CODE_MODE and STACK_VARIABLE_MODE.
 enum Mode { CODE_MODE, STACK_VARIABLE_MODE };
@@ -187,10 +214,10 @@ static void buildStackView(const std::vector<stack>& stacks, int paneWidth,
                 varLine =
                     indent
                     + " "
-                    + var.name
+                    + padString(var.name, 14)
                     + ": "
                     + getColorForType(var.type)
-                    + var.type
+                    + padString(var.type, 8)
                     + RESET_FG
                     + "    "
                     + BRIGHT_GREEN_FG
@@ -200,10 +227,10 @@ static void buildStackView(const std::vector<stack>& stacks, int paneWidth,
                 varLine =
                     indent
                     + " "
-                    + var.name
+                    + padString(var.name, 30)
                     + ": "
                     + getColorForType(var.type)
-                    + var.type
+                    + padString(var.type, 8)
                     + RESET_FG
                     + " -> "
                     + BRIGHT_GREEN_FG

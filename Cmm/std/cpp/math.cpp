@@ -11,12 +11,12 @@
 #include <iostream>
 #include <vector>
 
-#include "../../../common.h"
-#include "../../../Values.h"
-#include "../../../primitives/Integer.h"
-#include "../../../primitives/Real.h"
-#include "../../../primitives/Complex.h"
-#include "../../../primitives/String.h"
+#include "common.h"
+#include "Values.h"
+#include "primitives/Complex.h"
+#include "primitives/Integer.h"
+#include "primitives/Real.h"
+#include "primitives/String.h"
 
 void do_register(Cmm::NativeAddFunction);
 

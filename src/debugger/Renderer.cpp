@@ -372,7 +372,7 @@ static void redraw(const std::vector<std::string>& code_lines,
     }
 
     // Clear the screen using system("clear").
-    system("clear");
+    auto dummy = system("clear");
 
     // Divider string.
     std::string divider = " ║ ";

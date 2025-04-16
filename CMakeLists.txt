@@ -5,88 +5,88 @@ set(CMAKE_CXX_STANDARD 23)
 
 set(CMAKE_C_COMPILER "${CMAKE_CXX_COMPILER}")
 
-file(GLOB PARSER_CPP_SRC "${CMAKE_SOURCE_DIR}/grammar/*.cpp")
-file(GLOB PARSER_C_SRC   "${CMAKE_SOURCE_DIR}/grammar/*.c")
-file(GLOB PARSER_HDR     "${CMAKE_SOURCE_DIR}/grammar/*.hpp")
+file(GLOB PARSER_CPP_SRC "${CMAKE_SOURCE_DIR}/src/grammar/*.cpp")
+file(GLOB PARSER_C_SRC   "${CMAKE_SOURCE_DIR}/src/grammar/*.c")
+file(GLOB PARSER_HDR     "${CMAKE_SOURCE_DIR}/src/grammar/*.hpp")
 
 message("Sources: " ${PARSER_CPP_SRC} ${PARSER_C_SRC})
 message("Headers: " ${PARSER_HDR})
 
 
-include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 add_executable(Cmm
-        Cmm.cpp
+        src/Cmm.cpp
 
-        config.h
+        src/config.h
 
-        primitives/Integer.cpp
-        primitives/Integer.h
-        primitives/Real.cpp
-        primitives/Real.h
-        primitives/Complex.cpp
-        primitives/Complex.h
-        primitives/Bool.h
-        primitives/String.h
-        primitives.h
+        src/primitives/Integer.cpp
+        src/primitives/Integer.h
+        src/primitives/Real.cpp
+        src/primitives/Real.h
+        src/primitives/Complex.cpp
+        src/primitives/Complex.h
+        src/primitives/Bool.h
+        src/primitives/String.h
+        src/primitives.h
 
-        nodes/AST.cpp
-        nodes/AST.h
+        src/nodes/AST.cpp
+        src/nodes/AST.h
 
-        nodes/Expressions.cpp
-        nodes/Expressions.h
+        src/nodes/Expressions.cpp
+        src/nodes/Expressions.h
 
-        MathHelper.cpp
-        MathHelper.h
+        src/MathHelper.cpp
+        src/MathHelper.h
 
-        Values.cpp
-        Values.h
+        src/Values.cpp
+        src/Values.h
 
-        forward.h
+        src/forward.h
 
-        nodes/Program.cpp
-        nodes/Program.h
+        src/nodes/Program.cpp
+        src/nodes/Program.h
 
-        nodes/Typing.cpp
-        nodes/Typing.h
+        src/nodes/Typing.cpp
+        src/nodes/Typing.h
 
-        nodes/Control.cpp
-        nodes/Control.h
+        src/nodes/Control.cpp
+        src/nodes/Control.h
 
-        nodes/Variables.cpp
-        nodes/Variables.h
+        src/nodes/Variables.cpp
+        src/nodes/Variables.h
 
-        nodes/Functional.cpp
-        nodes/Functional.h
+        src/nodes/Functional.cpp
+        src/nodes/Functional.h
 
-        editor/NanoEditor.cpp
-        editor/NanoEditor.h
+        src/editor/NanoEditor.cpp
+        src/editor/NanoEditor.h
 
-        NativeLoader.cpp
-        NativeLoader.h
+        src/NativeLoader.cpp
+        src/NativeLoader.h
 
-        PreProcessor.cpp
-        PreProcessor.h
+        src/PreProcessor.cpp
+        src/PreProcessor.h
 
-        debugger/Core.cpp
-        debugger/Core.h
+        src/debugger/Core.cpp
+        src/debugger/Core.h
 
-        debugger/Renderer.cpp
-        debugger/Renderer.h
+        src/debugger/Renderer.cpp
+        src/debugger/Renderer.h
 
-        utils/cli.cpp
-        utils/cli.hpp
+        src/utils/cli.cpp
+        src/utils/cli.hpp
 
-        utils/konsol.cpp
-        utils/konsol.hpp
+        src/utils/konsol.cpp
+        src/utils/konsol.hpp
 
-        utils/clp.hpp
+        src/utils/clp.hpp
 
-        grammar/Store.cpp
-        grammar/Store.h
+        src/grammar/Store.cpp
+        src/grammar/Store.h
 
-        utils/string_utils.cpp
-        utils/string_utils.hpp
+        src/utils/string_utils.cpp
+        src/utils/string_utils.hpp
 
 
         ${PARSER_HDR}
@@ -96,7 +96,7 @@ add_executable(Cmm
 
 add_custom_target(
         GenerateGrammar ALL
-        COMMAND ${CMAKE_SOURCE_DIR}/grammar/generate.sh
+        COMMAND ${CMAKE_SOURCE_DIR}/src/grammar/generate.sh
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
         COMMENT "grammar generation..."
 )
@@ -104,108 +104,108 @@ add_custom_target(
 add_dependencies(Cmm GenerateGrammar)
 
 add_executable(Sandbox
-        sandbox.cpp
-        config.h
+        src/sandbox.cpp
+        src/config.h
 )
 
 add_library(io SHARED
         Cmm/std/cpp/io.cpp
-        common.h
-        primitives/Integer.cpp
-        primitives/Integer.h
-        primitives/Real.cpp
-        primitives/Real.h
-        primitives/Complex.cpp
-        primitives/Complex.h
-        primitives/Bool.h
-        primitives/String.h
-        primitives.h
+        src/common.h
+        src/primitives/Integer.cpp
+        src/primitives/Integer.h
+        src/primitives/Real.cpp
+        src/primitives/Real.h
+        src/primitives/Complex.cpp
+        src/primitives/Complex.h
+        src/primitives/Bool.h
+        src/primitives/String.h
+        src/primitives.h
 
-        Values.h
-        Values.cpp
+        src/Values.h
+        src/Values.cpp
 
-        MathHelper.h
-        MathHelper.cpp
+        src/MathHelper.h
+        src/MathHelper.cpp
 )
 
 add_library(math SHARED
         Cmm/std/cpp/math.cpp
-        common.h
-        primitives/Integer.cpp
-        primitives/Integer.h
-        primitives/Real.cpp
-        primitives/Real.h
-        primitives/Complex.cpp
-        primitives/Complex.h
-        primitives/Bool.h
-        primitives/String.h
-        primitives.h
+        src/common.h
+        src/primitives/Integer.cpp
+        src/primitives/Integer.h
+        src/primitives/Real.cpp
+        src/primitives/Real.h
+        src/primitives/Complex.cpp
+        src/primitives/Complex.h
+        src/primitives/Bool.h
+        src/primitives/String.h
+        src/primitives.h
 
-        Values.h
-        Values.cpp
+        src/Values.h
+        src/Values.cpp
 
-        MathHelper.h
-        MathHelper.cpp
+        src/MathHelper.h
+        src/MathHelper.cpp
 )
 
 add_library(str SHARED
         Cmm/std/cpp/str.cpp
-        common.h
-        primitives/Integer.cpp
-        primitives/Integer.h
-        primitives/Real.cpp
-        primitives/Real.h
-        primitives/Complex.cpp
-        primitives/Complex.h
-        primitives/Bool.h
-        primitives/String.h
-        primitives.h
+        src/common.h
+        src/primitives/Integer.cpp
+        src/primitives/Integer.h
+        src/primitives/Real.cpp
+        src/primitives/Real.h
+        src/primitives/Complex.cpp
+        src/primitives/Complex.h
+        src/primitives/Bool.h
+        src/primitives/String.h
+        src/primitives.h
 
-        Values.h
-        Values.cpp
+        src/Values.h
+        src/Values.cpp
 
-        MathHelper.h
-        MathHelper.cpp
+        src/MathHelper.h
+        src/MathHelper.cpp
 )
 
 add_library(time SHARED
         Cmm/std/cpp/time.cpp
-        common.h
-        primitives/Integer.cpp
-        primitives/Integer.h
-        primitives/Real.cpp
-        primitives/Real.h
-        primitives/Complex.cpp
-        primitives/Complex.h
-        primitives/Bool.h
-        primitives/String.h
-        primitives.h
+        src/common.h
+        src/primitives/Integer.cpp
+        src/primitives/Integer.h
+        src/primitives/Real.cpp
+        src/primitives/Real.h
+        src/primitives/Complex.cpp
+        src/primitives/Complex.h
+        src/primitives/Bool.h
+        src/primitives/String.h
+        src/primitives.h
 
-        Values.h
-        Values.cpp
+        src/Values.h
+        src/Values.cpp
 
-        MathHelper.h
-        MathHelper.cpp
+        src/MathHelper.h
+        src/MathHelper.cpp
 )
 
 add_library(system SHARED
         Cmm/std/cpp/system.cpp
-        common.h
-        primitives/Integer.cpp
-        primitives/Integer.h
-        primitives/Real.cpp
-        primitives/Real.h
-        primitives/Complex.cpp
-        primitives/Complex.h
-        primitives/Bool.h
-        primitives/String.h
-        primitives.h
+        src/common.h
+        src/primitives/Integer.cpp
+        src/primitives/Integer.h
+        src/primitives/Real.cpp
+        src/primitives/Real.h
+        src/primitives/Complex.cpp
+        src/primitives/Complex.h
+        src/primitives/Bool.h
+        src/primitives/String.h
+        src/primitives.h
 
-        Values.h
-        Values.cpp
+        src/Values.h
+        src/Values.cpp
 
-        MathHelper.h
-        MathHelper.cpp
+        src/MathHelper.h
+        src/MathHelper.cpp
 )
 
 target_link_libraries(

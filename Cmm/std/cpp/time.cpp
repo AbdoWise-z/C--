@@ -11,11 +11,11 @@
 #include <iostream>
 #include <vector>
 
-#include "../../../common.h"
-#include "../../../Values.h"
-#include "../../../primitives/Integer.h"
-#include "../../../primitives/Real.h"
-#include "../../../primitives/String.h"
+#include "common.h"
+#include "Values.h"
+#include "primitives/Integer.h"
+#include "primitives/Real.h"
+#include "primitives/String.h"
 
 #include <chrono>
 #include <thread>

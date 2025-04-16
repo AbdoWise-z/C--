@@ -11,11 +11,11 @@
 #include <iostream>
 #include <vector>
 
-#include "../../../common.h"
-#include "../../../Values.h"
-#include "../../../primitives/Integer.h"
-#include "../../../primitives/Real.h"
-#include "../../../primitives/String.h"
+#include "common.h"
+#include "Values.h"
+#include "primitives/Integer.h"
+#include "primitives/Real.h"
+#include "primitives/String.h"
 
 void do_register(Cmm::NativeAddFunction);
 
@@ -29,10 +29,11 @@ extern "C" {
 Cmm::ValueObject m_system(const Cmm::FunctionSignature& sig, std::vector<Cmm::ValueObject>& params) {
     std::string str = *(static_cast<Cmm::String*>(params[0].value));
 
-    system(str.c_str());
+    int res = system(str.c_str());
+
     return {
-        .type = Cmm::V_Void,
-        .value = nullptr,
+        .type = Cmm::V_Integer,
+        .value = new Cmm::Integer(res),
     };
 }
 

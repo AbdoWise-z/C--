@@ -9,7 +9,7 @@ while (true) {
     var t: int = second();
     var it: int = 0;
     while (t == second()) {
-        it++;
+        it = it + 1;
     }
 
     speed = speed + (it - speed) * eps;

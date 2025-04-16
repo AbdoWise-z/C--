@@ -2,6 +2,7 @@
 #include <iostream>
 #include <string>
 
+#include "Store.h"
 #include "../config.h"
 #include "../forward.h"
 #include "../nodes/AST.h"
@@ -105,7 +106,7 @@ extern Cmm::Program::ProgramNode* root;
 program:
       statements_list END {
         $$ = new Cmm::Program::ProgramNode($1);
-        root = dynamic_cast<Cmm::Program::ProgramNode*>($$);
+        Cmm::Store::root = dynamic_cast<Cmm::Program::ProgramNode*>($$);
         YYACCEPT;
       }
     ;

@@ -12,7 +12,12 @@ file(GLOB PARSER_HDR     "${CMAKE_SOURCE_DIR}/grammar/*.hpp")
 message("Sources: " ${PARSER_CPP_SRC} ${PARSER_C_SRC})
 message("Headers: " ${PARSER_HDR})
 
+
+include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+
 add_executable(Cmm
+        Cmm.cpp
+
         config.h
 
         primitives/Integer.cpp
@@ -69,10 +74,24 @@ add_executable(Cmm
         debugger/Renderer.cpp
         debugger/Renderer.h
 
+        utils/cli.cpp
+        utils/cli.hpp
+
+        utils/konsol.cpp
+        utils/konsol.hpp
+
+        utils/clp.hpp
+
+        grammar/Store.cpp
+        grammar/Store.h
+
+        utils/string_utils.cpp
+        utils/string_utils.hpp
+
+
         ${PARSER_HDR}
         ${PARSER_CPP_SRC}
         ${PARSER_C_SRC}
-
 )
 
 add_custom_target(
@@ -169,6 +188,26 @@ add_library(time SHARED
         MathHelper.cpp
 )
 
+add_library(system SHARED
+        Cmm/std/cpp/system.cpp
+        common.h
+        primitives/Integer.cpp
+        primitives/Integer.h
+        primitives/Real.cpp
+        primitives/Real.h
+        primitives/Complex.cpp
+        primitives/Complex.h
+        primitives/Bool.h
+        primitives/String.h
+        primitives.h
+
+        Values.h
+        Values.cpp
+
+        MathHelper.h
+        MathHelper.cpp
+)
+
 target_link_libraries(
         io
         gmp mpfr
@@ -186,6 +225,11 @@ target_link_libraries(
 
 target_link_libraries(
         time
+        gmp mpfr
+)
+
+target_link_libraries(
+        system
         gmp mpfr
 )
 

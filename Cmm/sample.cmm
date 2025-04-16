@@ -6,5 +6,5 @@ var n1: real = input("real");
 print("Enter a second number: ");
 var n2: real = input("real");
 
-print("fk you" + endl());
-print("just kidding the result is: " + (n1 + n2) + endl());
+println("fk -> fk kaseb | epsilon");
+println("just kidding the result is: " + (n1 + n2));

@@ -8,6 +8,7 @@
 #include <stdexcept>
 
 #include "Renderer.h"
+#include "grammar/Store.h"
 
 
 static bool debuggerEnabled = false;
@@ -19,19 +20,19 @@ extern int yyparse();
 extern void yy_scan_string(const char* str);
 extern Cmm::Program::ProgramNode* root;
 
-void Cmm::CmmDebugger::enableDebugger() {
+void Cmm::debugger::enableDebugger() {
     debuggerEnabled = true;
 }
 
-void Cmm::CmmDebugger::disableDebugger() {
+void Cmm::debugger::disableDebugger() {
     debuggerEnabled = false;
 }
 
-bool Cmm::CmmDebugger::isEnabled() {
+bool Cmm::debugger::isEnabled() {
     return debuggerEnabled;
 }
 
-void Cmm::CmmDebugger::beginSession() {
+void Cmm::debugger::beginSession() {
     if (started) {
         throw std::runtime_error("CmmDebugger::beginSession() called while in active session");
     }
@@ -40,7 +41,7 @@ void Cmm::CmmDebugger::beginSession() {
     Program::beginScope(nullptr, "Global");
 }
 
-void Cmm::CmmDebugger::endSession() {
+void Cmm::debugger::endSession() {
     if (!started) {
         throw std::runtime_error("CmmDebugger::endSession() called while not in active session");
     }
@@ -98,10 +99,10 @@ static void start_debugged(Cmm::ExecutableNode* exec) {
         n->prepare();
         executionStack.push(n->step());
     }
-    Cmm::CmmDebugger::launch();
+    Cmm::debugger::launch();
 }
 
-void Cmm::CmmDebugger::exec(std::string code) {
+void Cmm::debugger::exec(std::string code) {
 
     yy_scan_string(code.c_str());
 
@@ -109,8 +110,9 @@ void Cmm::CmmDebugger::exec(std::string code) {
 
     if (parse_result == 0) {
         codeString += code;
-        auto program = root;
-        ::code.push_back(root->source[0]);
+        auto program = Cmm::Store::root;
+
+        ::code.push_back(program->source[0]);
 
         if (debuggerEnabled) {
             start_debugged(program->source[0]);
@@ -124,24 +126,24 @@ void Cmm::CmmDebugger::exec(std::string code) {
     }
 }
 
-void Cmm::CmmDebugger::step() {
+void Cmm::debugger::step() {
     if (executionStack.empty()) return;
 
     do_step_once(executionStack.top());
 }
 
-std::string Cmm::CmmDebugger::getCode() {
+std::string Cmm::debugger::getCode() {
     return codeString;
 }
 
-int Cmm::CmmDebugger::getCurrentLine() {
+int Cmm::debugger::getCurrentLine() {
     if (executionStack.empty()) return -1;
 
     Cmm::ASTNode* curr = executionStack.top();
     return curr->_lineNumber - 1; // fixme: maybe start lines from zero like a sane person ? :)
 }
 
-bool Cmm::CmmDebugger::isDone() {
+bool Cmm::debugger::isDone() {
     return executionStack.empty();
 }
 

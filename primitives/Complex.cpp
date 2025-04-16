@@ -7,8 +7,6 @@
 
 using namespace Namespace;
 
-using namespace Namespace;
-
 Complex::Complex() : real(0.0), imag(0.0) {}
 
 Complex::Complex(const Real &r, const Real &i) : real(r), imag(i) {}

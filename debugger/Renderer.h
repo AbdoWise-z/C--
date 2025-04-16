@@ -14,7 +14,7 @@
 #define DEBUGGER_STEP_IN  1
 #define DEBUGGER_CONTINUE
 
-namespace Namespace::CmmDebugger {
+namespace Namespace::debugger {
     void launch();
 }
 

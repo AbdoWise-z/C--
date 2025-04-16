@@ -387,7 +387,7 @@ static void redraw(const std::vector<std::string>& code_lines,
             std::string line = code_lines[code_index];
             if ((int)line.size() > (codeWidth - 2))
                 line = line.substr(0, codeWidth - 2);
-            std::string plainCode = (code_index == Cmm::CmmDebugger::getCurrentLine()) ? ("> " + line) : ("  " + line);
+            std::string plainCode = (code_index == Cmm::debugger::getCurrentLine()) ? ("> " + line) : ("  " + line);
 
             if (code_index == current_code_line && mode == CODE_MODE)
                 codeSegment = std::string(SELECT_BG) + plainCode + RESET_COLOR;
@@ -427,7 +427,7 @@ static void redraw(const std::vector<std::string>& code_lines,
        << "F10:" << RESET_ATTR << " Toggle empty"
        << "\t";
 
-    if (Cmm::CmmDebugger::isDone()) {
+    if (Cmm::debugger::isDone()) {
         std::cout << BRIGHT_RED_FG << UNDERLINE
         << "F11:" << RESET_ATTR << " Exit"
         << "\t";
@@ -549,7 +549,7 @@ static void interactive_debug_terminal(const std::string &code) {
     // Remember the last selected variable index per stack.
     int current_variable_index = 0;
     int current_stack_index = 0;
-    int current_code_line = Cmm::CmmDebugger::getCurrentLine();
+    int current_code_line = Cmm::debugger::getCurrentLine();
     bool skip_empty_stacks = true;
     std::vector<stack> stacks;
 
@@ -581,9 +581,9 @@ static void interactive_debug_terminal(const std::string &code) {
                     if (number == "18") {
                         // F8 pressed: Step
                         // [F8 handler goes here]
-                        if (!Cmm::CmmDebugger::isDone()) {
-                            Cmm::CmmDebugger::step();
-                            current_code_line = Cmm::CmmDebugger::getCurrentLine();
+                        if (!Cmm::debugger::isDone()) {
+                            Cmm::debugger::step();
+                            current_code_line = Cmm::debugger::getCurrentLine();
                         }
                     } else if (number == "19") {
                         // F8 pressed: Step
@@ -594,7 +594,7 @@ static void interactive_debug_terminal(const std::string &code) {
                     } else if (number == "21") {
                         skip_empty_stacks = !skip_empty_stacks;
                     } else if (number == "23") {
-                        if (Cmm::CmmDebugger::isDone()) {
+                        if (Cmm::debugger::isDone()) {
                             break;
                         }
                     }
@@ -657,6 +657,6 @@ static void interactive_debug_terminal(const std::string &code) {
 }
 
 
-void Cmm::CmmDebugger::launch() {
+void Cmm::debugger::launch() {
     interactive_debug_terminal(getCode());
 }

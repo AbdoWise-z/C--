@@ -10,7 +10,7 @@
 #include "../config.h"
 #include "../nodes/Program.h"
 
-namespace Namespace::CmmDebugger {
+namespace Namespace::debugger {
     void enableDebugger();
     void disableDebugger();
     bool isEnabled();

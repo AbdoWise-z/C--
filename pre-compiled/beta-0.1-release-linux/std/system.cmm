@@ -1,0 +1,4 @@
+#bind "libs/libsystem.so"
+
+// sends a system command
+func system(cmd: str) -> int = native

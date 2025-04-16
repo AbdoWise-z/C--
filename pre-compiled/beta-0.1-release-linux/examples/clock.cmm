@@ -1,14 +1,14 @@
 // import the standard library
 #import "std"
 
-
-print("Current Time is\n");
+print("[Current Date Time is]\n");
 
 while (true) {
     print("\r");
-
     print(
         year() + "/" + month() + "/" + day() + "  " +
         hour() + ":" + minute() + ":" + second() + "." + millis()
     );
+
+    sleep_ms(10);
 }

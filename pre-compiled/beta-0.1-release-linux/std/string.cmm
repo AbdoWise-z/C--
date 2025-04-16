@@ -1,0 +1,17 @@
+#bind "libs/libstr.so"
+
+func strlen(_s: str)                        -> int = native
+func charAt(_s: str, i: int)                -> str = native
+func slice(_s: str, _start: int, _end: int) -> str = native
+
+func revert(_s: str) -> str {
+    var out: str = "";
+    for (var i: int = strlen(_s) - 1;i >= 0;i--) {
+        out += charAt(_s, i);
+    }
+    return out;
+}
+
+func endsWith(_s: str, _c: str) -> bool {
+    return charAt(_s, strlen(_s) - 1) == _c;
+}

@@ -27,17 +27,10 @@
 
 extern void yylex_destroy();
 
-Cmm::ValueObject super_cool_function(Cmm::FunctionSignature sig, std::vector<Cmm::ValueObject> params) {
-    return {
-        .type = Cmm::V_String,
-        .value = new Cmm::String("Please work I don't wanna debug this for 2 hours"),
-    };
-}
-
 void run_code(std::vector<std::string> params) {
     try {
         std::string input = StringUtils::join(params.begin(), params.end(), " ");
-        auto [code, load] = Cmm::PreProcessor::processContent(input, {"./Cmm/std" , "."});
+        auto [code, load] = Cmm::PreProcessor::processContent(input, {"./Cmm/std" , "./std" , "."});
 
         for (auto& lib : load) {
             Cmm::NativeLoader::LoadNative(lib);
@@ -91,55 +84,10 @@ void run_interactive() {
     std::string input;
     std::cout << "Copyright © 2025 xAbdoMo et al. All rights reserved." << std::endl;
     std::cout << "Unauthorized copying, reproduction, or distribution of this software is strictly prohibited." << std::endl;
-    std::cout << "Type 'editor' to open code editor, 'quit' to exit, 'help' for a list of commands, or any Cmm \n"
+    std::cout << "Type 'editor' to open code editor, 'exit' to exit, 'help' for a list of commands, or any Cmm \n"
                  "statement to execute." << std::endl;
 
     Cmm::debugger::beginSession();
-
-
-    // Testing code .. keep it for now.
-    // Cmm::NativeLoader::LoadNative("./Cmm/libstd.so");
-    // Cmm:Cmm::Program::createFunction({"send_help", {}}, super_cool_function);
-    // while (true) {
-    //
-    //     std::cout << ">>> ";
-    //     std::getline(std::cin, input);
-    //
-    //     if (input == "editor") {
-    //         input = NanoEditor::edit();
-    //     }
-    //
-    //     if (input == "debugger enable") {
-    //         Cmm::debugger::enableDebugger();
-    //         std::cout << "Debugger enabled\n";
-    //         continue;
-    //     }
-    //
-    //     if (input == "debugger disable") {
-    //         Cmm::debugger::disableDebugger();
-    //         std::cout << "Debugger disabled\n";
-    //         continue;
-    //     }
-    //
-    //     if (input == "debugger") {
-    //         Cmm::debugger::launch();
-    //         continue;
-    //     }
-    //
-    //     if (input == "quit") break;
-    //     if (input.empty()) {
-    //         std::cout << "\r";
-    //         continue;
-    //     }
-    //
-    //     auto [code, load] = Cmm::PreProcessor::processContent(input, {"./Cmm/std" , "."});
-    //
-    //     for (const auto& lib: load) {
-    //         Cmm::NativeLoader::LoadNative(lib);
-    //     }
-    //
-    //     Cmm::debugger::exec(code);
-    // }
 
     cli.run();
 
@@ -185,7 +133,7 @@ void run_code(const std::string& file_path, const std::string& include_path) {
     std::string wrapper_code = "#import \"" + file_path + "\""; // yes this works ..
     auto [code, load] = Cmm::PreProcessor::processContent(
         wrapper_code,
-        {"./Cmm/std" , ".", include_path}
+        {"./Cmm/std" , "./std" , ".", include_path}
         );
 
     for (const auto& lib: load) {

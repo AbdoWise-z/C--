@@ -68,7 +68,7 @@ static std::pair<std::string, std::vector<std::string>> processFile(const std::s
     return {processedContent.str(), toBindList};
 }
 
-static std::pair<std::string, std::vector<std::string>> _processContent(const std::string& input, std::vector<std::string> searchPaths) {
+static std::pair<std::string, std::vector<std::string>> _processContent(const std::string& input, const std::vector<std::string>& searchPaths) {
     std::ostringstream processedContent;
     std::vector<std::string> toBindList;
 
@@ -106,7 +106,9 @@ std::pair<std::string, std::vector<std::string>> Cmm::PreProcessor::loadFile(con
     return processFile(filename, searchPaths);
 }
 
-std::pair<std::string, std::vector<std::string>> Cmm::PreProcessor::processContent(const std::string &content,
-    const std::vector<std::string> &searchPaths) {
+std::pair<std::string, std::vector<std::string>> Cmm::PreProcessor::processContent(
+    const std::string &content,
+    const std::vector<std::string> &searchPaths)
+{
     return _processContent(content, searchPaths);
 }

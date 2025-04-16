@@ -1,6 +1,3 @@
-//
-// Created by xabdomo on 3/27/25.
-//
 
 #ifndef CONTROL_H
 #define CONTROL_H

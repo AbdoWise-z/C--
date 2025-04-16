@@ -1,6 +1,3 @@
-//
-// Created by xabdomo on 3/27/25.
-//
 
 #ifndef TYPING_H
 #define TYPING_H

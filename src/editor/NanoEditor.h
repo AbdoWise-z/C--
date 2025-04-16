@@ -1,6 +1,3 @@
-//
-// Created by xabdomo on 3/27/25.
-//
 
 #ifndef NANOEDITOR_H
 #define NANOEDITOR_H

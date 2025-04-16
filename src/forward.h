@@ -1,6 +1,3 @@
-//
-// Created by xabdomo on 3/26/25.
-//
 
 #ifndef FORWARD_H
 #define FORWARD_H

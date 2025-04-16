@@ -1,6 +1,3 @@
-//
-// Created by xabdomo on 3/25/25.
-//
 
 #ifndef VALUES_H
 #define VALUES_H

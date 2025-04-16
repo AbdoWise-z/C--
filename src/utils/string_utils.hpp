@@ -1,6 +1,3 @@
-//
-// Created by xabdomo on 4/16/25.
-//
 
 #ifndef STRING_UTILS_HPP
 #define STRING_UTILS_HPP

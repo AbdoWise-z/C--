@@ -1,6 +1,3 @@
-//
-// Created by xabdomo on 3/28/25.
-//
 
 #ifndef NATIVELOADER_H
 #define NATIVELOADER_H

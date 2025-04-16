@@ -1,6 +1,3 @@
-//
-// Created by xabdomo on 4/12/25.
-//
 
 #ifndef DEBUGGERRENDER_H
 #define DEBUGGERRENDER_H

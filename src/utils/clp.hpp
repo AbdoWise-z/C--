@@ -1,6 +1,3 @@
-//
-// Created by xabdomo on 4/16/25.
-//
 
 #ifndef CLP_HPP
 #define CLP_HPP

@@ -1,6 +1,3 @@
-//
-// Created by xabdomo on 3/24/25.
-//
 
 #include "Complex.h"
 #include <iostream>

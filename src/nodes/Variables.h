@@ -1,6 +1,3 @@
-//
-// Created by xabdomo on 3/27/25.
-//
 
 #ifndef VARIABLES_H
 #define VARIABLES_H

@@ -1,6 +1,3 @@
-//
-// Created by xabdomo on 4/13/25.
-//
 
 #include "cli.hpp"
 

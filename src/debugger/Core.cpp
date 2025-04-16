@@ -1,6 +1,3 @@
-//
-// Created by xabdomo on 4/12/25.
-//
 
 #include "Core.h"
 

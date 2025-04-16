@@ -1,6 +1,3 @@
-//
-// Created by xabdomo on 4/16/25.
-//
 
 #ifndef STORE_H
 #define STORE_H

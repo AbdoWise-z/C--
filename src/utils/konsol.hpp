@@ -1,6 +1,3 @@
-//
-// Created by xabdomo on 4/15/25.
-//
 
 #ifndef KONSOL_HPP
 #define KONSOL_HPP

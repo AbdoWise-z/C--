@@ -1,6 +1,3 @@
-//
-// Created by xabdomo on 3/28/25.
-//
 
 #include "NativeLoader.h"
 #include <dlfcn.h>

@@ -1,6 +1,3 @@
-//
-// Created by xabdomo on 3/26/25.
-//
 
 #include "Program.h"
 

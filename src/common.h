@@ -1,6 +1,3 @@
-//
-// Created by xabdomo on 3/28/25.
-//
 
 #ifndef NATIVE_H
 #define NATIVE_H

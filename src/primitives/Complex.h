@@ -1,6 +1,3 @@
-//
-// Created by xabdomo on 3/24/25.
-//
 
 #ifndef COMPLEX_H
 #define COMPLEX_H

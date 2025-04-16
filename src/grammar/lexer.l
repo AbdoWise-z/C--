@@ -38,7 +38,7 @@ void remove_first_and_last_char(std::string* str_ptr) {
     return V_STRING;
 }
 
-[0-9]+"\."[0-9]+ {
+[0-9]+"\."[0-9]* {
     std::string* val = new std::string(yytext);
     yylval.str = val;
     return V_REAL;

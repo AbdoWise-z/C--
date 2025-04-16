@@ -1,0 +1,9 @@
+{
+    var x = 45;
+    {
+        var y = x + 1;
+        println(y);
+        var x = 17;
+        println(x);
+    }
+}

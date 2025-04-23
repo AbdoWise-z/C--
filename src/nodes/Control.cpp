@@ -255,7 +255,7 @@ namespace Cmm::Control {
     void BreakStatementNode::exec() {
         auto looper = Program::getNearestBreakPointScopeOwner();
         if (looper == nullptr) {
-            throw Program::ControlError("break cannot be used outside a looper scope");
+            throw Program::ControlError("break cannot be used outside a looper / switch scope");
         }
 
         looper->_shouldBreak = true;

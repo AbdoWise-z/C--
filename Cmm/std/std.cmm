@@ -1,6 +1,6 @@
-#import "io.cmm"
-#import "math.cmm"
-#import "string.cmm"
-#import "time.cmm"
-#import "types.cmm"
-#import "system.cmm"
+#include <io.cmm>
+#include <math.cmm>
+#include <string.cmm>
+#include <time.cmm>
+#include <types.cmm>
+#include <system.cmm>

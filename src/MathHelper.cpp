@@ -7,39 +7,6 @@
 
 #include "primitives.h"
 
-const static std::pmr::map<std::pair<Cmm::ValueType, Cmm::ValueType>, Cmm::ValueType> _cMap = {
-    {{Cmm::V_Bool, Cmm::V_Bool}, Cmm::V_Bool},
-    {{Cmm::V_Bool, Cmm::V_Integer}, Cmm::V_Integer},
-    {{Cmm::V_Bool, Cmm::V_Real}, Cmm::V_Real},
-    {{Cmm::V_Bool, Cmm::V_Complex}, Cmm::V_Complex},
-    {{Cmm::V_Bool, Cmm::V_String}, Cmm::V_String},
-
-    {{Cmm::V_Integer, Cmm::V_Bool}, Cmm::V_Integer},
-    {{Cmm::V_Integer, Cmm::V_Integer}, Cmm::V_Integer},
-    {{Cmm::V_Integer, Cmm::V_Real}, Cmm::V_Real},
-    {{Cmm::V_Integer, Cmm::V_Complex}, Cmm::V_Complex},
-    {{Cmm::V_Integer, Cmm::V_String}, Cmm::V_String},
-
-    {{Cmm::V_Real, Cmm::V_Bool}, Cmm::V_Real},
-    {{Cmm::V_Real, Cmm::V_Integer}, Cmm::V_Real},
-    {{Cmm::V_Real, Cmm::V_Real}, Cmm::V_Real},
-    {{Cmm::V_Real, Cmm::V_Complex}, Cmm::V_Complex},
-    {{Cmm::V_Real, Cmm::V_String}, Cmm::V_String},
-
-    {{Cmm::V_Complex, Cmm::V_Bool}, Cmm::V_Complex},
-    {{Cmm::V_Complex, Cmm::V_Integer}, Cmm::V_Complex},
-    {{Cmm::V_Complex, Cmm::V_Real}, Cmm::V_Complex},
-    {{Cmm::V_Complex, Cmm::V_Complex}, Cmm::V_Complex},
-    {{Cmm::V_Complex, Cmm::V_String}, Cmm::V_String},
-
-    {{Cmm::V_String, Cmm::V_Bool}, Cmm::V_String},
-    {{Cmm::V_String, Cmm::V_Integer}, Cmm::V_String},
-    {{Cmm::V_String, Cmm::V_Real}, Cmm::V_String},
-    {{Cmm::V_String, Cmm::V_Complex}, Cmm::V_String},
-    {{Cmm::V_String, Cmm::V_String}, Cmm::V_String},
-
-};
-
 
 Cmm::MathHelper::OperationError::OperationError(ValueType a, ValueType b, const std::string& op) {
     this->from = a;
@@ -61,9 +28,9 @@ const char * Cmm::MathHelper::OperationError::what() const noexcept {
 }
 
 Cmm::ValueObject Cmm::MathHelper::add(ValueObject &left, ValueObject &right) {
-    auto cIt = _cMap.find({left.type, right.type});
+    auto cIt = TermConversionMap.find({left.type, right.type});
 
-    if (cIt == _cMap.end()) {
+    if (cIt == TermConversionMap.end()) {
         throw MathHelper::OperationError(left.type, right.type, "\"+\"");
     }
 
@@ -130,9 +97,9 @@ Cmm::ValueObject Cmm::MathHelper::add(ValueObject &left, ValueObject &right) {
 
 
 Cmm::ValueObject Cmm::MathHelper::sub(ValueObject &left, ValueObject &right) {
-    auto cIt = _cMap.find({left.type, right.type});
+    auto cIt = TermConversionMap.find({left.type, right.type});
 
-    if (cIt == _cMap.end()) {
+    if (cIt == TermConversionMap.end()) {
         throw MathHelper::OperationError(left.type, right.type, "\"-\"");
     }
 
@@ -203,9 +170,9 @@ Cmm::ValueObject Cmm::MathHelper::sub(ValueObject &left, ValueObject &right) {
 
 
 Cmm::ValueObject Cmm::MathHelper::mul(ValueObject &left, ValueObject &right) {
-    auto cIt = _cMap.find({left.type, right.type});
+    auto cIt = TermConversionMap.find({left.type, right.type});
 
-    if (cIt == _cMap.end()) {
+    if (cIt == TermConversionMap.end()) {
         throw MathHelper::OperationError(left.type, right.type, "\"*\"");
     }
 
@@ -276,9 +243,9 @@ Cmm::ValueObject Cmm::MathHelper::mul(ValueObject &left, ValueObject &right) {
 
 
 Cmm::ValueObject Cmm::MathHelper::div(ValueObject &left, ValueObject &right) {
-    auto cIt = _cMap.find({left.type, right.type});
+    auto cIt = TermConversionMap.find({left.type, right.type});
 
-    if (cIt == _cMap.end()) {
+    if (cIt == TermConversionMap.end()) {
         throw MathHelper::OperationError(left.type, right.type, "\"/\"");
     }
 
@@ -348,9 +315,9 @@ Cmm::ValueObject Cmm::MathHelper::div(ValueObject &left, ValueObject &right) {
 }
 
 Cmm::ValueObject Cmm::MathHelper::mod(ValueObject &left, ValueObject &right) {
-    auto cIt = _cMap.find({left.type, right.type});
+    auto cIt = TermConversionMap.find({left.type, right.type});
 
-    if (cIt == _cMap.end()) {
+    if (cIt == TermConversionMap.end()) {
         throw MathHelper::OperationError(left.type, right.type, "\"&\"");
     }
 
@@ -403,9 +370,9 @@ Cmm::ValueObject Cmm::MathHelper::mod(ValueObject &left, ValueObject &right) {
 
 Cmm::ValueObject Cmm::MathHelper::lshift(ValueObject &left, ValueObject &right) {
 
-    auto cIt = _cMap.find({left.type, right.type});
+    auto cIt = TermConversionMap.find({left.type, right.type});
 
-    if (cIt == _cMap.end()) {
+    if (cIt == TermConversionMap.end()) {
         throw MathHelper::OperationError(left.type, right.type, "\"<<\"");
     }
 
@@ -457,9 +424,9 @@ Cmm::ValueObject Cmm::MathHelper::lshift(ValueObject &left, ValueObject &right) 
 }
 
 Cmm::ValueObject Cmm::MathHelper::rshift(ValueObject &left, ValueObject &right) {
-    auto cIt = _cMap.find({left.type, right.type});
+    auto cIt = TermConversionMap.find({left.type, right.type});
 
-    if (cIt == _cMap.end()) {
+    if (cIt == TermConversionMap.end()) {
         throw MathHelper::OperationError(left.type, right.type, "\">>\"");
     }
 
@@ -511,9 +478,9 @@ Cmm::ValueObject Cmm::MathHelper::rshift(ValueObject &left, ValueObject &right) 
 }
 
 Cmm::ValueObject Cmm::MathHelper::bitwise_or(ValueObject &left, ValueObject &right) {
-    auto cIt = _cMap.find({left.type, right.type});
+    auto cIt = TermConversionMap.find({left.type, right.type});
 
-    if (cIt == _cMap.end()) {
+    if (cIt == TermConversionMap.end()) {
         throw MathHelper::OperationError(left.type, right.type, "\"|\"");
     }
 
@@ -565,9 +532,9 @@ Cmm::ValueObject Cmm::MathHelper::bitwise_or(ValueObject &left, ValueObject &rig
 }
 
 Cmm::ValueObject Cmm::MathHelper::bitwise_and(ValueObject &left, ValueObject &right) {
-    auto cIt = _cMap.find({left.type, right.type});
+    auto cIt = TermConversionMap.find({left.type, right.type});
 
-    if (cIt == _cMap.end()) {
+    if (cIt == TermConversionMap.end()) {
         throw MathHelper::OperationError(left.type, right.type, "\"&\"");
     }
 
@@ -619,9 +586,9 @@ Cmm::ValueObject Cmm::MathHelper::bitwise_and(ValueObject &left, ValueObject &ri
 }
 
 Cmm::ValueObject Cmm::MathHelper::bitwise_xor(ValueObject &left, ValueObject &right) {
-    auto cIt = _cMap.find({left.type, right.type});
+    auto cIt = TermConversionMap.find({left.type, right.type});
 
-    if (cIt == _cMap.end()) {
+    if (cIt == TermConversionMap.end()) {
         throw MathHelper::OperationError(left.type, right.type, "\"^\"");
     }
 
@@ -747,9 +714,9 @@ Cmm::ValueObject Cmm::MathHelper::logical_and(ValueObject &left, ValueObject &ri
 }
 
 Cmm::ValueObject Cmm::MathHelper::equal(ValueObject &left, ValueObject &right) {
-    auto cIt = _cMap.find({left.type, right.type});
+    auto cIt = TermConversionMap.find({left.type, right.type});
 
-    if (cIt == _cMap.end()) {
+    if (cIt == TermConversionMap.end()) {
         throw MathHelper::OperationError(left.type, right.type, "\"^\"");
     }
 
@@ -817,9 +784,9 @@ Cmm::ValueObject Cmm::MathHelper::equal(ValueObject &left, ValueObject &right) {
 }
 
 Cmm::ValueObject Cmm::MathHelper::greater(ValueObject &left, ValueObject &right) {
-    auto cIt = _cMap.find({left.type, right.type});
+    auto cIt = TermConversionMap.find({left.type, right.type});
 
-    if (cIt == _cMap.end()) {
+    if (cIt == TermConversionMap.end()) {
         throw MathHelper::OperationError(left.type, right.type, "\"^\"");
     }
 
@@ -887,9 +854,9 @@ Cmm::ValueObject Cmm::MathHelper::greater(ValueObject &left, ValueObject &right)
 }
 
 Cmm::ValueObject Cmm::MathHelper::less(ValueObject &left, ValueObject &right) {
-    auto cIt = _cMap.find({left.type, right.type});
+    auto cIt = TermConversionMap.find({left.type, right.type});
 
-    if (cIt == _cMap.end()) {
+    if (cIt == TermConversionMap.end()) {
         throw MathHelper::OperationError(left.type, right.type, "\"^\"");
     }
 
@@ -957,9 +924,9 @@ Cmm::ValueObject Cmm::MathHelper::less(ValueObject &left, ValueObject &right) {
 }
 
 Cmm::ValueObject Cmm::MathHelper::greater_equal(ValueObject &left, ValueObject &right) {
-    auto cIt = _cMap.find({left.type, right.type});
+    auto cIt = TermConversionMap.find({left.type, right.type});
 
-    if (cIt == _cMap.end()) {
+    if (cIt == TermConversionMap.end()) {
         throw MathHelper::OperationError(left.type, right.type, "\"^\"");
     }
 
@@ -1027,9 +994,9 @@ Cmm::ValueObject Cmm::MathHelper::greater_equal(ValueObject &left, ValueObject &
 }
 
 Cmm::ValueObject Cmm::MathHelper::less_equal(ValueObject &left, ValueObject &right) {
-    auto cIt = _cMap.find({left.type, right.type});
+    auto cIt = TermConversionMap.find({left.type, right.type});
 
-    if (cIt == _cMap.end()) {
+    if (cIt == TermConversionMap.end()) {
         throw MathHelper::OperationError(left.type, right.type, "\"^\"");
     }
 
@@ -1097,9 +1064,9 @@ Cmm::ValueObject Cmm::MathHelper::less_equal(ValueObject &left, ValueObject &rig
 }
 
 Cmm::ValueObject Cmm::MathHelper::not_equal(ValueObject &left, ValueObject &right) {
-    auto cIt = _cMap.find({left.type, right.type});
+    auto cIt = TermConversionMap.find({left.type, right.type});
 
-    if (cIt == _cMap.end()) {
+    if (cIt == TermConversionMap.end()) {
         throw MathHelper::OperationError(left.type, right.type, "\"^\"");
     }
 

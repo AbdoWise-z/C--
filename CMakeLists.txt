@@ -92,6 +92,8 @@ add_executable(Cmm
         ${PARSER_HDR}
         ${PARSER_CPP_SRC}
         ${PARSER_C_SRC}
+        src/generator/quad_generator.cpp
+        src/generator/quad_generator.hpp
 )
 
 add_custom_target(

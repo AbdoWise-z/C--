@@ -127,29 +127,29 @@ namespace Namespace::Program {
         };
     }
 
-    static VariableBlock& resolveRef(int scope, ValueObject val) {
-        ProgramBlock& block = getCurrentProgram();
-        while (scope >= 0) {
-            std::string next_target = *static_cast<std::string*>(val.value);
-            Scope& _s = block.stack[scope];
-            auto it = _s.variables.find(next_target);
-            if (it != _s.variables.end()) {
-                VariableBlock& block = it->second;
-                ValueObject& obj = block.Value;
-
-                if (obj.type != V_Ref) {
-                    return block;  // found the target
-                }
-                val = obj;
-            }
-
-            scope --;
-        }
-
-        std::string next_target = *static_cast<std::string*>(val.value);
-
-        throw VariableNotFoundError("[Ref: " + next_target + "]");
-    }
+//     static VariableBlock& resolveRef(int scope, ValueObject val) {
+//         ProgramBlock& block = getCurrentProgram();
+//         while (scope >= 0) {
+//             std::string next_target = *static_cast<std::string*>(val.value);
+//             Scope& _s = block.stack[scope];
+//             auto it = _s.variables.find(next_target);
+//             if (it != _s.variables.end()) {
+//                 VariableBlock& block = it->second;
+//                 ValueObject& obj = block.Value;
+//
+// //                if (obj.type != V_Ref) {
+//                     return block;  // found the target
+// //                }
+//                 val = obj;
+//             }
+//
+//             scope --;
+//         }
+//
+//         std::string next_target = *static_cast<std::string*>(val.value);
+//
+//         throw VariableNotFoundError("[Ref: " + next_target + "]");
+//     }
 
     VariableBlock & getVariable(const std::string &name) {
         ProgramBlock& block = getCurrentProgram();
@@ -162,10 +162,10 @@ namespace Namespace::Program {
                 VariableBlock& block = it->second;
                 ValueObject& obj = block.Value;
 
-                if (obj.type != V_Ref) {
+//                if (obj.type != V_Ref) {
                     return block;
-                }
-                return resolveRef(scope - 1, obj);
+//                }
+//                return resolveRef(scope - 1, obj);
             }
             scope --;
         }
@@ -181,17 +181,25 @@ namespace Namespace::Program {
 
         Scope& scope = block.stack.back();
 
-        auto it1 = scope.functions.find(signature);
+        auto it1 = scope.functions.find(signature.first);
         if (it1 != scope.functions.end()) {
-            throw AlreadyDefinedError(stringfy(signature));
+            if (it1->second.find(signature.second) != it1->second.end()) {
+                throw AlreadyDefinedError(stringfy(signature));
+            }
+        } else {
+            scope.functions[signature.first] = {};
+            it1 = scope.functions.find(signature.first);
         }
 
-        auto it2 = block.native_functions.find(signature);
-        if (it2 != block.native_functions.end()) {
-            throw AlreadyDefinedError(stringfy(signature));
+        if (block.stack.size() == 1) { // creating a function on the global scope
+            auto it2 = block.native_functions.find(signature.first);
+            if (it2 != block.native_functions.end() && it2->second.find(signature.second) != it2->second.end()) {
+                throw AlreadyDefinedError(stringfy(signature));
+            }
         }
 
-        scope.functions[signature] = node;
+
+        scope.functions[signature.first][signature.second] = node;
     }
 
     void createFunction(const FunctionSignature &signature, NativeFunction handler) {
@@ -200,19 +208,25 @@ namespace Namespace::Program {
             throw NoStackError();
         }
 
-        Scope& scope = block.stack.back();
+        Scope& scope = block.stack[0];
 
-        auto it1 = block.native_functions.find(signature);
+        auto it1 = block.native_functions.find(signature.first);
         if (it1 != block.native_functions.end()) {
-            throw AlreadyDefinedError(stringfy(signature));
+            if (it1->second.find(signature.second) != it1->second.end()) {
+                throw AlreadyDefinedError(stringfy(signature));
+            }
+        } else {
+            block.native_functions[signature.first] = {};
         }
 
-        auto it2 = scope.functions.find(signature);
+        auto it2 = scope.functions.find(signature.first);
         if (it2 != scope.functions.end()) {
-            throw AlreadyDefinedError(stringfy(signature));
+            if (it2->second.find(signature.second) != it2->second.end()) {
+                throw AlreadyDefinedError(stringfy(signature));
+            }
         }
 
-        block.native_functions[signature] = handler;
+        block.native_functions[signature.first][signature.second] = handler;
     }
 
     void validateNativeExists(const FunctionSignature &signature) {
@@ -222,8 +236,12 @@ namespace Namespace::Program {
             throw NativeError("Native functions can only be created on the top level of the program.");
         }
 
-        auto it = block.native_functions.find(signature);
+        auto it = block.native_functions.find(signature.first);
         if (it == block.native_functions.end()) {
+            throw FunctionNotFoundError(stringfy(signature) + ":native");
+        }
+
+        if (it->second.find(signature.second) == it->second.end()) {
             throw FunctionNotFoundError(stringfy(signature) + ":native");
         }
     }
@@ -231,9 +249,14 @@ namespace Namespace::Program {
     static ValueObject callFunctionNative(const FunctionSignature& signature, const std::vector<ValueObject>& params) {
         ProgramBlock& block = getCurrentProgram();
 
-        auto it = block.native_functions.find(signature);
+        auto it = block.native_functions.find(signature.first);
         if (it != block.native_functions.end()) {
-            const NativeFunction obj = it->second;
+            auto func_obj = it->second.find(signature.second);
+            if (func_obj == it->second.end()) {
+                throw FunctionNotFoundError(stringfy(signature));
+            }
+
+            const auto obj = func_obj->second;
             // do the actual calling
             const ValueObject result = obj(signature, params);
             return result;
@@ -255,9 +278,14 @@ namespace Namespace::Program {
         ProgramBlock& block = getCurrentProgram();
         int scope = block.stack.size() - 1;
         while (scope >= 0) {
-            auto it = block.stack[scope].functions.find(signature);
+            auto it = block.stack[scope].functions.find(signature.first);
             if (it != block.stack[scope].functions.end()) {
-                Functional::FunctionNode* obj = it->second;
+                auto func_obj = it->second.find(signature.second);
+                if (func_obj == it->second.end()) {
+                    throw FunctionNotFoundError(stringfy(signature));
+                }
+
+                const auto obj = func_obj->second;
                 // do the actual calling
                 ValueObject result = obj->exec(params);
                 return result;
@@ -320,24 +348,21 @@ namespace Namespace::Program {
 
 
     ProgramNode::ProgramNode(ExecutableNode *source) {
-        this->source = {source};
+        this->source = source;
     }
 
     ProgramNode::ProgramNode() {
-        this->source.clear();
+        this->source = nullptr;
     }
 
     ProgramNode::~ProgramNode() {
-        for (auto s: source)
-            delete s;
+        delete this->source;
     }
 
     void ProgramNode::exec() {
         beginScope();
 
-        for (const auto item: source) {
-            item->exec();
-        }
+        source->exec();
 
         endScope();
     }
@@ -350,7 +375,7 @@ namespace Namespace::Program {
 
     void ExpressionStatementNode::exec() {
         auto mValue = this->expr->eval();
-        if (!_silent && mValue.type != V_Void && mValue.type != V_Ref && mValue.type != V_Error)
+        if (!_silent && mValue.type != V_Void) //  && mValue.type != V_Ref && mValue.type != V_Error
             std::cout << "[e]> expr[" << ValuesHelper::ValueTypeAsString(mValue.type) << "]" << "=" << ValuesHelper::toString(mValue) << std::endl;
         ValuesHelper::Delete(mValue);
     }

@@ -174,12 +174,7 @@ Cmm::Expressions::InvertNode::~InvertNode() {
 
 Cmm::Expressions::CastNode::CastNode(EvaluableNode *child, const std::string& type) {
     this->child = child;
-    if (type == "int") targetType = V_Integer;
-    if (type == "real") targetType = V_Real;
-    if (type == "complex") targetType = V_Complex;
-    if (type == "str") targetType = V_String;
-    if (type == "bool") targetType = V_Bool;
-    if (type == "void") targetType = V_Void; // will capture this in runtime instead of compile time since I want types to be runtime bound
+    this->targetType = ValuesHelper::StringToValueType(type);
 }
 
 Cmm::ValueObject Cmm::Expressions::CastNode::eval() {

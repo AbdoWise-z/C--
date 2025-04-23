@@ -1,4 +1,4 @@
-#bind "libs/libtime.so"
+#bind <libs/libtime.so>
 
 func sleep(s: int, ms: int, ns: int) -> void = native
 func sleep(s: int) -> void { sleep(s, 0, 0); }

@@ -13,14 +13,15 @@ namespace Cmm {
         V_Complex,
         V_Bool,
         V_Void,
-        V_Error,
-        V_Ref
+        V_Any
     };
 
     struct ValueObject {
         ValueType type;
         void* value;
     };
+
+    typedef std::vector<ValueType> FunctionTypeSignature;
 
     typedef std::pair<std::string, std::vector<ValueType>> FunctionSignature;
     typedef ValueObject (*NativeFunction)( const FunctionSignature&, std::vector<ValueObject> );

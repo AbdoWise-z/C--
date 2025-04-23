@@ -102,12 +102,15 @@ namespace Cmm::Variables {
             new Expressions::VariableNode(name),
             new Expressions::ConstantValueNode(Integer(1)),
             op == "++" ? "+" : "-");
+
+        this->op = op;
     }
 
     ValueObject PreIncNode::eval() {
         auto result = _internal->eval();
         Program::VariableBlock& block = Program::getVariable(name);
         ValueObject& original = block.Value;
+
         if (block.isConst) {
             throw Program::ConstantAssignmentError(name);
         }
@@ -136,6 +139,7 @@ namespace Cmm::Variables {
             new Expressions::VariableNode(name),
             new Expressions::ConstantValueNode(Integer(1)),
             op == "++" ? "+" : "-");
+        this->op = op;
     }
 
     ValueObject PostIncNode::eval() {

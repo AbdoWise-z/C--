@@ -21,6 +21,7 @@
 #include "debugger/Core.h"
 #include "debugger/Renderer.h"
 #include "editor/NanoEditor.h"
+#include "generator/quad_generator.hpp"
 #include "utils/cli.hpp"
 #include "utils/konsol.hpp"
 #include "utils/string_utils.hpp"
@@ -31,6 +32,8 @@ void run_code(std::vector<std::string> params) {
     try {
         std::string input = StringUtils::join(params.begin(), params.end(), " ");
         auto [code, load] = Cmm::PreProcessor::processContent(input, {"./Cmm/std" , "./std" , "."});
+
+        // std::cout << code << std::endl;
 
         for (auto& lib : load) {
             Cmm::NativeLoader::LoadNative(lib);
@@ -107,6 +110,9 @@ void print_help() {
     std::cout << std::setw(30) << std::left << color("  --d / --debug", GREEN_FG) << " : Run in debugging mode, enable stepping and stack view (experimental)." << std::endl;
 
     std::cout << std::setw(30) << std::left << color("  --file", GREEN_FG) << " : Specify input file to compile / run. ignored if --interactive is set." << std::endl;
+    std::cout << std::setw(30) << std::left << color("  --quads", GREEN_FG) << " : Specify output file to write quads. ignored if --interactive is set." << std::endl;
+    std::cout << std::setw(30) << std::left << color("  --symbols", GREEN_FG) << " : Specify output file to write symbols. ignored if --interactive is set." << std::endl;
+
     std::cout << std::setw(30) << std::left << color("  --I", GREEN_FG) << " : Specify include path for the compiler to search for files." << std::endl;
 
     std::cout << bcolor("Interactive mode commands:", RED_BG) << std::endl;
@@ -130,12 +136,13 @@ void run_code(const std::string& file_path, const std::string& include_path) {
 
     Cmm::debugger::beginSession();
 
-    std::string wrapper_code = "#import \"" + file_path + "\""; // yes this works ..
+    std::string wrapper_code = "#include <" + file_path + ">"; // code injection :goose:
     auto [code, load] = Cmm::PreProcessor::processContent(
         wrapper_code,
         {"./Cmm/std" , "./std" , ".", include_path}
         );
 
+    // std::cout << code << std::endl;
     for (const auto& lib: load) {
         Cmm::NativeLoader::LoadNative(lib);
     }
@@ -145,6 +152,48 @@ void run_code(const std::string& file_path, const std::string& include_path) {
     yylex_destroy();
 
     Cmm::debugger::endSession();
+}
+
+void compile_code(const std::string& file_path, const std::string& include_path, const std::string& quads, const std::string& symbols) {
+    std::ios::sync_with_stdio(false);
+    yydebug = 0;
+
+    std::string wrapper_code = "#include <" + file_path + ">";
+    auto [code, load] = Cmm::PreProcessor::processContent(
+        wrapper_code,
+        {"./Cmm/std" , "./std" , ".", include_path}
+        );
+
+    // std::cout << code << std::endl;
+    // no session, so we shouldn't be attaching any native libraries
+    // for (const auto& lib: load) {
+    //     Cmm::NativeLoader::LoadNative(lib);
+    // }
+
+    auto program = Cmm::debugger::compileCode(code);
+    if (program) {
+        auto ok = Cmm::QuadGenerator::generate(program, quads);
+        if (!ok) std::cerr << "Failed to generate quads" << std::endl;
+        else {
+
+            std::cout << bcolor("Warns:", CYAN_BG) << std::endl;
+            for (const auto& warn: ok->warnings) {
+                std::cout << "  " << std::setw(8) << std::left << std::to_string(warn.line) << warn.exception << std::endl;
+            }
+
+            if (ok->warnings.empty()) std::cout << "  None" << std::endl;
+
+            std::cout << bcolor("Errors:", RED_BG) << std::endl;
+            for (const auto& err: ok->errors) {
+                std::cout << "  " << std::setw(8) << std::left << std::to_string(err.line) << err.exception << std::endl;
+            }
+
+            if (ok->errors.empty()) std::cout << "  None" << std::endl;
+
+            std::cout << "Generated: " << quads << std::endl;
+        }
+    }
+    yylex_destroy();
 }
 
 int main(int argc, char** argv) {
@@ -158,6 +207,8 @@ int main(int argc, char** argv) {
 
     clp.addArgument("I", CommandLineParser::Type::STRING, true, ".");
     clp.addArgument("file", CommandLineParser::Type::STRING, true, "");
+    clp.addArgument("quads", CommandLineParser::Type::STRING, true, "");
+    clp.addArgument("symbols", CommandLineParser::Type::STRING, true, "");
 
     try {
         clp.parse(argc, argv);
@@ -169,6 +220,8 @@ int main(int argc, char** argv) {
 
         auto include_paths = clp.get<std::string>("I");
         auto file = clp.get<std::string>("file");
+        auto quads = clp.get<std::string>("quads");
+        auto symbols = clp.get<std::string>("symbols");
 
         if (debug) {
             Cmm::debugger::enableDebugger();
@@ -187,7 +240,11 @@ int main(int argc, char** argv) {
                 return -1;
             }
 
-            run_code(file, include_paths);
+            if (!quads.empty() || !symbols.empty()) {
+                compile_code(file, include_paths, quads, symbols);
+            } else {
+                run_code(file, include_paths);
+            }
         }
 
     } catch (const std::exception& e) {

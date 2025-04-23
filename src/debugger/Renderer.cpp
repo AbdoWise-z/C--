@@ -466,11 +466,13 @@ static void buildStack(std::vector<stack>& stacks, bool skip_empty = false) {
 
         for (const auto& func: program.native_functions) {
 
-            _stack.variables.push_back({
-                .name = Cmm::Program::stringfy(func.first),
+            for (const auto &overloads: func.second) {
+                _stack.variables.push_back({
+                .name = Cmm::Program::stringfy({func.first, overloads.first}),
                 .type = "func",
                 .value = "native"
             });
+            }
         }
 
         stacks.push_back(_stack);
@@ -501,11 +503,13 @@ static void buildStack(std::vector<stack>& stacks, bool skip_empty = false) {
 
         for (const auto& func: i.functions) {
 
-            _stack.variables.push_back({
-                .name = Cmm::Program::stringfy(func.first),
+            for (const auto& overloads: func.second) {
+                _stack.variables.push_back({
+                .name = Cmm::Program::stringfy({func.first, overloads.first}),
                 .type = "func",
-                .value = "(" + listTypes(func.second->returnType) + ")"
+                .value = "(" + listTypes(overloads.second->returnType) + ")"
             });
+            }
         }
 
         for (const auto& var: i.variables) {

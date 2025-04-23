@@ -2,6 +2,64 @@
 #include "Values.h"
 #include "primitives.h"
 
+
+namespace Cmm {
+
+    const std::map<std::pair<Cmm::ValueType, Cmm::ValueType>, Cmm::ValueType> TermConversionMap = {
+        {{Cmm::V_Bool, Cmm::V_Bool}, Cmm::V_Bool},
+        {{Cmm::V_Bool, Cmm::V_Integer}, Cmm::V_Integer},
+        {{Cmm::V_Bool, Cmm::V_Real}, Cmm::V_Real},
+        {{Cmm::V_Bool, Cmm::V_Complex}, Cmm::V_Complex},
+        {{Cmm::V_Bool, Cmm::V_String}, Cmm::V_String},
+        {{Cmm::V_Bool, Cmm::V_Any}, Cmm::V_Any},
+
+        {{Cmm::V_Integer, Cmm::V_Bool}, Cmm::V_Integer},
+        {{Cmm::V_Integer, Cmm::V_Integer}, Cmm::V_Integer},
+        {{Cmm::V_Integer, Cmm::V_Real}, Cmm::V_Real},
+        {{Cmm::V_Integer, Cmm::V_Complex}, Cmm::V_Complex},
+        {{Cmm::V_Integer, Cmm::V_String}, Cmm::V_String},
+        {{Cmm::V_Integer, Cmm::V_Any}, Cmm::V_Any},
+
+        {{Cmm::V_Real, Cmm::V_Bool}, Cmm::V_Real},
+        {{Cmm::V_Real, Cmm::V_Integer}, Cmm::V_Real},
+        {{Cmm::V_Real, Cmm::V_Real}, Cmm::V_Real},
+        {{Cmm::V_Real, Cmm::V_Complex}, Cmm::V_Complex},
+        {{Cmm::V_Real, Cmm::V_String}, Cmm::V_String},
+        {{Cmm::V_Real, Cmm::V_Any}, Cmm::V_Any},
+
+        {{Cmm::V_Complex, Cmm::V_Bool}, Cmm::V_Complex},
+        {{Cmm::V_Complex, Cmm::V_Integer}, Cmm::V_Complex},
+        {{Cmm::V_Complex, Cmm::V_Real}, Cmm::V_Complex},
+        {{Cmm::V_Complex, Cmm::V_Complex}, Cmm::V_Complex},
+        {{Cmm::V_Complex, Cmm::V_String}, Cmm::V_String},
+        {{Cmm::V_Complex, Cmm::V_Any}, Cmm::V_Any},
+
+        {{Cmm::V_String, Cmm::V_Bool}, Cmm::V_String},
+        {{Cmm::V_String, Cmm::V_Integer}, Cmm::V_String},
+        {{Cmm::V_String, Cmm::V_Real}, Cmm::V_String},
+        {{Cmm::V_String, Cmm::V_Complex}, Cmm::V_String},
+        {{Cmm::V_String, Cmm::V_String}, Cmm::V_String},
+        {{Cmm::V_String, Cmm::V_Any}, Cmm::V_Any},
+
+        {{Cmm::V_Any, Cmm::V_Bool}, Cmm::V_Any},
+        {{Cmm::V_Any, Cmm::V_Integer}, Cmm::V_Any},
+        {{Cmm::V_Any, Cmm::V_Real}, Cmm::V_Any},
+        {{Cmm::V_Any, Cmm::V_Complex}, Cmm::V_Any},
+        {{Cmm::V_Any, Cmm::V_String}, Cmm::V_Any},
+        {{Cmm::V_Any, Cmm::V_Any}, Cmm::V_Any},
+    };
+
+    const std::map<Cmm::ValueType , std::set<Cmm::ValueType>> CastConversionMap = {
+        {V_Integer, {V_Integer, V_Real, V_Complex, V_Bool, V_String, V_Any}},
+        {V_Real   , {V_Integer, V_Real, V_Complex, V_Bool, V_String, V_Any}},
+        {V_Complex, {V_Integer, V_Real, V_Complex, V_Bool, V_String, V_Any}},
+        {V_String , {V_Integer, V_Real,            V_Bool, V_String, V_Any}},
+        {V_Bool   , {V_Integer, V_Real, V_Complex, V_Bool, V_String, V_Any}},
+        {V_Any    , {V_Any}},
+        {V_Void   , {}},
+    };
+}
+
 std::string Cmm::ValuesHelper::ValueTypeAsString(ValueType v) {
     if (v == V_Integer) return "int";
     if (v == V_Real) return "real";
@@ -9,8 +67,9 @@ std::string Cmm::ValuesHelper::ValueTypeAsString(ValueType v) {
     if (v == V_Bool) return "bool";
     if (v == V_Complex) return "complex";
     if (v == V_Void) return "void";
-    if (v == V_Error) return "error";
-    if (v == V_Ref) return "ref";
+    if (v == V_Any) return "any";
+    // if (v == V_Error) return "error";
+    // if (v == V_Ref) return "ref";
 
     return "wtf";
 }
@@ -22,8 +81,9 @@ Cmm::ValueType Cmm::ValuesHelper::StringToValueType(const std::string& v) {
     if (v == "bool") return V_Bool;
     if (v == "complex") return V_Complex;
     if (v == "void") return V_Void;
-    if (v == "error") return V_Error;
-    if (v == "ref") return V_Ref;
+    if (v == "any") return V_Any;
+    // if (v == "error") return V_Error;
+    // if (v == "ref") return V_Ref;
 
     return static_cast<ValueType>(-1); // wtf xD
 }
@@ -31,8 +91,8 @@ Cmm::ValueType Cmm::ValuesHelper::StringToValueType(const std::string& v) {
 std::string Cmm::ValuesHelper::toString(ValueObject v) {
     //TODO: maybe fix this later ...
     if (v.type == V_Void) return "void";
-    if (v.type == V_Error) return "err";
-    if (v.type == V_Ref) return "ref";
+    // if (v.type == V_Error) return "err";
+    // if (v.type == V_Ref) return "ref";
 
     ValueObject temp = castTo(v, V_String);
     auto str = static_cast<String*>(temp.value);
@@ -146,20 +206,20 @@ Cmm::ValueObject Cmm::ValuesHelper::castTo(ValueObject val, ValueType newType) {
 }
 
 Cmm::ValueObject Cmm::ValuesHelper::clone(ValueObject val) {
-    if (val.type == V_Error || val.type == V_Void) {
+    if (val.type == V_Void) {
         return {
             .type = val.type,
             .value = nullptr
         };
     }
 
-    if (val.type == V_Ref) {
-        // a little hack
-        val.type = V_String;
-        auto clone = castTo(val, V_String);
-        clone.type = V_String;
-        return clone;
-    }
+    // if (val.type == V_Ref) {
+    //     // a little hack
+    //     val.type = V_String;
+    //     auto clone = castTo(val, V_String);
+    //     clone.type = V_String;
+    //     return clone;
+    // }
 
     return castTo(val, val.type);
 }

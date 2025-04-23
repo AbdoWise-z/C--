@@ -1,13 +1,9 @@
-#import "std"
-
-var i  = rand(100, 500);
-
-do {
-    var j = -rand(1, 15);
-    i = i + j;
-
-    for (var k = 0;k < 4;k ++) {
-        var g = rand(1, 10);
-        if (g == 1) i++;
-    }
-} while (i > 0);
+switch (i + 1) {
+    case 1:
+        print("ayo");
+        break;
+    case 2:
+        print("not ayo");
+    case 3:
+        print("heh");
+}

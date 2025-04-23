@@ -1,4 +1,4 @@
-#import "std"
+#include <std>
 
 print("Enter a number: ");
 var n1: real = input("real");

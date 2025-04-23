@@ -49,6 +49,7 @@ namespace Namespace::Variables {
     public:
         Expressions::TermNode* _internal;
         std::string name;
+        std::string op;
         PreIncNode(const std::string& name, const std::string &op);
         ValueObject eval() override;
         ~PreIncNode() override;
@@ -58,6 +59,7 @@ namespace Namespace::Variables {
     public:
         Expressions::TermNode* _internal;
         std::string name;
+        std::string op;
         PostIncNode(const std::string& name, const std::string &op);
         ValueObject eval() override;
         ~PostIncNode() override;

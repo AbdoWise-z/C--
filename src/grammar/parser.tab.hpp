@@ -120,14 +120,11 @@ extern int yydebug;
     CONTROL_BREAK = 321,           /* CONTROL_BREAK  */
     CONTROL_CONTINUE = 322,        /* CONTROL_CONTINUE  */
     MISC_FUNC = 323,               /* MISC_FUNC  */
-    MISC_FROM = 324,               /* MISC_FROM  */
-    MISC_VAR = 325,                /* MISC_VAR  */
-    MISC_CONST = 326,              /* MISC_CONST  */
-    MISC_IMPORT = 327,             /* MISC_IMPORT  */
-    MISC_EXPORT = 328,             /* MISC_EXPORT  */
-    MISC_NATIVE = 329,             /* MISC_NATIVE  */
-    OP_UNARY_MINUS = 330,          /* OP_UNARY_MINUS  */
-    LOWER_THAN_ELSE = 331          /* LOWER_THAN_ELSE  */
+    MISC_VAR = 324,                /* MISC_VAR  */
+    MISC_CONST = 325,              /* MISC_CONST  */
+    MISC_NATIVE = 326,             /* MISC_NATIVE  */
+    OP_UNARY_MINUS = 327,          /* OP_UNARY_MINUS  */
+    LOWER_THAN_ELSE = 328          /* LOWER_THAN_ELSE  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -146,7 +143,7 @@ union YYSTYPE
     Cmm::Control::SwitchCaseNode* sw_case_t;
     Cmm::Control::SwitchBodyNode* sw_body_t;
 
-#line 150 "parser.tab.hpp"
+#line 147 "parser.tab.hpp"
 
 };
 typedef union YYSTYPE YYSTYPE;

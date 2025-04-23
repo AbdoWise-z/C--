@@ -20,6 +20,8 @@ namespace Namespace::debugger {
     std::string getCode();
     int getCurrentLine();
     bool isDone();
+
+    Program::ProgramNode* compileCode(std::string code);
 }
 
 #endif //CMMDEBUGGER_H

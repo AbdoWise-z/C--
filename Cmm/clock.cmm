@@ -1,5 +1,5 @@
 // import the standard library
-#import "std"
+#include <std>
 
 
 print("Current Time is\n");

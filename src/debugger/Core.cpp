@@ -109,15 +109,15 @@ void Cmm::debugger::exec(std::string code) {
         codeString += code;
         auto program = Cmm::Store::root;
 
-        ::code.push_back(program->source[0]);
+        ::code.push_back(program->source);
 
         if (debuggerEnabled) {
-            start_debugged(program->source[0]);
-            program->source.clear();
+            start_debugged(program->source);
+            program->source = nullptr;
             delete program;
         } else {
-            program->source[0]->exec();
-            program->source.clear();
+            program->source->exec();
+            program->source = nullptr;
             delete program;
         }
     }
@@ -142,6 +142,20 @@ int Cmm::debugger::getCurrentLine() {
 
 bool Cmm::debugger::isDone() {
     return executionStack.empty();
+}
+
+Cmm::Program::ProgramNode * Cmm::debugger::compileCode(std::string code) {
+    yy_scan_string(code.c_str());
+
+
+    int parse_result = yyparse();
+
+    if (parse_result == 0) {
+        auto program = Cmm::Store::root;
+        return program;
+    }
+
+    return nullptr;
 }
 
 

@@ -7,6 +7,7 @@
 
 #include "config.h"
 
+
 namespace Namespace::PreProcessor {
     std::pair<std::string, std::vector<std::string>> loadFile(const std::string &filename);
     std::pair<std::string, std::vector<std::string>> loadFile(const std::string &filename, const std::vector<std::string> &searchPaths);

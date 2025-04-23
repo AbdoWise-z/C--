@@ -1,4 +1,4 @@
-#import "std"
+#include <std>
 
 var speed: real = 0;
 var eps: real = 0.8;

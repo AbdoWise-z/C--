@@ -1,4 +1,4 @@
-#bind "libs/libstr.so"
+#bind <libs/libstr.so>
 
 func strlen(_s: str)                        -> int = native
 func charAt(_s: str, i: int)                -> str = native

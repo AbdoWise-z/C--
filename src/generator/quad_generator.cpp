@@ -1072,18 +1072,19 @@ static void generateQuads_recv(Cmm::ASTNode* node, CodeGenContext* context, size
 
         for (int i = 0;i < mNode->body->cases.size();i++) {
             auto _case = mNode->body->cases[i];
-            auto case_type = inferType(_case->value, context);
             std::string cond_name;
-
-            if (result_type != case_type) {
-                auto _shadowNode = new Cmm::Expressions::CastNode(_case->value, Cmm::ValuesHelper::ValueTypeAsString(result_type));
-                auto sub_expr = quoteStrings(writeExpression(_shadowNode, context, indentation + 1, out));
-                _shadowNode->child = nullptr;
-                delete _shadowNode;
-                cond_name = sub_expr.first;
-            } else {
-                auto sub_expr = quoteStrings(writeExpression(_case->value, context, indentation + 1, out));
-                cond_name = sub_expr.first;
+            if (_case->value) {
+                auto case_type = inferType(_case->value, context);
+                if (result_type != case_type) {
+                    auto _shadowNode = new Cmm::Expressions::CastNode(_case->value, Cmm::ValuesHelper::ValueTypeAsString(result_type));
+                    auto sub_expr = quoteStrings(writeExpression(_shadowNode, context, indentation + 1, out));
+                    _shadowNode->child = nullptr;
+                    delete _shadowNode;
+                    cond_name = sub_expr.first;
+                } else {
+                    auto sub_expr = quoteStrings(writeExpression(_case->value, context, indentation + 1, out));
+                    cond_name = sub_expr.first;
+                }
             }
 
             auto result = getTempVarName(context);
@@ -1093,8 +1094,10 @@ static void generateQuads_recv(Cmm::ASTNode* node, CodeGenContext* context, size
                 next_case_cond_label = getSwitchCaseCondLabel(context);
             }
 
-            writeQuad(out, indentation + 1, "==", cond_name, expr.first, result, context);
-            writeQuad(out, indentation + 1, "IF_FALSE", result, next_case_cond_label, "", context);
+            if (!cond_name.empty()) {
+                writeQuad(out, indentation + 1, "==", cond_name, expr.first, result, context);
+                writeQuad(out, indentation + 1, "IF_FALSE", result, next_case_cond_label, "", context);
+            }
 
             if (i != 0) {
                 writeQuad(out, indentation + 1, "Label", next_case_label, "", "", context);

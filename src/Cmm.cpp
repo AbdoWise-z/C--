@@ -23,6 +23,7 @@
 #include "editor/NanoEditor.h"
 #include "generator/quad_generator.hpp"
 #include "utils/cli.hpp"
+#include "utils/file_utils.hpp"
 #include "utils/konsol.hpp"
 #include "utils/string_utils.hpp"
 
@@ -191,6 +192,37 @@ void compile_code(const std::string& file_path, const std::string& include_path,
             if (ok->errors.empty()) std::cout << "  None" << std::endl;
 
             std::cout << "Generated: " << quads << std::endl;
+
+            // symbol table
+            if (!symbols.empty()) {
+                std::stringstream ss;
+                ss << "|" << std::setw(30) << std::left << "Name"
+                       << "|" << std::setw(30) << std::left << "Value Type"
+                       << "|" << std::setw(30) << std::left << "Accept Types"
+                       << "|" << std::setw(30) << std::left << "Value"
+                       << "|" << std::setw(20) << std::left << "Code Line"
+                       << "|" << std::setw(20) << std::left << "Quad Line"
+                       << "|" << std::setw(20) << std::left << "Scope level"
+                       << "|" << std::setw(20) << std::left << "Symbol class"
+                       << "|" << std::setw(20) << std::left << "Use count"
+                       << "|" << std::endl;
+
+                for (const auto& sym: ok->symbolTable) {
+                    ss << "|" << std::setw(30) << std::left << sym.name
+                       << "|" << std::setw(30) << std::left << Cmm::Program::stringfy({"", sym.type})
+                       << "|" << std::setw(30) << std::left << Cmm::Program::stringfy({"", sym.accept_type})
+                       << "|" << std::setw(30) << std::left << sym.value
+                       << "|" << std::setw(20) << std::left << sym.codeLine
+                       << "|" << std::setw(20) << std::left << sym.quadLine
+                       << "|" << std::setw(20) << std::left << sym.scope
+                       << "|" << std::setw(20) << std::left << (sym.objectType == Cmm::QuadGenerator::Variable ? "Variable" : "Function")
+                       << "|" << std::setw(20) << std::left << sym.useCount
+                       << "|" << std::endl;
+                }
+
+                FileUtils::writeContent(symbols, ss.str());
+                std::cout << "Generated: " << symbols << std::endl;
+            }
         }
     }
     yylex_destroy();

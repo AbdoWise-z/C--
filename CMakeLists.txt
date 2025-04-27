@@ -94,6 +94,8 @@ add_executable(Cmm
         ${PARSER_C_SRC}
         src/generator/quad_generator.cpp
         src/generator/quad_generator.hpp
+        src/utils/file_utils.cpp
+        src/utils/file_utils.hpp
 )
 
 add_custom_target(

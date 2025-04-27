@@ -1,9 +1,9 @@
-switch (i + 1) {
-    case 1:
-        print("ayo");
-        break;
-    case 2:
-        print("not ayo");
-    case 3:
-        print("heh");
+func dina_man(project: str = "yay") -> real {
+    return -1.0;
 }
+
+func dina_man(project: str = "yay", param1: str, param2: str) -> void {
+    return -1.0;
+}
+
+var i = dina_man("yay", "yay", "yay");

@@ -28,7 +28,7 @@
 namespace Namespace::QuadGenerator {
     struct CodeGenScope {
         std::unordered_map<std::string, std::pair<Cmm::ValueType, bool>>                 variables;
-        std::unordered_map<std::string, std::map<FunctionTypeSignature, Cmm::ValueType>> functions;
+        std::unordered_map<std::string, std::map<FunctionDefinitionSignature, Cmm::ValueType>> functions;
 
         bool deadCode = false;
     };
@@ -67,7 +67,7 @@ namespace Namespace::QuadGenerator {
 
         std::vector<std::string> breakLabels;
         std::vector<std::string> continueLabels;
-        std::vector<FunctionTypeSignature> returnLabels;
+        std::vector<std::vector<ValueType>> returnLabels;
 
         CodeGenContext():
             stack({}),
@@ -90,8 +90,6 @@ namespace Namespace::QuadGenerator {
         Variable,
         Function,
         NativeFunction,
-        Temporary_Variable,
-
     };
 
     struct Symbol {
@@ -99,10 +97,14 @@ namespace Namespace::QuadGenerator {
         size_t quadLine; // for code generation
         size_t scope;
         std::vector<ValueType> type;
+        std::vector<ValueType> accept_type;
         SymbolType objectType;
 
         std::string name;
         std::string value;
+
+        // some analytics
+        size_t useCount;
     };
 
 

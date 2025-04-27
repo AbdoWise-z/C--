@@ -21,7 +21,7 @@ namespace Cmm {
         void* value;
     };
 
-    typedef std::vector<ValueType> FunctionTypeSignature;
+    typedef std::pair<std::vector<ValueType>, std::vector<bool>>  FunctionDefinitionSignature;
 
     typedef std::pair<std::string, std::vector<ValueType>> FunctionSignature;
     typedef ValueObject (*NativeFunction)( const FunctionSignature&, std::vector<ValueObject> );

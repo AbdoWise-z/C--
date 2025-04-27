@@ -467,10 +467,12 @@ static void buildStack(std::vector<stack>& stacks, bool skip_empty = false) {
         for (const auto& func: program.native_functions) {
 
             for (const auto &overloads: func.second) {
+                Cmm::FunctionSignature signature;
+
                 _stack.variables.push_back({
-                .name = Cmm::Program::stringfy({func.first, overloads.first}),
-                .type = "func",
-                .value = "native"
+                    .name = Cmm::Program::stringfy({func.first, overloads.first}),
+                    .type = "func",
+                    .value = "native"
             });
             }
         }

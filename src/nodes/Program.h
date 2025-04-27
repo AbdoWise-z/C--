@@ -33,7 +33,7 @@ namespace Namespace::Program {
 
     struct Scope {
         std::map<std::string, VariableBlock> variables;
-        std::map<std::string, std::map<FunctionTypeSignature, Functional::FunctionNode*>> functions;
+        std::map<std::string, std::map<std::vector<ValueType>, Functional::FunctionNode*>> functions; // Fixme: FunctionDefinitionSignature
         ASTNode* owner;
         std::string name;
     };
@@ -42,7 +42,7 @@ namespace Namespace::Program {
         std::vector<Scope> stack;
         std::vector<std::string> moduleStack;
         ASTNode* programCode;
-        std::map<std::string, std::map<FunctionTypeSignature, NativeFunction>> native_functions;
+        std::map<std::string, std::map<std::vector<ValueType>, NativeFunction>> native_functions;
     };
 
     ProgramBlock& getCurrentProgram();

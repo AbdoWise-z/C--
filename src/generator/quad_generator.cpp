@@ -11,6 +11,7 @@
 #include <filesystem>
 #include <iostream>
 #include <regex>
+#include <stack>
 
 #include "nodes/Functional.h"
 #include "nodes/Variables.h"
@@ -20,11 +21,19 @@ namespace fs = std::filesystem;
 
 using namespace Cmm::QuadGenerator;
 
-static std::pair<Cmm::ValueType, bool> varTypeOrError(std::string name, std::vector<CodeGenScope>& stack) {
+static std::pair<Cmm::ValueType, bool> varTypeOrError(std::string name, CodeGenContext* context) {
+    std::vector<CodeGenScope>& stack = context->stack;
     int scope = stack.size() - 1;
     while (scope >= 0) {
         auto it = stack[scope].variables.find(name);
         if (it != stack[scope].variables.end()) {
+            // found it
+            for (auto& i: context->symbolTable) {
+                if (i.scope == scope && i.objectType == Variable && i.name == name) {
+                    i.useCount++;
+                    break;
+                }
+            }
             return it->second;
         }
         scope --;
@@ -33,16 +42,85 @@ static std::pair<Cmm::ValueType, bool> varTypeOrError(std::string name, std::vec
     throw Cmm::Program::VariableNotFoundError(name);
 }
 
+static std::pair<bool, std::vector<bool>> SignatureMatch(const Cmm::FunctionDefinitionSignature& signature, const std::vector<Cmm::ValueType>& params, int i = 0, int j = 0, std::vector<bool> set = {}) {
+    if (i == signature.first.size() && j == params.size()) {
+        return {true, set}; // both done
+    }
 
+    if (i == signature.first.size()) {
+        return {false, {}}; // just one of them is done
+    }
 
-static Cmm::ValueType funcTypeOrError(Cmm::FunctionSignature s, std::vector<CodeGenScope>& stack) {
+    if (j < params.size() && signature.first[i] != params[j]) { // param didn't match
+        if (signature.second[i]) { // but it's optional
+            std::vector<bool> newset = set;
+            newset.push_back(false);
+            return SignatureMatch(signature, params, i + 1, j, newset); // try to skip this param
+        }
+    } else { // param did match .. but we might actually also skip it
+        // attempt 1: add it
+        std::vector<bool> newset = set;
+        newset.push_back(true);
+        auto result = SignatureMatch(signature, params, i + 1, j + 1, newset);
+        if (result.first) return result; // that worked
+
+        // attempt 2: skip it
+        if (signature.second[i]) {
+            newset = set;
+            newset.push_back(false);
+            return SignatureMatch(signature, params, i + 1, j, newset);
+        }
+    }
+
+    return {false, {}}; // everything failed
+}
+
+static Cmm::ValueType funcTypeOrError(Cmm::FunctionSignature s, CodeGenContext* context) {
+    std::vector<CodeGenScope>& stack = context->stack;
     int scope = stack.size() - 1;
     while (scope >= 0) {
         auto it = stack[scope].functions.find(s.first);
         if (it != stack[scope].functions.end()) {
-            auto func_obj = it->second.find(s.second);
-            if (func_obj != it->second.end()) {
-                return func_obj->second;
+            std::vector<Cmm::ValueType> Candidates;
+
+            // auto func_obj = it->second.find(s.second);
+            // if (func_obj != it->second.end()) {
+            //     for (auto& i: context->symbolTable) {
+            //         if (i.scope == scope && (i.objectType == Function || i.objectType == NativeFunction) && i.name == s.first && i.accept_type == s.second) {
+            //             i.useCount++;
+            //             break;
+            //         }
+            //     }
+            //
+            //     return func_obj->second;
+            // }
+
+            std::vector<Cmm::ValueType> matching_call;
+            for (auto& [k, v]: it->second) {
+                if (SignatureMatch(k, s.second).first) {
+                    Candidates.push_back(v);
+                    if (Candidates.size() == 1) {
+                        matching_call = k.first;
+                    }
+                }
+            }
+
+            if (!Candidates.empty()) {
+                if (Candidates.size() > 1) {
+                    CodeGenWarn warn;
+                    warn.exception = "Call to " + Cmm::Program::stringfy(s) + " is ambiguous, found more than one matching overload.";
+                    warn.line = context->currentLine;
+                    context->warnings.push_back(warn);
+                }
+
+                for (auto& i: context->symbolTable) {
+                    if (i.scope == scope && (i.objectType == Function || i.objectType == NativeFunction) && i.name == s.first && i.accept_type == matching_call) {
+                        i.useCount++;
+                        break;
+                    }
+                }
+
+                return Candidates.front();
             }
         }
         scope --;
@@ -54,7 +132,7 @@ static Cmm::ValueType funcTypeOrError(Cmm::FunctionSignature s, std::vector<Code
 static Cmm::ValueType inferType(Cmm::EvaluableNode* node, CodeGenContext* context) {
     if (auto mNode = dynamic_cast<Cmm::Variables::PreIncNode*>(node)) {
         try {
-            return varTypeOrError(mNode->name, context->stack).first;
+            return varTypeOrError(mNode->name, context).first;
         } catch (Cmm::Program::VariableNotFoundError& e) {
             // CodeGenError err;
             // err.exception = e.what(),
@@ -66,7 +144,7 @@ static Cmm::ValueType inferType(Cmm::EvaluableNode* node, CodeGenContext* contex
 
     if (auto mNode = dynamic_cast<Cmm::Variables::PostIncNode*>(node)) {
         try {
-            return varTypeOrError(mNode->name, context->stack).first;
+            return varTypeOrError(mNode->name, context).first;
         } catch (Cmm::Program::VariableNotFoundError& e) {
             // CodeGenError err;
             // err.exception = e.what(),
@@ -78,7 +156,7 @@ static Cmm::ValueType inferType(Cmm::EvaluableNode* node, CodeGenContext* contex
 
     if (auto mNode = dynamic_cast<Cmm::Expressions::VariableNode*>(node)) {
         try {
-            return varTypeOrError(mNode->name, context->stack).first;
+            return varTypeOrError(mNode->name, context).first;
         } catch (Cmm::Program::VariableNotFoundError& e) {
             // CodeGenError err;
             // err.exception = e.what(),
@@ -138,7 +216,7 @@ static Cmm::ValueType inferType(Cmm::EvaluableNode* node, CodeGenContext* contex
             for (auto param: mNode->funcParam->params) {
                 func.second.push_back(inferType(param, context));
             }
-            funcTypeOrError(func, context->stack);
+            funcTypeOrError(func, context);
         } catch (Cmm::Program::FunctionNotFoundError& e) {
             // CodeGenError err;
             // err.exception = e.what(),
@@ -232,7 +310,7 @@ static std::pair<std::string, Cmm::ValueType> writeExpression(Cmm::EvaluableNode
         auto type = Cmm::V_Any;
 
         try {
-            auto var = varTypeOrError(mNode->name, context->stack); // check the variable exists (throws error if not)
+            auto var = varTypeOrError(mNode->name, context); // check the variable exists (throws error if not)
             if (var.second) {
                 // this is a const
                 CodeGenError err;
@@ -257,7 +335,7 @@ static std::pair<std::string, Cmm::ValueType> writeExpression(Cmm::EvaluableNode
         auto type = Cmm::V_Any;
 
         try {
-            auto var = varTypeOrError(mNode->name, context->stack); // check the variable exists (throws error if not)
+            auto var = varTypeOrError(mNode->name, context); // check the variable exists (throws error if not)
             if (var.second) {
                 // this is a const
                 CodeGenError err;
@@ -284,7 +362,7 @@ static std::pair<std::string, Cmm::ValueType> writeExpression(Cmm::EvaluableNode
 
     if (auto mNode = dynamic_cast<Cmm::Expressions::VariableNode*>(node)) {
         try {
-            auto _val = varTypeOrError(mNode->name, context->stack);
+            auto _val = varTypeOrError(mNode->name, context);
             return {mNode->name, _val.first};
         } catch (Cmm::Program::VariableNotFoundError& e) {
             CodeGenError err;
@@ -464,11 +542,11 @@ static std::pair<std::string, Cmm::ValueType> writeExpression(Cmm::EvaluableNode
                 writeQuad(out, indentation, OP_PARAM, res.first, "", "", context);
                 param_count++;
             }
-            func_t = funcTypeOrError(func, context->stack);
+            func_t = funcTypeOrError(func, context);
         } catch (Cmm::Program::FunctionNotFoundError& e) {
             CodeGenError err;
             err.exception = e.what(),
-            err.line = node->_lineNumber + 1;
+            err.line = node->_lineNumber;
             context->errors.push_back(err);
         }
 
@@ -481,6 +559,8 @@ static std::pair<std::string, Cmm::ValueType> writeExpression(Cmm::EvaluableNode
         writeQuad(out, indentation, OP_CALL, mNode->id, std::to_string(param_count), tVar, context);
         return {getTempVarName(context), func_t};
     }
+
+    return {"__THIS_SHOULD_NEVER_HAPPEN__", Cmm::V_String};
 }
 
 static void generateQuads_recv(Cmm::ASTNode* node, CodeGenContext* context, size_t indentation, std::ostream& out) {
@@ -496,6 +576,13 @@ static void generateQuads_recv(Cmm::ASTNode* node, CodeGenContext* context, size
             auto expr = quoteStrings(writeExpression(mNode->value, context, indentation, out));
             writeQuad(out, indentation, OP_ASSIGN, expr.first, "", mNode->name, context);
 
+            if (expr.second == Cmm::V_Void) {
+                CodeGenError err;
+                err.exception = "Trying to assign an expression with void result to variable";
+                err.line = mNode->_lineNumber;
+                context->errors.push_back(err);
+            }
+
             std::string value = "(Runtime)";
             if (auto _const = dynamic_cast<Cmm::Expressions::ConstantValueNode*>(mNode->value)) {
                 value = Cmm::ValuesHelper::toString(_const->value);
@@ -504,11 +591,13 @@ static void generateQuads_recv(Cmm::ASTNode* node, CodeGenContext* context, size
             Symbol s = {
                 .codeLine = (size_t) mNode->_lineNumber,
                 .quadLine = (size_t) context->currentLine,
-                .scope = context->stack.size(),
+                .scope = context->stack.size() - 1,
                 .type = {expr.second},
+                .accept_type = {},
                 .objectType = SymbolType::Variable,
                 .name = mNode->name,
-                .value =value
+                .value =value,
+                .useCount = 0,
             };
 
             stack.variables[mNode->name] = {expr.second, mNode->isConst};
@@ -552,11 +641,13 @@ static void generateQuads_recv(Cmm::ASTNode* node, CodeGenContext* context, size
             Symbol s = {
                 .codeLine = (size_t) mNode->_lineNumber,
                 .quadLine = (size_t) context->currentLine,
-                .scope = context->stack.size(),
+                .scope = context->stack.size() - 1,
                 .type = {_externalType},
+                .accept_type = {},
                 .objectType = SymbolType::Variable,
                 .name = mNode->name,
-                .value =value
+                .value =value,
+                .useCount = 0,
             };
 
             stack.variables[mNode->name] = {_externalType, mNode->isConst};
@@ -567,7 +658,7 @@ static void generateQuads_recv(Cmm::ASTNode* node, CodeGenContext* context, size
     if (auto mNode = dynamic_cast<Cmm::Variables::VariableAssignmentNode*>(node)) {
         std::pair variable_params = {Cmm::V_Any, false};
         try {
-            variable_params = varTypeOrError(mNode->name, context->stack);
+            variable_params = varTypeOrError(mNode->name, context);
 
             if (variable_params.second) {
                 // this is a const
@@ -585,6 +676,7 @@ static void generateQuads_recv(Cmm::ASTNode* node, CodeGenContext* context, size
         }
 
         auto _internalType = inferType(mNode->expr, context);
+
         auto _externalType = variable_params.first;
         if (_internalType != _externalType) {
             CodeGenWarn err;
@@ -636,10 +728,12 @@ static void generateQuads_recv(Cmm::ASTNode* node, CodeGenContext* context, size
         auto it = stack.functions.find(mNode->node->id);
 
         std::vector<Cmm::ValueType> args;
+        std::vector<bool> op_args;
         std::vector<std::string> argsNames;
         for (auto i: mNode->node->arguments->arguments) {
             args.push_back(Cmm::ValuesHelper::StringToValueType(i->type));
             argsNames.push_back(i->id);
+            op_args.push_back(i->defaultValue != nullptr);
         }
 
         std::vector<Cmm::ValueType> retType;
@@ -648,21 +742,24 @@ static void generateQuads_recv(Cmm::ASTNode* node, CodeGenContext* context, size
         }
 
         bool alreadyDeclared = false;
-        if (it != stack.functions.end()) {
+
+        try {
+            auto dummy = funcTypeOrError({mNode->node->id, args}, context);
+            alreadyDeclared = true;
+
+            CodeGenError err;
+            err.exception = Cmm::Program::AlreadyDefinedError(Cmm::Program::stringfy({
+                mNode->node->id,
+                args
+            })).what();
+            err.line = mNode->_lineNumber;
+            context->errors.push_back(err);
+        } catch (std::exception& e) {
+            // we are good
+        }
+
+        if (it == stack.functions.end()) {
             // check if this specific overload exists
-
-            if (it->second.contains(args)) {
-                CodeGenError err;
-                err.exception = Cmm::Program::AlreadyDefinedError(Cmm::Program::stringfy({
-                    mNode->node->id,
-                    args
-                })).what();
-                err.line = mNode->_lineNumber;
-                context->errors.push_back(err);
-
-                alreadyDeclared = true;
-            }
-        } else {
             stack.functions[mNode->node->id] = {};
             it = stack.functions.find(mNode->node->id);
         }
@@ -672,51 +769,83 @@ static void generateQuads_recv(Cmm::ASTNode* node, CodeGenContext* context, size
             context->stack.push_back({});
             // push arguments first
             auto& scope = context->stack.back();
+            std::vector<Cmm::ValueType> accept_types;
             for (auto i: mNode->node->arguments->arguments) {
                 // add it to the scope
                 auto type = Cmm::ValuesHelper::StringToValueType(i->type);
+
+                if (scope.variables.contains(i->id)) {
+                    CodeGenError err;
+                    err.exception = "Function has repeated argument: " + i->id;
+                    err.line = i->_lineNumber;
+                    context->errors.push_back(err);
+                }
+
                 scope.variables[i->id] = {type, false};
 
                 // add it to the symbol table
-                std::string value = "(Runtime)";
-                if (auto _const = dynamic_cast<Cmm::Expressions::ConstantValueNode*>(i->defaultValue)) {
-                    value = Cmm::ValuesHelper::toString(_const->value);
+                std::string value = "(None)";
+                if (i->defaultValue) {
+                    auto res_type = inferType(i->defaultValue, context);
+                    if (res_type != type) {
+                        auto _shadowNode = new Cmm::Expressions::CastNode(i->defaultValue, Cmm::ValuesHelper::ValueTypeAsString(type));
+                        auto expr = quoteStrings(writeExpression(_shadowNode, context, indentation, out));
+                        _shadowNode->child = nullptr;
+                        delete _shadowNode;
+                        value = expr.first;
+                    } else {
+                        auto expr = quoteStrings(writeExpression(i->defaultValue, context, indentation, out));
+                        value = expr.first;
+                    }
                 }
 
+                // add it to the symbol table
                 Symbol s = {
                     .codeLine = (size_t) mNode->_lineNumber,
                     .quadLine = (size_t) context->currentLine,
-                    .scope = context->stack.size(),
+                    .scope = context->stack.size() - 1,
                     .type = {type},
+                    .accept_type = {},
                     .objectType = SymbolType::Variable,
                     .name = i->id,
-                    .value =value
+                    .value =value.starts_with("t") ? "(Runtime)" : value,
+                    .useCount = 0,
                 };
 
                 context->symbolTable.push_back(s);
+                writeQuad(out, indentation, "Arg", Cmm::ValuesHelper::ValueTypeAsString(type), value, i->id, context);
+
+                accept_types.push_back(type);
             }
 
+            writeQuad(out, indentation, "FUNC", mNode->node->id, "", "", context);
 
-            writeQuad(out, indentation, "FUNC", Cmm::Program::stringfy({
-                mNode->node->id,
-                args
-            }), "", StringUtils::join(argsNames.begin(), argsNames.end()), context);
-
-            it->second[args] = mNode->node->returnType->types.size() == 1 ? (*mNode->node->returnType->types.begin()) : Cmm::V_Any;
+            it->second[{args, op_args}] = mNode->node->returnType->types.size() == 1 ? (*mNode->node->returnType->types.begin()) : Cmm::V_Any;
             context->returnLabels.push_back(retType);
 
             // now push the function symbol itself
+            std::vector<Cmm::ValueType> ret_type;
+            for (auto t: mNode->node->returnType->types) {
+                ret_type.push_back(t);
+            }
+
             Symbol s = {
                 .codeLine = (size_t) mNode->_lineNumber,
                 .quadLine = (size_t) context->currentLine,
-                .scope = context->stack.size() - 1,
-                .type = {mNode->node->returnType->types.size() == 1 ? (*mNode->node->returnType->types.begin()) : Cmm::V_Any},
+                .scope = context->stack.size() - 2,
+                .type = ret_type,
+                .accept_type = accept_types,
                 .objectType = SymbolType::Function,
                 .name = mNode->node->id,
-                .value = "(Func)"
+                .value = "(Func)",
+                .useCount = 0,
             };
 
+            context->symbolTable.push_back(s);
+
             generateQuads_recv(mNode->node->function, context, indentation + 1, out);
+            writeQuad(out, indentation, "FUNC END", mNode->node->id, "", "", context);
+
             context->stack.pop_back();
             context->returnLabels.pop_back();
         }
@@ -728,28 +857,31 @@ static void generateQuads_recv(Cmm::ASTNode* node, CodeGenContext* context, size
         auto it = stack.functions.find(mNode->id);
 
         std::vector<Cmm::ValueType> args;
+        std::vector<bool> op_args;
         std::vector<std::string> argsNames;
         for (auto i: mNode->arguments->arguments) {
             args.push_back(Cmm::ValuesHelper::StringToValueType(i->type));
             argsNames.push_back(i->id);
+            op_args.push_back(i->defaultValue != nullptr);
         }
 
         bool alreadyDeclared = false;
-        if (it != stack.functions.end()) {
+
+        try {
+            auto dummy = funcTypeOrError({mNode->id, args}, context);
+            alreadyDeclared = true;
+        } catch (std::exception& e) {
+            CodeGenError err;
+            err.exception = Cmm::Program::AlreadyDefinedError(Cmm::Program::stringfy({
+                mNode->id,
+                args
+            })).what();
+            err.line = mNode->_lineNumber;
+            context->errors.push_back(err);
+        }
+
+        if (it == stack.functions.end()) {
             // check if this specific overload exists
-
-            if (it->second.contains(args)) {
-                CodeGenError err;
-                err.exception = Cmm::Program::AlreadyDefinedError(Cmm::Program::stringfy({
-                    mNode->id,
-                    args
-                })).what();
-                err.line = mNode->_lineNumber;
-                context->errors.push_back(err);
-
-                alreadyDeclared = true;
-            }
-        } else {
             stack.functions[mNode->id] = {};
             it = stack.functions.find(mNode->id);
         }
@@ -759,48 +891,77 @@ static void generateQuads_recv(Cmm::ASTNode* node, CodeGenContext* context, size
             context->stack.push_back({});
             // push arguments first
             auto& scope = context->stack.back();
+            std::vector<Cmm::ValueType> accept_types;
             for (auto i: mNode->arguments->arguments) {
                 // add it to the scope
                 auto type = Cmm::ValuesHelper::StringToValueType(i->type);
-                scope.variables[i->id] = {type, false};
 
-                // add it to the symbol table
-                std::string value = "(Runtime)";
-                if (auto _const = dynamic_cast<Cmm::Expressions::ConstantValueNode*>(i->defaultValue)) {
-                    value = Cmm::ValuesHelper::toString(_const->value);
+                if (scope.variables.contains(i->id)) {
+                    CodeGenError err;
+                    err.exception = "Function has repeated argument: " + i->id;
+                    err.line = i->_lineNumber;
+                    context->errors.push_back(err);
                 }
 
+                scope.variables[i->id] = {type, false};
+
+                std::string value = "(None)";
+                if (i->defaultValue) {
+                    auto res_type = inferType(i->defaultValue, context);
+                    if (res_type != type) {
+                        auto _shadowNode = new Cmm::Expressions::CastNode(i->defaultValue, Cmm::ValuesHelper::ValueTypeAsString(type));
+                        auto expr = quoteStrings(writeExpression(_shadowNode, context, indentation, out));
+                        _shadowNode->child = nullptr;
+                        delete _shadowNode;
+                        value = expr.first;
+                    } else {
+                        auto expr = quoteStrings(writeExpression(i->defaultValue, context, indentation, out));
+                        value = expr.first;
+                    }
+                }
+
+                // add it to the symbol table
                 Symbol s = {
                     .codeLine = (size_t) mNode->_lineNumber,
                     .quadLine = (size_t) context->currentLine,
-                    .scope = context->stack.size(),
+                    .scope = context->stack.size() - 1,
                     .type = {type},
+                    .accept_type = {},
                     .objectType = SymbolType::Variable,
                     .name = i->id,
-                    .value =value
+                    .value =value.starts_with("t") ? "(Runtime)" : value,
+                    .useCount = 0,
                 };
 
                 context->symbolTable.push_back(s);
+                writeQuad(out, indentation, "Arg", Cmm::ValuesHelper::ValueTypeAsString(type), value, i->id, context);
+                accept_types.push_back(type);
             }
 
-            writeQuad(out, indentation, "NATIVE_FUNC", Cmm::Program::stringfy({
-                mNode->id,
-                args
-            }), "" , StringUtils::join(argsNames.begin(), argsNames.end()), context);
+            writeQuad(out, indentation, "Native FUNC", mNode->id, "", "", context);
 
-            it->second[args] = mNode->returnType->types.size() == 1 ? (*mNode->returnType->types.begin()) : Cmm::V_Any;
+            it->second[{args, op_args}] = mNode->returnType->types.size() == 1 ? (*mNode->returnType->types.begin()) : Cmm::V_Any;
             context->returnLabels.push_back(args);
 
             // now push the function symbol itself
+            std::vector<Cmm::ValueType> ret_type;
+            for (auto t: mNode->returnType->types) {
+                ret_type.push_back(t);
+            }
+
             Symbol s = {
                 .codeLine = (size_t) mNode->_lineNumber,
                 .quadLine = (size_t) context->currentLine,
-                .scope = context->stack.size() - 1,
-                .type = {mNode->returnType->types.size() == 1 ? (*mNode->returnType->types.begin()) : Cmm::V_Any},
+                .scope = context->stack.size() - 2,
+                .type = ret_type,
+                .accept_type = accept_types,
                 .objectType = SymbolType::Function,
                 .name = mNode->id,
-                .value = "(Native Func)"
+                .value = "(Native Func)",
+                .useCount = 0,
             };
+
+            context->symbolTable.push_back(s);
 
             context->stack.pop_back();
             context->returnLabels.pop_back();
@@ -822,12 +983,19 @@ static void generateQuads_recv(Cmm::ASTNode* node, CodeGenContext* context, size
         }
 
         auto label = getIfLabel(context);
+        auto label2 = mNode->if_false ? getIfLabel(context) : "__none__";
         writeQuad(out, indentation, "IF_FALSE", cond_name, label, "", context);
         context->stack.push_back({});
         generateQuads_recv(mNode->if_true, context, indentation + 1, out);
+        if (mNode->if_false) writeQuad(out, indentation + 1, "JMP", label2, "", "", context);
         context->stack.pop_back();
         writeQuad(out, indentation, "Label", label, "", "", context);
-        generateQuads_recv(mNode->if_false, context, indentation + 1, out);
+        if (mNode->if_false) {
+            context->stack.push_back({});
+            generateQuads_recv(mNode->if_false, context, indentation + 1, out);
+            context->stack.pop_back();
+            writeQuad(out, indentation, "Label", label2, "", "", context);
+        }
     }
 
 

@@ -13,7 +13,7 @@ namespace Namespace::Functional {
 
 
 
-    class FunctionDeclarationNode: public ExecutableNode, public Control::ReturnPointNode {
+    class FunctionDeclarationNode: public ExecutableNode, public Control::ReturnPointNode  {
     public:
         FunctionArgumentListNode* arguments;
         Program::StatementListNode* function;
@@ -66,13 +66,24 @@ namespace Namespace::Functional {
         ~FunctionParamListNode() override;
     };
 
-    class FunctionCallNode: public EvaluableNode {
+    class FunctionCallNode: public EvaluableNode, public StepOverNodeWithResult {
     public:
         std::string id;
         FunctionParamListNode* funcParam;
+
         explicit FunctionCallNode(std::string id, FunctionParamListNode* funcParam);
         ~FunctionCallNode() override;
         ValueObject eval() override;
+
+        // debugging
+        std::stack<FunctionDeclarationNode*> _curr_func;
+        std::stack<ASTNode*> _marker_node;
+        std::stack<std::vector<ValueObject>> _curr_params;
+        std::stack<int> _curr_step_pos;
+
+        void enterStack() override;
+        std::pair<ASTNode*, ValueObject> step(ValueObject) override;
+        void exitStack() override;
     };
 
     // class FunctionNode: public Control::ReturnPointNode {

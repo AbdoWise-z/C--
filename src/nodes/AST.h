@@ -33,13 +33,21 @@ namespace Namespace {
 
     class StepOverNode: virtual public ASTNode {
     public:
-        virtual ASTNode* step() = 0;
-        virtual void prepare() = 0;
+        virtual ASTNode* step(ValueObject) = 0;
+        virtual void enterStack() = 0;
+        virtual void exitStack() = 0;
     };
 
-    class StepInNode: virtual public ASTNode, virtual public StepOverNode {
+    class StepOverNodeWithResult: virtual public ASTNode {
     public:
-        virtual ASTNode* step_in() = 0;
+        virtual std::pair<ASTNode*, ValueObject> step(ValueObject) = 0;
+        virtual void enterStack() = 0;
+        virtual void exitStack() = 0;
+    };
+
+    class DebuggerWaitToStepNode : virtual public ASTNode {
+    public:
+        ~DebuggerWaitToStepNode() override = default;
     };
 }
 

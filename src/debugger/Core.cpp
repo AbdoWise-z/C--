@@ -12,6 +12,8 @@ static bool debuggerEnabled = false;
 static std::vector<Cmm::ExecutableNode*> code;
 static bool started = false;
 static std::string codeString;
+static std::string currentCodeString;
+static std::string currentError;
 
 extern int yyparse();
 extern void yy_scan_string(const char* str);
@@ -55,47 +57,107 @@ void Cmm::debugger::endSession() {
 }
 
 std::stack<Cmm::ASTNode*> executionStack;
+std::stack<Cmm::ValueObject>   evalStack;
 
+static void do_step_once(bool exec = true, bool first = false, bool recursive = false) {
+    try {
+        auto node = executionStack.top();
+        auto step_over = dynamic_cast<Cmm::StepOverNode*>(node);
+        auto step_result = dynamic_cast<Cmm::StepOverNodeWithResult*>(node);
 
-static void do_step_once(Cmm::ASTNode* node) {
-    auto step = dynamic_cast<Cmm::StepOverNode*>(node);
+        auto wait_step = dynamic_cast<Cmm::DebuggerWaitToStepNode*>(node);
 
-    if (step) {
-        auto exec = step->step();
-        if (exec) {
+        if (!first && recursive && wait_step) return; // ignore
 
-            executionStack.push(exec);
-            while (dynamic_cast<Cmm::StepOverNode*>(executionStack.top())) {
-                auto n = dynamic_cast<Cmm::StepOverNode*>(executionStack.top());
-                n->prepare();
-                executionStack.push(n->step());
+        if (step_over) {
+            auto object = Cmm::ValueObject::Void();
+            if (!evalStack.empty() && !first) {
+                object = evalStack.top();
+                evalStack.pop();
             }
 
-        } else {
-            executionStack.pop(); // done with this step over node
+            if (const auto nextNode = step_over->step(object)) {
+                executionStack.push(nextNode);
+
+                if (const auto step_ = dynamic_cast<Cmm::StepOverNode*>(nextNode)) {
+                    step_->enterStack();
+                }
+
+                if (const auto step_ = dynamic_cast<Cmm::StepOverNodeWithResult*>(nextNode)) {
+                    step_->enterStack();
+                }
+
+                do_step_once(false, true, true);
+            } else {
+                step_over->exitStack();
+                executionStack.pop(); // done with this step over node
+
+                if (!executionStack.empty()) {
+                    do_step_once(false, false, true); // pop back to the nearest step node
+                }
+            }
+        } else if (step_result) {
+            auto object = Cmm::ValueObject::Void();
+            if (!evalStack.empty() && !first) {
+                object = evalStack.top();
+                evalStack.pop();
+            }
+
+            auto nextNode = step_result->step(object);
+            if (nextNode.first) {
+                executionStack.push(nextNode.first);
+
+                if (const auto step_ = dynamic_cast<Cmm::StepOverNode*>(nextNode.first)) {
+                    step_->enterStack();
+                }
+
+                if (const auto step_ = dynamic_cast<Cmm::StepOverNodeWithResult*>(nextNode.first)) {
+                    step_->enterStack();
+                }
+
+                do_step_once(false, true, true);
+            } else {
+                step_result->exitStack();
+                executionStack.pop(); // done with this step over node
+
+                evalStack.push(nextNode.second);
+
+                if (!executionStack.empty()) {
+                    do_step_once(false, false, true); // pop back to the nearest step node
+                }
+            }
+        } else if (exec) {
+            if (dynamic_cast<Cmm::ExecutableNode*>(node)) {
+                dynamic_cast<Cmm::ExecutableNode*>(node)->exec();
+            }
+
+            executionStack.pop();
             if (!executionStack.empty()) {
-                do_step_once(executionStack.top());
+                do_step_once();
             }
         }
-    } else {
-        if (dynamic_cast<Cmm::ExecutableNode*>(node)) {
-            dynamic_cast<Cmm::ExecutableNode*>(node)->exec();
-        }
 
-        executionStack.pop();
-        if (!executionStack.empty()) {
-            do_step_once(executionStack.top());
+        if (executionStack.empty()) {
+            codeString += currentCodeString;
+            currentCodeString = "";
         }
+    } catch (const std::exception& e) {
+        currentError = e.what();
     }
 }
 
 static void start_debugged(Cmm::ExecutableNode* exec) {
     executionStack.push(exec);
-    while (dynamic_cast<Cmm::StepOverNode*>(executionStack.top())) {
-        auto n = dynamic_cast<Cmm::StepOverNode*>(executionStack.top());
-        n->prepare();
-        executionStack.push(n->step());
+
+    if (const auto step_ = dynamic_cast<Cmm::StepOverNode*>(exec)) {
+        step_->enterStack();
     }
+
+    if (const auto step_ = dynamic_cast<Cmm::StepOverNodeWithResult*>(exec)) {
+        step_->enterStack();
+    }
+
+    do_step_once(false);
     Cmm::debugger::launch();
 }
 
@@ -106,7 +168,7 @@ void Cmm::debugger::exec(std::string code) {
     int parse_result = yyparse();
 
     if (parse_result == 0) {
-        codeString += code;
+        currentCodeString = code;
         auto program = Cmm::Store::root;
 
         ::code.push_back(program->source);
@@ -116,21 +178,32 @@ void Cmm::debugger::exec(std::string code) {
             program->source = nullptr;
             delete program;
         } else {
-            program->source->exec();
-            program->source = nullptr;
-            delete program;
+            try {
+                program->source->exec();
+                program->source = nullptr;
+                delete program;
+
+                codeString += currentCodeString;
+                currentCodeString = "";
+                currentError = "";
+            } catch (const std::exception& e) {
+                currentCodeString = "";
+                currentError = "";
+                throw;
+            }
+
         }
     }
 }
 
 void Cmm::debugger::step() {
     if (executionStack.empty()) return;
-
-    do_step_once(executionStack.top());
+    if (! currentError.empty()) return;
+    do_step_once();
 }
 
 std::string Cmm::debugger::getCode() {
-    return codeString;
+    return codeString + currentCodeString;
 }
 
 int Cmm::debugger::getCurrentLine() {
@@ -142,6 +215,25 @@ int Cmm::debugger::getCurrentLine() {
 
 bool Cmm::debugger::isDone() {
     return executionStack.empty();
+}
+
+void Cmm::debugger::reset() {
+    if (!isDone()) {
+        while (executionStack.size() > 0) {
+            executionStack.pop();
+        }
+
+        while (evalStack.size() > 0) {
+            evalStack.pop();
+        }
+
+        currentCodeString = "";
+        currentError = "";
+    }
+}
+
+std::string Cmm::debugger::getError() {
+    return currentError;
 }
 
 Cmm::Program::ProgramNode * Cmm::debugger::compileCode(std::string code) {

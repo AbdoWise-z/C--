@@ -4,12 +4,15 @@
 
 #include <iostream>
 
+#include "Variables.h"
 #include "../MathHelper.h"
 
 Cmm::Control::IFNode::IFNode(EvaluableNode *condition, ExecutableNode *if_true, ExecutableNode *if_false) {
     this->condition = condition;
     this->if_true = if_true;
     this->if_false = if_false;
+
+    _lineNumber = condition->_lineNumber;
 }
 
 void Cmm::Control::IFNode::exec() {
@@ -24,19 +27,21 @@ void Cmm::Control::IFNode::exec() {
     }
 }
 
-Cmm::ASTNode* Cmm::Control::IFNode::step() {
-    if (_curr_step_pos == 0) {
-        _curr_step_pos++;
+Cmm::ASTNode* Cmm::Control::IFNode::step(ValueObject v) {
+    int& curr_step = _curr_step_pos.top();
+
+    if (curr_step == 0) {
+        curr_step++;
         return this->condition;
     }
 
-    if (_curr_step_pos > 1) return nullptr;
+    if (curr_step > 1) return nullptr;
 
-    auto result = condition->eval();
+    auto result = v;
     auto bool_result = ValuesHelper::castTo(result, V_Bool);
     ValuesHelper::Delete(result);
 
-    _curr_step_pos++;
+    curr_step++;
 
     if (bool_result.value)
         return if_true;
@@ -44,8 +49,12 @@ Cmm::ASTNode* Cmm::Control::IFNode::step() {
     return if_false;
 }
 
-void Cmm::Control::IFNode::prepare() {
-    _curr_step_pos = 0;
+void Cmm::Control::IFNode::enterStack() {
+    _curr_step_pos.push(0);
+}
+
+void Cmm::Control::IFNode::exitStack() {
+    _curr_step_pos.pop();
 }
 
 Cmm::Control::IFNode::~IFNode() {
@@ -59,6 +68,8 @@ Cmm::Control::ForNode::ForNode(EvaluableNode *condition, ExecutableNode *init, E
     this->inc = inc;
     this->init = init;
     this->body = body;
+
+    _lineNumber = condition->_lineNumber;
 }
 
 Cmm::Control::ForNode::ForNode(EvaluableNode *condition, ExecutableNode *init, ExecutableNode *inc,
@@ -69,13 +80,15 @@ Cmm::Control::ForNode::ForNode(EvaluableNode *condition, ExecutableNode *init, E
     this->init = init;
     this->body = body;
     this->_executeOnce = _executeOnce;
-
 }
 
 void Cmm::Control::ForNode::exec() {
     // empty scope to capture any initialization variables
     // they shouldn't be accessible outsize the for loop
     Program::beginScope(nullptr);
+
+    this->_shouldBreak.push(false);
+    this->_shouldContinue.push(false);
 
     auto _inc = dynamic_cast<Program::ExpressionStatementNode*>(this->inc);
     if (_inc) _inc->_silent = true; // if it's an expression node make it silent because I hate spamming :)
@@ -86,13 +99,19 @@ void Cmm::Control::ForNode::exec() {
 
     if (_executeOnce) { // basically a do-while loop
         Program::beginScope(this);
-        this->_shouldBreak = false;
-        this->_shouldContinue = false;
+
+        this->_shouldBreak.top()    = false;
+        this->_shouldContinue.top() = false;
 
         body->exec();
         Program::endScope();
 
-        if (this->_shouldBreak) return;
+        if (this->_shouldBreak.top()) {
+            this->_shouldBreak.pop();
+            this->_shouldContinue.pop();
+            Program::endScope();
+            return;
+        }
     }
 
     if (condition) {
@@ -106,12 +125,13 @@ void Cmm::Control::ForNode::exec() {
 
     while (cond) {
         Program::beginScope(this);  // begin the internal for-loop scope
-        this->_shouldBreak = false;
-        this->_shouldContinue = false;
+
+        this->_shouldBreak.top()    = false;
+        this->_shouldContinue.top() = false;
 
         body->exec();
 
-        if (this->_shouldBreak) break;
+        if (this->_shouldBreak.top()) break;
         if (inc) inc->exec();
 
         if (condition) {
@@ -125,6 +145,9 @@ void Cmm::Control::ForNode::exec() {
 
         Program::endScope();
     }
+
+    this->_shouldBreak.pop();
+    this->_shouldContinue.pop();
     Program::endScope();
 }
 
@@ -134,54 +157,56 @@ Cmm::Control::ForNode::~ForNode() {
     delete inc;
 }
 
-Cmm::ASTNode * Cmm::Control::ForNode::step() {
-    if (_curr_step_pos == 0) {
+Cmm::ASTNode * Cmm::Control::ForNode::step(ValueObject v) {
+    int& curr_step = _curr_step_pos.top();
+    if (curr_step == 0) {
         // first we initialize the for-loop
+
         Program::beginScope(nullptr, "For-wrapper (external)");
         auto _inc = dynamic_cast<Program::ExpressionStatementNode*>(this->inc);
         if (_inc) _inc->_silent = true;
-        _curr_step_pos = 1;
+        curr_step = 1;
 
         if (init) {
             return init;
         }
     }
 
-    if (_curr_step_pos == 1) {
-        _curr_step_pos = 2;
+    if (curr_step == 1) {
+        curr_step = 2;
         if (_executeOnce) { // basically a do-while loop
             Program::beginScope(this, "For-wrapper (internal)");
-            this->_shouldBreak = false;
-            this->_shouldContinue = false;
+            this->_shouldBreak.top()    = false;
+            this->_shouldContinue.top() = false;
             return body;
         } else {
-            _curr_step_pos = 3;
+            curr_step = 3;
         }
     }
 
-    if (_curr_step_pos == 2) {
+    if (curr_step == 2) {
         // we did a do-while first loop, now close the scope
         Program::endScope();
-        if (this->_shouldBreak) {
-            _curr_step_pos = 999;
+        if (this->_shouldBreak.top()) {
+            curr_step = 999;
             Program::endScope();
             return nullptr;
         }
-        _curr_step_pos = 3;
+        curr_step = 3;
     }
 
     before:
-    if (_curr_step_pos == 3) {
-        _curr_step_pos = 4;
+    if (curr_step == 3) {
+        curr_step = 4;
         return condition;
     }
 
-    if (_curr_step_pos == 4) {
+    if (curr_step == 4) {
         // now actually check the condition
         bool cond = false;
 
         if (condition) {
-            auto result = condition->eval();
+            auto result = v;
             auto bool_result = ValuesHelper::castTo(result, V_Bool);
             ValuesHelper::Delete(result);
             cond = bool_result.value;
@@ -190,30 +215,30 @@ Cmm::ASTNode * Cmm::Control::ForNode::step() {
         }
 
         if (!cond) {
-            _curr_step_pos = 999;
+            curr_step = 999;
             Program::endScope();
             return nullptr;
         }
 
-        _curr_step_pos = 5;
+        curr_step = 5;
         Program::beginScope(this, "For-wrapper (internal)");
-        this->_shouldBreak = false;
-        this->_shouldContinue = false;
+        this->_shouldBreak.top()    = false;
+        this->_shouldContinue.top() = false;
         return body;
     }
 
-    if (_curr_step_pos == 5) {
+    if (curr_step == 5) {
         Program::endScope();
-        if (this->_shouldBreak) {
-            _curr_step_pos = 999;
+        if (this->_shouldBreak.top()) {
+            curr_step = 999;
             Program::endScope();
             return nullptr;
         }
-        _curr_step_pos = 3;
+        curr_step = 3;
         if (this->inc) {
             return this->inc; // apply the increment
         } else {
-            _curr_step_pos = 3;
+            curr_step = 3;
             goto before;
         }
     }
@@ -221,8 +246,17 @@ Cmm::ASTNode * Cmm::Control::ForNode::step() {
     return nullptr;
 }
 
-void Cmm::Control::ForNode::prepare() {
-    _curr_step_pos = 0;
+void Cmm::Control::ForNode::enterStack() {
+    _curr_step_pos.push(0);
+    this->_shouldBreak.push(false);
+    this->_shouldContinue.push(false);
+}
+
+void Cmm::Control::ForNode::exitStack() {
+    _curr_step_pos.pop();
+
+    _shouldBreak.pop();
+    _shouldContinue.pop();
 }
 
 namespace Cmm::Control {
@@ -238,12 +272,12 @@ namespace Cmm::Control {
 
         if (expr) {
             auto result = expr->eval();
-            func->_returnValue = result;
+            func->_returnValue.top() = result;
         } else {
-            func->_returnValue.type = V_Void;
+            func->_returnValue.top().type = V_Void;
         }
 
-        func->_shouldReturn = true;
+        func->_shouldReturn.top() = true;
     }
 
     ReturnStatementNode::~ReturnStatementNode() {
@@ -258,7 +292,7 @@ namespace Cmm::Control {
             throw Program::ControlError("break cannot be used outside a looper / switch scope");
         }
 
-        looper->_shouldBreak = true;
+        looper->_shouldBreak.top() = true;
     }
 
     BreakStatementNode::~BreakStatementNode() = default;
@@ -271,7 +305,7 @@ namespace Cmm::Control {
             throw Program::ControlError("break cannot be used outside a looper scope");
         }
 
-        looper->_shouldContinue = true;
+        looper->_shouldContinue.top() = true;
     }
 
     ContinueStatementNode::~ContinueStatementNode() = default;
@@ -279,12 +313,20 @@ namespace Cmm::Control {
     SwitchNode::SwitchNode(EvaluableNode *value, SwitchBodyNode *body) {
         this->body = body;
         this->value = value;
+
+        _lineNumber = value->_lineNumber;
     }
 
     void SwitchNode::exec() {
         auto val = value->eval();
         Program::beginScope(this);
+
+        this->_shouldBreak.push(false);
+
         body->exec(val);
+
+        this->_shouldBreak.pop();
+
         Program::endScope();
         ValuesHelper::Delete(val);
     }
@@ -292,6 +334,38 @@ namespace Cmm::Control {
     SwitchNode::~SwitchNode() {
         delete body;
         delete value;
+    }
+
+    void SwitchNode::enterStack() {
+        _curr_step_pos.push(0);
+        _shouldBreak.push(false);
+    }
+
+    ASTNode * SwitchNode::step(ValueObject v) {
+        int& curr_step = _curr_step_pos.top();
+        if (curr_step == 0) {
+            Program::beginScope(this);
+            curr_step = 1;
+            return value;
+        }
+
+        if (curr_step == 1) {
+            curr_step = 2;
+            body->_curr_value.push(v);
+            return body;
+        }
+
+        auto val = body->_curr_value.top();
+        ValuesHelper::Delete(val);
+        body->_curr_value.pop();
+        Program::endScope();
+
+        return nullptr;
+    }
+
+    void SwitchNode::exitStack() {
+        _shouldBreak.pop();
+        _curr_step_pos.pop();
     }
 
     SwitchBodyNode::SwitchBodyNode(SwitchBodyNode *prev, SwitchCaseNode *next) {
@@ -315,7 +389,7 @@ namespace Cmm::Control {
         }
 
         for (const auto _c : cases) {
-            if (break_point->_shouldBreak) break;
+            if (break_point->_shouldBreak.top()) break;
             found_match = _c->exec(v, found_match);
         }
     }
@@ -324,6 +398,71 @@ namespace Cmm::Control {
         for (const auto _c : cases) {
             delete _c;
         }
+    }
+
+    void SwitchBodyNode::enterStack() {
+        _curr_step_pos.push(0);
+        _curr_step_pos_internal.push(0);
+        _curr_matched.push(false);
+        _created_nodes.push({});
+    }
+
+    ASTNode * SwitchBodyNode::step(ValueObject v) {
+        int& curr_step = _curr_step_pos.top();
+        if (curr_step >= cases.size()) {
+            return nullptr;
+        }
+
+        auto break_point = Program::getNearestBreakPointScopeOwner();
+        auto& curr_case = cases[curr_step];
+
+        if (!_curr_matched.top()) {
+            int& curr_step_internal = _curr_step_pos_internal.top();
+
+            if (!curr_case->value) { // default case
+                _curr_matched.top() = true;
+                return step(v);
+            }
+
+            if (curr_step_internal == 0) {
+                curr_step_internal = 1;
+                auto _n = new Variables::DebuggerWaitEvalNode(cases[curr_step]->value);
+                _created_nodes.top().push_back(_n);
+                return _n;
+            }
+
+            if (curr_step_internal == 1) {
+                if (MathHelper::equal(v, _curr_value.top()).value) {
+                    ValuesHelper::Delete(v);
+                    _curr_matched.top() = true;
+                    return step(v);
+                }
+                ValuesHelper::Delete(v);
+                curr_step_internal = 0;
+                curr_step ++;
+                return step(v);
+            }
+        } else {
+
+            if (break_point->_shouldBreak.top()) {
+                return nullptr;
+            }
+            curr_step ++;
+            return curr_case->body;
+        }
+
+        return nullptr;
+    }
+
+    void SwitchBodyNode::exitStack() {
+        _curr_step_pos.pop();
+        _curr_step_pos_internal.pop();
+        _curr_matched.pop();
+
+        for (auto n: _created_nodes.top()) {
+            delete n;
+        }
+        _created_nodes.pop();
     }
 
     SwitchCaseNode::SwitchCaseNode(ExecutableNode *body, EvaluableNode *value) {

@@ -115,7 +115,7 @@ static int getConsoleHeight() {
     struct winsize w;
     ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
     int totalHeight = w.ws_row;
-    totalHeight = (totalHeight < 20) ? 20 : totalHeight;
+    totalHeight = (totalHeight < 12) ? 12 : totalHeight;
     return totalHeight - 1;
 }
 
@@ -319,7 +319,7 @@ static void redraw(const std::vector<std::string>& code_lines,
             )
 {
     int totalWidth = getConsoleWidth();
-    int consoleHeight = getConsoleHeight() - 1;
+    int consoleHeight = getConsoleHeight() - 1 - !Cmm::debugger::getError().empty();
     int dividerWidth = 3; // e.g. " ║ "
     int codeWidth = totalWidth * 0.6;
     if (mode == STACK_VARIABLE_MODE) {
@@ -432,6 +432,12 @@ static void redraw(const std::vector<std::string>& code_lines,
 
     std::cout << RESET_ATTR;
     std::cout << std::endl;
+
+    if (!Cmm::debugger::getError().empty()) {
+        std::cout << BRIGHT_RED_FG << Cmm::debugger::getError() << RESET_ATTR << std::endl;
+    }
+
+
     std::cout.flush();
 }
 

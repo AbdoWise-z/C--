@@ -38,8 +38,41 @@ namespace Cmm::Variables {
         delete value;
     }
 
+    void VariableDeclarationNode::enterStack() {
+        _curr_step_pos.push(0);
+    }
+
+    ASTNode * VariableDeclarationNode::step(ValueObject mValue) {
+        int& curr_step = _curr_step_pos.top();
+        if (curr_step == 0) {
+            curr_step++;
+            return this->value;
+        }
+
+        // seconds call: with value
+        auto mType = ValuesHelper::StringToValueType(this->type);
+        if (mValue.type != mType) {
+            // cast it
+            auto temp = ValuesHelper::castTo(mValue, mType);
+            ValuesHelper::Delete(mValue);
+            mValue = temp;
+        }
+
+        Program::createVariable(name, mValue, isConst);
+
+#ifdef CMM_DEBUG
+        std::cout << "[+]> " << name << "=" << ValuesHelper::toString(mValue) << std::endl;
+#endif
+        return nullptr;
+    }
+
+
+    void VariableDeclarationNode::exitStack() {
+        _curr_step_pos.pop();
+    }
+
     InferredVariableDeclarationNode::InferredVariableDeclarationNode(bool isConst, std::string name,
-        EvaluableNode *value) {
+                                                                     EvaluableNode *value) {
         this->isConst = isConst;
         this->name = std::move(name);
         this->value = value;
@@ -52,6 +85,30 @@ namespace Cmm::Variables {
 
     InferredVariableDeclarationNode::~InferredVariableDeclarationNode() {
         delete value;
+    }
+
+    void InferredVariableDeclarationNode::enterStack() {
+        _curr_step_pos.push(0);
+    }
+
+    ASTNode * InferredVariableDeclarationNode::step(ValueObject mValue) {
+        int& curr_step = _curr_step_pos.top();
+        if (curr_step == 0) {
+            curr_step++;
+            return this->value;
+        }
+
+        Program::createVariable(name, mValue, isConst);
+
+#ifdef CMM_DEBUG
+        std::cout << "[+]> " << name << "=" << ValuesHelper::toString(mValue) << std::endl;
+#endif
+        return nullptr;
+    }
+
+
+    void InferredVariableDeclarationNode::exitStack() {
+        _curr_step_pos.pop();
     }
 
 
@@ -81,6 +138,42 @@ namespace Cmm::Variables {
 #endif
     }
 
+    void VariableAssignmentNode::enterStack() {
+        _curr_step_pos.push(0);
+    }
+
+    ASTNode * VariableAssignmentNode::step(ValueObject mValue) {
+        Program::VariableBlock& block = Program::getVariable(name);
+        ValueObject& original = block.Value;
+        if (block.isConst) {
+            throw Program::ConstantAssignmentError(name);
+        }
+
+        int& curr_step = _curr_step_pos.top();
+        if (curr_step == 0) {
+            curr_step++;
+            return this->expr;
+        }
+
+        if (mValue.type != original.type) {
+            auto temp = ValuesHelper::castTo(mValue, original.type);
+            ValuesHelper::Delete(mValue);
+            mValue = temp;
+        }
+
+        ValuesHelper::Delete(original);
+        original = mValue;
+
+#ifdef CMM_DEBUG
+        std::cout << "[u]> " << name << "=" << ValuesHelper::toString(mValue) << std::endl;
+#endif
+        return nullptr;
+    }
+
+    void VariableAssignmentNode::exitStack() {
+        _curr_step_pos.pop();
+    }
+
     VariableAssignmentNode::~VariableAssignmentNode() = default;
 
     CompoundAssignmentNode::CompoundAssignmentNode(const std::string& name, const std::string &op, EvaluableNode *value) {
@@ -90,6 +183,24 @@ namespace Cmm::Variables {
 
     void CompoundAssignmentNode::exec() {
         this->_internal->exec();
+    }
+
+    void CompoundAssignmentNode::enterStack() {
+        _curr_step_pos.push(0);
+    }
+
+    ASTNode * CompoundAssignmentNode::step(ValueObject mValue) {
+        int& curr_step = _curr_step_pos.top();
+        if (curr_step == 0) {
+            curr_step++;
+            return this->_internal;
+        }
+
+        return nullptr;
+    }
+
+    void CompoundAssignmentNode::exitStack() {
+        _curr_step_pos.pop();
     }
 
     CompoundAssignmentNode::~CompoundAssignmentNode() {
@@ -129,6 +240,42 @@ namespace Cmm::Variables {
         return result;
     }
 
+    void PreIncNode::enterStack() {
+        _curr_step_pos.push(0);
+    }
+
+    std::pair<ASTNode*, ValueObject> PreIncNode::step(ValueObject mValue) {
+        Program::VariableBlock& block = Program::getVariable(name);
+        ValueObject& original = block.Value;
+        if (block.isConst) {
+            throw Program::ConstantAssignmentError(name);
+        }
+
+        int& curr_step = _curr_step_pos.top();
+        if (curr_step == 0) {
+            curr_step++;
+            return {this->_internal, ValueObject::Void()};
+        }
+
+        if (mValue.type != original.type) {
+            auto temp = ValuesHelper::castTo(mValue, original.type);
+            ValuesHelper::Delete(mValue);
+            mValue = temp;
+        }
+
+        ValuesHelper::Delete(original);
+        original = mValue;
+
+#ifdef CMM_DEBUG
+        std::cout << "[u]> " << name << "=" << ValuesHelper::toString(mValue) << std::endl;
+#endif
+        return {nullptr, original};
+    }
+
+    void PreIncNode::exitStack() {
+        _curr_step_pos.pop();
+    }
+
     PreIncNode::~PreIncNode() {
         delete _internal;
     }
@@ -165,7 +312,75 @@ namespace Cmm::Variables {
         return _before;
     }
 
+
+    void PostIncNode::enterStack() {
+        _curr_step_pos.push(0);
+    }
+
+    std::pair<ASTNode*, ValueObject> PostIncNode::step(ValueObject mValue) {
+        Program::VariableBlock& block = Program::getVariable(name);
+        ValueObject& original = block.Value;
+        if (block.isConst) {
+            throw Program::ConstantAssignmentError(name);
+        }
+
+        int& curr_step = _curr_step_pos.top();
+        if (curr_step == 0) {
+            curr_step++;
+            return {this->_internal, ValueObject::Void()};
+        }
+
+        if (mValue.type != original.type) {
+            auto temp = ValuesHelper::castTo(mValue, original.type);
+            ValuesHelper::Delete(mValue);
+            mValue = temp;
+        }
+
+        ValueObject _before = original;
+
+        original = mValue;
+
+#ifdef CMM_DEBUG
+        std::cout << "[u]> " << name << "=" << ValuesHelper::toString(mValue) << std::endl;
+#endif
+        return {nullptr, _before};
+    }
+
+    void PostIncNode::exitStack() {
+        _curr_step_pos.pop();
+    }
+
     PostIncNode::~PostIncNode() {
         delete _internal;
+    }
+
+    DebuggerWaitEvalNode::DebuggerWaitEvalNode(EvaluableNode *internal) {
+        this->_internal = internal;
+        this->_lineNumber = internal->_lineNumber;
+
+    }
+
+    ValueObject DebuggerWaitEvalNode::eval() {
+        return _internal->eval();
+    }
+
+    DebuggerWaitEvalNode::~DebuggerWaitEvalNode() = default;
+
+    void DebuggerWaitEvalNode::enterStack() {
+        _curr_step_pos.push(0);
+    }
+
+    std::pair<ASTNode *, ValueObject> DebuggerWaitEvalNode::step(ValueObject v) {
+        int& curr_step = _curr_step_pos.top();
+        if (curr_step == 0) {
+            curr_step++;
+            return {this->_internal, ValueObject::Void()};
+        }
+
+        return {nullptr, v};
+    }
+
+    void DebuggerWaitEvalNode::exitStack() {
+        _curr_step_pos.pop();
     }
 }

@@ -88,10 +88,14 @@ add_executable(Cmm
         src/utils/string_utils.cpp
         src/utils/string_utils.hpp
 
+        src/common.cpp
+        src/common.h
+
 
         ${PARSER_HDR}
         ${PARSER_CPP_SRC}
         ${PARSER_C_SRC}
+
         src/generator/quad_generator.cpp
         src/generator/quad_generator.hpp
         src/utils/file_utils.cpp
@@ -114,6 +118,7 @@ add_executable(Sandbox
 
 add_library(io SHARED
         Cmm/std/cpp/io.cpp
+        src/common.cpp
         src/common.h
         src/primitives/Integer.cpp
         src/primitives/Integer.h
@@ -134,6 +139,7 @@ add_library(io SHARED
 
 add_library(math SHARED
         Cmm/std/cpp/math.cpp
+        src/common.cpp
         src/common.h
         src/primitives/Integer.cpp
         src/primitives/Integer.h
@@ -154,6 +160,7 @@ add_library(math SHARED
 
 add_library(str SHARED
         Cmm/std/cpp/str.cpp
+        src/common.cpp
         src/common.h
         src/primitives/Integer.cpp
         src/primitives/Integer.h
@@ -174,6 +181,7 @@ add_library(str SHARED
 
 add_library(time SHARED
         Cmm/std/cpp/time.cpp
+        src/common.cpp
         src/common.h
         src/primitives/Integer.cpp
         src/primitives/Integer.h
@@ -194,6 +202,7 @@ add_library(time SHARED
 
 add_library(system SHARED
         Cmm/std/cpp/system.cpp
+        src/common.cpp
         src/common.h
         src/primitives/Integer.cpp
         src/primitives/Integer.h

@@ -1,6 +1,6 @@
 
-#ifndef NATIVE_H
-#define NATIVE_H
+#ifndef COMMON_H
+#define COMMON_H
 
 #include <vector>
 #include <string>
@@ -19,6 +19,8 @@ namespace Cmm {
     struct ValueObject {
         ValueType type;
         void* value;
+
+        static ValueObject Void();
     };
 
     typedef std::pair<std::vector<ValueType>, std::vector<bool>>  FunctionDefinitionSignature;
@@ -29,4 +31,4 @@ namespace Cmm {
     typedef void (* NativeInitFunction ) (NativeAddFunction);
 
 }
-#endif //NATIVE_H
+#endif //COMMON_H

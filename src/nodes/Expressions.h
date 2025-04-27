@@ -2,6 +2,7 @@
 #ifndef EXPRESSIONS_H
 #define EXPRESSIONS_H
 
+#include <stack>
 #include <vector>
 
 #include "../primitives.h"
@@ -27,59 +28,106 @@ namespace Namespace {
             ~ExpressionNode() override;
         };
 
-        class TermNode final : public EvaluableNode {
+        class TermNode final : public EvaluableNode, public StepOverNodeWithResult {
         public:
             EvaluableNode* left;
             EvaluableNode* right;
             std::string op;
+
+
             TermNode(EvaluableNode* left, EvaluableNode* right, const std::string& op);
+            ValueObject internal_eval(ValueObject, ValueObject);
             ValueObject eval() override;
             ~TermNode() override;
+
+            // debugging
+            std::stack<int> _curr_step_pos;
+            std::stack<ValueObject> _curr_val;
+
+            void enterStack() override;
+            std::pair<ASTNode*, ValueObject> step(ValueObject) override;
+            void exitStack() override;
         };
 
-        class NegatedNode final : public EvaluableNode {
+        class NegatedNode final : public EvaluableNode, public StepOverNodeWithResult {
         public:
             EvaluableNode* child;
             explicit NegatedNode(EvaluableNode* child);
             ValueObject eval() override;
+            static ValueObject internal_eval(ValueObject);
             ~NegatedNode() override;
+
+            // debugging
+            std::stack<int> _curr_step_pos;
+
+            void enterStack() override;
+            std::pair<ASTNode*, ValueObject> step(ValueObject) override;
+            void exitStack() override;
         };
 
-        class NotNode final : public EvaluableNode {
+        class NotNode final : public EvaluableNode, public StepOverNodeWithResult {
         public:
             EvaluableNode* child;
             explicit NotNode(EvaluableNode* child);
             ValueObject eval() override;
             ~NotNode() override;
+
+            // debugging
+            std::stack<int> _curr_step_pos;
+
+            void enterStack() override;
+            std::pair<ASTNode*, ValueObject> step(ValueObject) override;
+            void exitStack() override;
         };
 
-        class InvertNode final : public EvaluableNode {
+        class InvertNode final : public EvaluableNode, public StepOverNodeWithResult {
         public:
             EvaluableNode* child;
             explicit InvertNode(EvaluableNode* child);
             ValueObject eval() override;
             ~InvertNode() override;
+
+            // debugging
+            std::stack<int> _curr_step_pos;
+
+            void enterStack() override;
+            std::pair<ASTNode*, ValueObject> step(ValueObject) override;
+            void exitStack() override;
         };
 
-        class CastNode final : public EvaluableNode {
+        class CastNode final : public EvaluableNode, public StepOverNodeWithResult {
         public:
             EvaluableNode* child;
             ValueType targetType;
             explicit CastNode(EvaluableNode* child, const std::string& type);
             ValueObject eval() override;
             ~CastNode() override;
+
+            // debugging
+            std::stack<int> _curr_step_pos;
+
+            void enterStack() override;
+            std::pair<ASTNode*, ValueObject> step(ValueObject) override;
+            void exitStack() override;
         };
 
-        class VariableNode final : public EvaluableNode {
+        class VariableNode final : public EvaluableNode, public StepOverNodeWithResult {
         public:
             std::string name;
             explicit VariableNode(const std::string& n);
             ValueObject eval() override;
             ~VariableNode() override;
+
+            // debugging
+            std::stack<int> _curr_step_pos;
+
+            void enterStack() override;
+            std::pair<ASTNode*, ValueObject> step(ValueObject) override;
+            void exitStack() override;
         };
 
 
-        class ConstantValueNode final : public EvaluableNode {
+        class ConstantValueNode final : public EvaluableNode, public StepOverNodeWithResult {
         public:
             ValueObject value{};
             explicit ConstantValueNode(const Real& value);
@@ -90,6 +138,13 @@ namespace Namespace {
 
             ValueObject eval() override;
             ~ConstantValueNode() override;
+
+            // debugging
+            std::stack<int> _curr_step_pos;
+
+            void enterStack() override;
+            std::pair<ASTNode*, ValueObject> step(ValueObject) override;
+            void exitStack() override;
         };
     }
 }

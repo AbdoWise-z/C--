@@ -77,6 +77,9 @@ namespace Namespace::Program {
     }
 
     void endScope() {
+        for (auto i: getCurrentProgram().stack.back().variables) {
+            ValuesHelper::Delete(i.second.Value);
+        }
         getCurrentProgram().stack.pop_back();
     }
 
@@ -344,6 +347,13 @@ namespace Namespace::Program {
         return "No stack found while trying to create a variable or a function";
     }
 
+    DivisionByZeroError::DivisionByZeroError() {
+    }
+
+    const char * DivisionByZeroError::what() const noexcept {
+        return "Division by zero";
+    }
+
     AlreadyDefinedError::AlreadyDefinedError(std::string id) : id(std::move(id)) {}
 
     const char * AlreadyDefinedError::what() const noexcept {
@@ -422,6 +432,24 @@ namespace Namespace::Program {
         ValuesHelper::Delete(mValue);
     }
 
+    ASTNode * ExpressionStatementNode::step(ValueObject v) {
+        if (_curr_step_pos.top() == 0) {
+            _curr_step_pos.top() = 1;
+            return expr;
+        }
+
+        ValuesHelper::Delete(v);
+        return nullptr;
+    }
+
+    void ExpressionStatementNode::enterStack() {
+        _curr_step_pos.push(0);
+    }
+
+    void ExpressionStatementNode::exitStack() {
+        _curr_step_pos.pop();
+    }
+
     StatementListNode::StatementListNode(StatementListNode *other, ExecutableNode *next) {
         this->statements.clear();
         if (other) {
@@ -446,30 +474,35 @@ namespace Namespace::Program {
         auto cnt = getNearestContinuePointScopeOwner();
 
         for (auto item: statements) {
-            if (ret && ret->_shouldReturn)   break;
-            if (brk && brk->_shouldBreak)    break;
-            if (cnt && cnt->_shouldContinue) break;
+            if (ret && ret->_shouldReturn.top())   break;
+            if (brk && brk->_shouldBreak.top())    break;
+            if (cnt && cnt->_shouldContinue.top()) break;
             item->exec();
         }
     }
 
-    ASTNode * StatementListNode::step() {
+    ASTNode * StatementListNode::step(ValueObject v) {
+        int& curr_step = _curr_step_pos.top();
         auto ret = getNearestReturnPointScopeOwner();
         auto brk = getNearestBreakPointScopeOwner();
         auto cnt = getNearestContinuePointScopeOwner();
 
-        if (ret && ret->_shouldReturn)   return nullptr;
-        if (brk && brk->_shouldBreak)    return nullptr;
-        if (cnt && cnt->_shouldContinue) return nullptr;
+        if (ret && ret->_shouldReturn.top())   return nullptr;
+        if (brk && brk->_shouldBreak.top())    return nullptr;
+        if (cnt && cnt->_shouldContinue.top()) return nullptr;
 
-        if (_curr_step_pos < statements.size())
-            return statements[_curr_step_pos++];
+        if (curr_step < statements.size())
+            return statements[curr_step++];
 
         return nullptr;
     }
 
-    void StatementListNode::prepare() {
-        _curr_step_pos = 0;
+    void StatementListNode::enterStack() {
+        _curr_step_pos.push(0);
+    }
+
+    void StatementListNode::exitStack() {
+        _curr_step_pos.pop();
     }
 
     ScopeNode::ScopeNode(ExecutableNode *node) {
@@ -486,18 +519,23 @@ namespace Namespace::Program {
         delete statements;
     }
 
-    void ScopeNode::prepare() {
-        _curr_step_pos = 0;
+    void ScopeNode::enterStack() {
+        _curr_step_pos.push(0);
     }
 
-    ASTNode * ScopeNode::step() {
-        if (_curr_step_pos == 0) {
+    void ScopeNode::exitStack() {
+        _curr_step_pos.pop();
+    }
+
+    ASTNode * ScopeNode::step(ValueObject v) {
+        int& curr_step = _curr_step_pos.top();
+        if (curr_step == 0) {
             beginScope(this, "LocalScope");
-            _curr_step_pos = 1;
+            curr_step = 1;
             return statements;
         } else {
             endScope();
-            _curr_step_pos = 0;
+            curr_step = 0;
             return nullptr;
         }
     }

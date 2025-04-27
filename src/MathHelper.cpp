@@ -6,6 +6,7 @@
 #include <ostream>
 
 #include "primitives.h"
+#include "nodes/Program.h"
 
 
 Cmm::MathHelper::OperationError::OperationError(ValueType a, ValueType b, const std::string& op) {
@@ -276,16 +277,26 @@ Cmm::ValueObject Cmm::MathHelper::div(ValueObject &left, ValueObject &right) {
 
     switch (common) {
         case Cmm::V_Integer:
+            if (*static_cast<Integer*>(r_ptr->value) == Integer(0)) {
+                throw Program::DivisionByZeroError();
+            }
+
             result.value = new Integer(
                 *static_cast<Integer*>(l_ptr->value) / *static_cast<Integer*>(r_ptr->value)
                 );
         break;
         case Cmm::V_Real:
+            if (*static_cast<Real*>(r_ptr->value) == Real(0.0)) {
+                throw Program::DivisionByZeroError();
+            }
             result.value = new Real(
                 *static_cast<Real*>(l_ptr->value) / *static_cast<Real*>(r_ptr->value)
                 );
         break;
         case Cmm::V_Complex:
+            if (*static_cast<Complex*>(r_ptr->value) == Complex(0.0, 0.0)) {
+                throw Program::DivisionByZeroError();
+            }
             result.value = new Complex(
                 *static_cast<Complex*>(l_ptr->value) / *static_cast<Complex*>(r_ptr->value)
                 );

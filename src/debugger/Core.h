@@ -20,6 +20,9 @@ namespace Namespace::debugger {
     std::string getCode();
     int getCurrentLine();
     bool isDone();
+    void reset();
+
+    std::string getError();
 
     Program::ProgramNode* compileCode(std::string code);
 }

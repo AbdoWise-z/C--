@@ -78,6 +78,12 @@ namespace Namespace::Program {
         [[nodiscard]] const char *what() const noexcept override;
     };
 
+    class DivisionByZeroError : public std::exception {
+    public:
+        DivisionByZeroError();
+        [[nodiscard]] const char *what() const noexcept override;
+    };
+
     class AlreadyDefinedError : public std::exception {
         std::string id;
     public:
@@ -133,35 +139,49 @@ namespace Namespace::Program {
         void exec() override;
     };
 
-    class ExpressionStatementNode: public ExecutableNode {
+    class ExpressionStatementNode: public virtual ExecutableNode, public virtual StepOverNode, public virtual DebuggerWaitToStepNode  {
     public:
         EvaluableNode* expr;
         bool _silent = false;
         explicit ExpressionStatementNode(EvaluableNode* value);
         void exec() override;
+
+        //debugging
+        std::stack<int> _curr_step_pos;
+
+        ASTNode* step(ValueObject) override;
+        void enterStack() override;
+        void exitStack() override;;
     };
 
     class StatementListNode: public ExecutableNode, public StepOverNode {
     public:
         std::vector<ExecutableNode*> statements;
-        int _curr_step_pos = 0;
+
+
         StatementListNode(StatementListNode* node, ExecutableNode* next);
         ~StatementListNode() override;
         void exec() override;
-        ASTNode* step() override;
-        void prepare() override;
+
+        //debugging
+        std::stack<int> _curr_step_pos;
+        ASTNode* step(ValueObject) override;
+        void enterStack() override;
+        void exitStack() override;;
     };
 
     class ScopeNode: public virtual ExecutableNode, public virtual StepOverNode {
     public:
-        int _curr_step_pos = 0;
+        // debugging
+        std::stack<int> _curr_step_pos;
 
         ExecutableNode* statements;
         explicit ScopeNode(ExecutableNode* node);
         void exec() override;
         ~ScopeNode() override;
-        void prepare() override;
-        ASTNode *step() override;
+        void enterStack() override;
+        void exitStack() override;
+        ASTNode *step(ValueObject) override;
     };
 }
 

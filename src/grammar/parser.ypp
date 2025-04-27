@@ -131,6 +131,7 @@ statement:
   | continue_stmt D_SEMICOLON        { $$ = $1; }
   | break_stmt D_SEMICOLON           { $$ = $1; }
   | D_SEMICOLON                      { $$ = nullptr; } // just a semicolon
+  // | error D_SEMICOLON                { yyerrok; }
   ;
 
 //               ==============  CONTROL   ==============

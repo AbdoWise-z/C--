@@ -13,7 +13,7 @@
 
 // forward declare function node since it's used in the scope type
 namespace Namespace::Functional {
-    class FunctionNode;
+    class FunctionDeclarationNode;
 }
 
 namespace Namespace::Program {
@@ -33,7 +33,7 @@ namespace Namespace::Program {
 
     struct Scope {
         std::map<std::string, VariableBlock> variables;
-        std::map<std::string, std::map<std::vector<ValueType>, Functional::FunctionNode*>> functions; // Fixme: FunctionDefinitionSignature
+        std::map<std::string, std::map<FunctionDefinitionSignature, Functional::FunctionDeclarationNode*>> functions;
         ASTNode* owner;
         std::string name;
     };
@@ -42,7 +42,7 @@ namespace Namespace::Program {
         std::vector<Scope> stack;
         std::vector<std::string> moduleStack;
         ASTNode* programCode;
-        std::map<std::string, std::map<std::vector<ValueType>, NativeFunction>> native_functions;
+        std::map<std::string, std::map<FunctionDefinitionSignature, std::pair<NativeFunction, Functional::FunctionDeclarationNode*>>> native_functions;
     };
 
     ProgramBlock& getCurrentProgram();
@@ -65,10 +65,10 @@ namespace Namespace::Program {
     void createVariable(const std::string& name, Cmm::ValueObject, bool isConst = false);
     VariableBlock& getVariable(const std::string& name);
 
-    void createFunction(const FunctionSignature &signature, Functional::FunctionNode*);
-    void createFunction(const FunctionSignature &signature, NativeFunction handler);
-    void validateNativeExists(const FunctionSignature& signature);
-    ValueObject callFunction(const FunctionSignature& signature, const std::vector<ValueObject>&);
+    void createFunction(const std::string& name, const FunctionDefinitionSignature &signature, Functional::FunctionDeclarationNode*);
+    void createFunction(const std::string& name, const FunctionDefinitionSignature &signature, NativeFunction handler);
+    void attachNativeFunctionDefinition(const std::string& name, const FunctionDefinitionSignature& signature, Functional::FunctionDeclarationNode*);
+    std::pair<Functional::FunctionDeclarationNode*, std::vector<bool>> getFunction(const FunctionSignature& signature);
 
     // ========================= ERRORS =========================
 

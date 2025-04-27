@@ -634,13 +634,13 @@ static const yytype_int16 yyrline[] =
      145,   146,   149,   150,   151,   152,   156,   157,   161,   165,
      170,   171,   175,   181,   182,   186,   187,   193,   194,   195,
      196,   200,   201,   205,   206,   207,   208,   209,   210,   211,
-     212,   213,   214,   219,   222,   227,   235,   245,   246,   250,
-     251,   252,   257,   258,   262,   263,   267,   274,   275,   276,
-     280,   281,   285,   286,   287,   288,   289,   290,   291,   292,
-     293,   294,   295,   296,   297,   298,   299,   300,   301,   305,
-     306,   307,   308,   309,   310,   311,   312,   313,   314,   315,
-     316,   320,   321,   322,   323,   324,   333,   334,   338,   339,
-     340,   341,   342,   343
+     212,   213,   214,   219,   222,   227,   235,   246,   247,   251,
+     252,   253,   258,   259,   263,   264,   268,   275,   276,   277,
+     281,   282,   286,   287,   288,   289,   290,   291,   292,   293,
+     294,   295,   296,   297,   298,   299,   300,   301,   302,   306,
+     307,   308,   309,   310,   311,   312,   313,   314,   315,   316,
+     317,   321,   322,   323,   324,   325,   334,   335,   339,   340,
+     341,   342,   343,   344
 };
 #endif
 
@@ -1761,12 +1761,12 @@ yyreduce:
   case 55: /* func_def: MISC_FUNC ID D_LPAREN func_arg_list D_RPAREN D_ARROW types_list D_LBRACE statements_list D_RBRACE  */
 #line 227 "parser.ypp"
                                                                                                       {
-      (yyval.executable) = new Cmm::Functional::FunctionDeclarationNode(new Cmm::Functional::FunctionNode(
+      (yyval.executable) = new Cmm::Functional::FunctionDeclarationNode(
         dynamic_cast<Cmm::Functional::FunctionArgumentListNode*>((yyvsp[-6].node)),
         dynamic_cast<Cmm::Program::StatementListNode*>((yyvsp[-1].executable)),
         *(yyvsp[-8].str),
         (yyvsp[-3].tlist)
-      ));
+      );
   }
 #line 1772 "parser.tab.cpp"
     break;
@@ -1774,362 +1774,363 @@ yyreduce:
   case 56: /* func_def: MISC_FUNC ID D_LPAREN func_arg_list D_RPAREN D_ARROW types_list OP_ASSIGN MISC_NATIVE  */
 #line 235 "parser.ypp"
                                                                                           {
-      (yyval.executable) = new Cmm::Functional::NativeFunctionDeclarationNode(
+      (yyval.executable) = new Cmm::Functional::FunctionDeclarationNode(
         dynamic_cast<Cmm::Functional::FunctionArgumentListNode*>((yyvsp[-5].node)),
-        (yyvsp[-2].tlist),
-        *(yyvsp[-7].str)
+        nullptr,
+        *(yyvsp[-7].str),
+        (yyvsp[-2].tlist)
       );
    }
-#line 1784 "parser.tab.cpp"
+#line 1785 "parser.tab.cpp"
     break;
 
   case 57: /* func_arg: ID D_COLON type_specifier  */
-#line 245 "parser.ypp"
+#line 246 "parser.ypp"
                                                          { (yyval.node) = new Cmm::Functional::FunctionArgumentNode(*(yyvsp[-2].str), *(yyvsp[0].str)); }
-#line 1790 "parser.tab.cpp"
+#line 1791 "parser.tab.cpp"
     break;
 
   case 58: /* func_arg: ID D_COLON type_specifier OP_ASSIGN constant_value  */
-#line 246 "parser.ypp"
+#line 247 "parser.ypp"
                                                          { (yyval.node) = new Cmm::Functional::FunctionArgumentNode(*(yyvsp[-4].str), *(yyvsp[-2].str), (yyvsp[0].evaluable)); }
-#line 1796 "parser.tab.cpp"
+#line 1797 "parser.tab.cpp"
     break;
 
   case 59: /* func_arg_list: func_arg  */
-#line 250 "parser.ypp"
+#line 251 "parser.ypp"
                                                { (yyval.node) = new Cmm::Functional::FunctionArgumentListNode(nullptr, dynamic_cast<Cmm::Functional::FunctionArgumentNode*>((yyvsp[0].node))); }
-#line 1802 "parser.tab.cpp"
+#line 1803 "parser.tab.cpp"
     break;
 
   case 60: /* func_arg_list: func_arg_list D_COMMA func_arg  */
-#line 251 "parser.ypp"
+#line 252 "parser.ypp"
                                                { (yyval.node) = new Cmm::Functional::FunctionArgumentListNode(dynamic_cast<Cmm::Functional::FunctionArgumentListNode*>((yyvsp[-2].node)), dynamic_cast<Cmm::Functional::FunctionArgumentNode*>((yyvsp[0].node))); }
-#line 1808 "parser.tab.cpp"
+#line 1809 "parser.tab.cpp"
     break;
 
   case 61: /* func_arg_list: %empty  */
-#line 252 "parser.ypp"
+#line 253 "parser.ypp"
                                                { (yyval.node) = new Cmm::Functional::FunctionArgumentListNode(nullptr, nullptr); }
-#line 1814 "parser.tab.cpp"
+#line 1815 "parser.tab.cpp"
     break;
 
   case 62: /* func_call: ID D_LPAREN func_param_list D_RPAREN  */
-#line 257 "parser.ypp"
+#line 258 "parser.ypp"
                                                { (yyval.evaluable) = new Cmm::Functional::FunctionCallNode(*(yyvsp[-3].str), dynamic_cast<Cmm::Functional::FunctionParamListNode*>((yyvsp[-1].node))); }
-#line 1820 "parser.tab.cpp"
+#line 1821 "parser.tab.cpp"
     break;
 
   case 63: /* func_call: ID D_LPAREN D_RPAREN  */
-#line 258 "parser.ypp"
+#line 259 "parser.ypp"
                                                { (yyval.evaluable) = new Cmm::Functional::FunctionCallNode(*(yyvsp[-2].str), nullptr); }
-#line 1826 "parser.tab.cpp"
+#line 1827 "parser.tab.cpp"
     break;
 
   case 64: /* func_param_list: func_param  */
-#line 262 "parser.ypp"
+#line 263 "parser.ypp"
                                                { (yyval.node) = new Cmm::Functional::FunctionParamListNode(nullptr, (yyvsp[0].evaluable)); }
-#line 1832 "parser.tab.cpp"
+#line 1833 "parser.tab.cpp"
     break;
 
   case 65: /* func_param_list: func_param_list D_COMMA func_param  */
-#line 263 "parser.ypp"
+#line 264 "parser.ypp"
                                                { (yyval.node) = new Cmm::Functional::FunctionParamListNode(dynamic_cast<Cmm::Functional::FunctionParamListNode*>((yyvsp[-2].node)), (yyvsp[0].evaluable)); }
-#line 1838 "parser.tab.cpp"
+#line 1839 "parser.tab.cpp"
     break;
 
   case 66: /* func_param: expr  */
-#line 267 "parser.ypp"
+#line 268 "parser.ypp"
                                                { (yyval.evaluable) = (yyvsp[0].evaluable); }
-#line 1844 "parser.tab.cpp"
+#line 1845 "parser.tab.cpp"
     break;
 
   case 67: /* expr: expr_casted_term  */
-#line 274 "parser.ypp"
+#line 275 "parser.ypp"
                                           { (yyval.evaluable) = (yyvsp[0].evaluable); }
-#line 1850 "parser.tab.cpp"
+#line 1851 "parser.tab.cpp"
     break;
 
   case 68: /* expr: expr OP_PLUS expr_casted_term  */
-#line 275 "parser.ypp"
+#line 276 "parser.ypp"
                                           { (yyval.evaluable) = new Cmm::Expressions::TermNode((yyvsp[-2].evaluable), (yyvsp[0].evaluable), *(yyvsp[-1].str)); }
-#line 1856 "parser.tab.cpp"
+#line 1857 "parser.tab.cpp"
     break;
 
   case 69: /* expr: expr OP_MINUS expr_casted_term  */
-#line 276 "parser.ypp"
+#line 277 "parser.ypp"
                                           { (yyval.evaluable) = new Cmm::Expressions::TermNode((yyvsp[-2].evaluable), (yyvsp[0].evaluable), *(yyvsp[-1].str)); }
-#line 1862 "parser.tab.cpp"
+#line 1863 "parser.tab.cpp"
     break;
 
   case 70: /* expr_casted_term: D_LPAREN type_specifier D_RPAREN expr_term  */
-#line 280 "parser.ypp"
+#line 281 "parser.ypp"
                                                { (yyval.evaluable) = new Cmm::Expressions::CastNode((yyvsp[0].evaluable), *(yyvsp[-2].str)); }
-#line 1868 "parser.tab.cpp"
+#line 1869 "parser.tab.cpp"
     break;
 
   case 71: /* expr_casted_term: expr_term  */
-#line 281 "parser.ypp"
+#line 282 "parser.ypp"
                                                { (yyval.evaluable) = (yyvsp[0].evaluable); }
-#line 1874 "parser.tab.cpp"
+#line 1875 "parser.tab.cpp"
     break;
 
   case 72: /* expr_term: expr_value  */
-#line 285 "parser.ypp"
+#line 286 "parser.ypp"
                                                 { (yyval.evaluable) = (yyvsp[0].evaluable); }
-#line 1880 "parser.tab.cpp"
+#line 1881 "parser.tab.cpp"
     break;
 
   case 73: /* expr_term: expr_term OP_MULT expr_value  */
-#line 286 "parser.ypp"
+#line 287 "parser.ypp"
                                                 { (yyval.evaluable) = new Cmm::Expressions::TermNode((yyvsp[-2].evaluable), (yyvsp[0].evaluable), *(yyvsp[-1].str)); }
-#line 1886 "parser.tab.cpp"
+#line 1887 "parser.tab.cpp"
     break;
 
   case 74: /* expr_term: expr_term OP_DIV expr_value  */
-#line 287 "parser.ypp"
+#line 288 "parser.ypp"
                                                 { (yyval.evaluable) = new Cmm::Expressions::TermNode((yyvsp[-2].evaluable), (yyvsp[0].evaluable), *(yyvsp[-1].str)); }
-#line 1892 "parser.tab.cpp"
+#line 1893 "parser.tab.cpp"
     break;
 
   case 75: /* expr_term: expr_term OP_LS expr_value  */
-#line 288 "parser.ypp"
+#line 289 "parser.ypp"
                                                 { (yyval.evaluable) = new Cmm::Expressions::TermNode((yyvsp[-2].evaluable), (yyvsp[0].evaluable), *(yyvsp[-1].str)); }
-#line 1898 "parser.tab.cpp"
+#line 1899 "parser.tab.cpp"
     break;
 
   case 76: /* expr_term: expr_term OP_RS expr_value  */
-#line 289 "parser.ypp"
+#line 290 "parser.ypp"
                                                 { (yyval.evaluable) = new Cmm::Expressions::TermNode((yyvsp[-2].evaluable), (yyvsp[0].evaluable), *(yyvsp[-1].str)); }
-#line 1904 "parser.tab.cpp"
+#line 1905 "parser.tab.cpp"
     break;
 
   case 77: /* expr_term: expr_term OP_BOR expr_value  */
-#line 290 "parser.ypp"
+#line 291 "parser.ypp"
                                                 { (yyval.evaluable) = new Cmm::Expressions::TermNode((yyvsp[-2].evaluable), (yyvsp[0].evaluable), *(yyvsp[-1].str)); }
-#line 1910 "parser.tab.cpp"
+#line 1911 "parser.tab.cpp"
     break;
 
   case 78: /* expr_term: expr_term OP_BAND expr_value  */
-#line 291 "parser.ypp"
+#line 292 "parser.ypp"
                                                 { (yyval.evaluable) = new Cmm::Expressions::TermNode((yyvsp[-2].evaluable), (yyvsp[0].evaluable), *(yyvsp[-1].str)); }
-#line 1916 "parser.tab.cpp"
+#line 1917 "parser.tab.cpp"
     break;
 
   case 79: /* expr_term: expr_term OP_XOR expr_value  */
-#line 292 "parser.ypp"
+#line 293 "parser.ypp"
                                                 { (yyval.evaluable) = new Cmm::Expressions::TermNode((yyvsp[-2].evaluable), (yyvsp[0].evaluable), *(yyvsp[-1].str)); }
-#line 1922 "parser.tab.cpp"
+#line 1923 "parser.tab.cpp"
     break;
 
   case 80: /* expr_term: expr_term OP_OR expr_value  */
-#line 293 "parser.ypp"
+#line 294 "parser.ypp"
                                                 { (yyval.evaluable) = new Cmm::Expressions::TermNode((yyvsp[-2].evaluable), (yyvsp[0].evaluable), *(yyvsp[-1].str)); }
-#line 1928 "parser.tab.cpp"
+#line 1929 "parser.tab.cpp"
     break;
 
   case 81: /* expr_term: expr_term OP_AND expr_value  */
-#line 294 "parser.ypp"
+#line 295 "parser.ypp"
                                                 { (yyval.evaluable) = new Cmm::Expressions::TermNode((yyvsp[-2].evaluable), (yyvsp[0].evaluable), *(yyvsp[-1].str)); }
-#line 1934 "parser.tab.cpp"
+#line 1935 "parser.tab.cpp"
     break;
 
   case 82: /* expr_term: expr_term OP_EQUAL expr_value  */
-#line 295 "parser.ypp"
+#line 296 "parser.ypp"
                                                 { (yyval.evaluable) = new Cmm::Expressions::TermNode((yyvsp[-2].evaluable), (yyvsp[0].evaluable), *(yyvsp[-1].str)); }
-#line 1940 "parser.tab.cpp"
+#line 1941 "parser.tab.cpp"
     break;
 
   case 83: /* expr_term: expr_term OP_GREATER expr_value  */
-#line 296 "parser.ypp"
+#line 297 "parser.ypp"
                                                 { (yyval.evaluable) = new Cmm::Expressions::TermNode((yyvsp[-2].evaluable), (yyvsp[0].evaluable), *(yyvsp[-1].str)); }
-#line 1946 "parser.tab.cpp"
+#line 1947 "parser.tab.cpp"
     break;
 
   case 84: /* expr_term: expr_term OP_LESS expr_value  */
-#line 297 "parser.ypp"
+#line 298 "parser.ypp"
                                                 { (yyval.evaluable) = new Cmm::Expressions::TermNode((yyvsp[-2].evaluable), (yyvsp[0].evaluable), *(yyvsp[-1].str)); }
-#line 1952 "parser.tab.cpp"
+#line 1953 "parser.tab.cpp"
     break;
 
   case 85: /* expr_term: expr_term OP_LE expr_value  */
-#line 298 "parser.ypp"
+#line 299 "parser.ypp"
                                                 { (yyval.evaluable) = new Cmm::Expressions::TermNode((yyvsp[-2].evaluable), (yyvsp[0].evaluable), *(yyvsp[-1].str)); }
-#line 1958 "parser.tab.cpp"
+#line 1959 "parser.tab.cpp"
     break;
 
   case 86: /* expr_term: expr_term OP_GE expr_value  */
-#line 299 "parser.ypp"
+#line 300 "parser.ypp"
                                                 { (yyval.evaluable) = new Cmm::Expressions::TermNode((yyvsp[-2].evaluable), (yyvsp[0].evaluable), *(yyvsp[-1].str)); }
-#line 1964 "parser.tab.cpp"
+#line 1965 "parser.tab.cpp"
     break;
 
   case 87: /* expr_term: expr_term OP_NEQUAL expr_value  */
-#line 300 "parser.ypp"
+#line 301 "parser.ypp"
                                                 { (yyval.evaluable) = new Cmm::Expressions::TermNode((yyvsp[-2].evaluable), (yyvsp[0].evaluable), *(yyvsp[-1].str)); }
-#line 1970 "parser.tab.cpp"
+#line 1971 "parser.tab.cpp"
     break;
 
   case 88: /* expr_term: expr_term OP_MOD expr_value  */
-#line 301 "parser.ypp"
+#line 302 "parser.ypp"
                                                 { (yyval.evaluable) = new Cmm::Expressions::TermNode((yyvsp[-2].evaluable), (yyvsp[0].evaluable), *(yyvsp[-1].str)); }
-#line 1976 "parser.tab.cpp"
+#line 1977 "parser.tab.cpp"
     break;
 
   case 89: /* expr_value: constant_value  */
-#line 305 "parser.ypp"
+#line 306 "parser.ypp"
                                              { (yyval.evaluable) = (yyvsp[0].evaluable); }
-#line 1982 "parser.tab.cpp"
+#line 1983 "parser.tab.cpp"
     break;
 
   case 90: /* expr_value: func_call  */
-#line 306 "parser.ypp"
+#line 307 "parser.ypp"
                                              { (yyval.evaluable) = (yyvsp[0].evaluable); }
-#line 1988 "parser.tab.cpp"
+#line 1989 "parser.tab.cpp"
     break;
 
   case 91: /* expr_value: ID  */
-#line 307 "parser.ypp"
+#line 308 "parser.ypp"
                                              { (yyval.evaluable) = new Cmm::Expressions::VariableNode(*(yyvsp[0].str)); }
-#line 1994 "parser.tab.cpp"
+#line 1995 "parser.tab.cpp"
     break;
 
   case 92: /* expr_value: D_LPAREN expr D_RPAREN  */
-#line 308 "parser.ypp"
+#line 309 "parser.ypp"
                                              { (yyval.evaluable) = (yyvsp[-1].evaluable); }
-#line 2000 "parser.tab.cpp"
+#line 2001 "parser.tab.cpp"
     break;
 
   case 93: /* expr_value: OP_MINUS expr_value  */
-#line 309 "parser.ypp"
+#line 310 "parser.ypp"
                                                { (yyval.evaluable) = new Cmm::Expressions::NegatedNode((yyvsp[0].evaluable)); }
-#line 2006 "parser.tab.cpp"
+#line 2007 "parser.tab.cpp"
     break;
 
   case 94: /* expr_value: OP_PLUS expr_value  */
-#line 310 "parser.ypp"
+#line 311 "parser.ypp"
                                                { (yyval.evaluable) = (yyvsp[0].evaluable); }
-#line 2012 "parser.tab.cpp"
+#line 2013 "parser.tab.cpp"
     break;
 
   case 95: /* expr_value: OP_NOT expr_value  */
-#line 311 "parser.ypp"
+#line 312 "parser.ypp"
                                                { (yyval.evaluable) = new Cmm::Expressions::NotNode((yyvsp[0].evaluable)); }
-#line 2018 "parser.tab.cpp"
+#line 2019 "parser.tab.cpp"
     break;
 
   case 96: /* expr_value: OP_INVERT expr_value  */
-#line 312 "parser.ypp"
+#line 313 "parser.ypp"
                                                { (yyval.evaluable) = new Cmm::Expressions::InvertNode((yyvsp[0].evaluable)); }
-#line 2024 "parser.tab.cpp"
+#line 2025 "parser.tab.cpp"
     break;
 
   case 97: /* expr_value: OP_INC ID  */
-#line 313 "parser.ypp"
+#line 314 "parser.ypp"
                                                { (yyval.evaluable) = new Cmm::Variables::PreIncNode(*(yyvsp[0].str), *(yyvsp[-1].str)); }
-#line 2030 "parser.tab.cpp"
+#line 2031 "parser.tab.cpp"
     break;
 
   case 98: /* expr_value: OP_DEC ID  */
-#line 314 "parser.ypp"
+#line 315 "parser.ypp"
                                                { (yyval.evaluable) = new Cmm::Variables::PreIncNode(*(yyvsp[0].str), *(yyvsp[-1].str)); }
-#line 2036 "parser.tab.cpp"
+#line 2037 "parser.tab.cpp"
     break;
 
   case 99: /* expr_value: ID OP_INC  */
-#line 315 "parser.ypp"
+#line 316 "parser.ypp"
                                                { (yyval.evaluable) = new Cmm::Variables::PostIncNode(*(yyvsp[-1].str), *(yyvsp[0].str)); }
-#line 2042 "parser.tab.cpp"
+#line 2043 "parser.tab.cpp"
     break;
 
   case 100: /* expr_value: ID OP_DEC  */
-#line 316 "parser.ypp"
+#line 317 "parser.ypp"
                                                { (yyval.evaluable) = new Cmm::Variables::PostIncNode(*(yyvsp[-1].str), *(yyvsp[0].str)); }
-#line 2048 "parser.tab.cpp"
+#line 2049 "parser.tab.cpp"
     break;
 
   case 101: /* constant_value: V_STRING  */
-#line 320 "parser.ypp"
+#line 321 "parser.ypp"
                 { (yyval.evaluable) = new Cmm::Expressions::ConstantValueNode(Cmm::String(*(yyvsp[0].str))); }
-#line 2054 "parser.tab.cpp"
+#line 2055 "parser.tab.cpp"
     break;
 
   case 102: /* constant_value: V_INTEGER  */
-#line 321 "parser.ypp"
+#line 322 "parser.ypp"
                 { (yyval.evaluable) = new Cmm::Expressions::ConstantValueNode(Cmm::Integer((*(yyvsp[0].str)).c_str())); }
-#line 2060 "parser.tab.cpp"
+#line 2061 "parser.tab.cpp"
     break;
 
   case 103: /* constant_value: V_REAL  */
-#line 322 "parser.ypp"
+#line 323 "parser.ypp"
                 { (yyval.evaluable) = new Cmm::Expressions::ConstantValueNode(Cmm::Real((*(yyvsp[0].str)).c_str())); }
-#line 2066 "parser.tab.cpp"
+#line 2067 "parser.tab.cpp"
     break;
 
   case 104: /* constant_value: V_BOOLEAN  */
-#line 323 "parser.ypp"
+#line 324 "parser.ypp"
                 { (yyval.evaluable) = new Cmm::Expressions::ConstantValueNode(Cmm::Bool(*((yyvsp[0].str)) == "true")); }
-#line 2072 "parser.tab.cpp"
+#line 2073 "parser.tab.cpp"
     break;
 
   case 105: /* constant_value: V_COMPLEX  */
-#line 324 "parser.ypp"
+#line 325 "parser.ypp"
                 { 
     (yyvsp[0].str)->pop_back(); // remove the "i"
     (yyval.evaluable) = new Cmm::Expressions::ConstantValueNode(Cmm::Complex(Cmm::Real(0.0), Cmm::Real((yyvsp[0].str)->c_str()))); 
   }
-#line 2081 "parser.tab.cpp"
+#line 2082 "parser.tab.cpp"
     break;
 
   case 106: /* types_list: type_specifier  */
-#line 333 "parser.ypp"
+#line 334 "parser.ypp"
                                         { (yyval.tlist) = new Cmm::Typing::TypeListNode(nullptr, *(yyvsp[0].str)); }
-#line 2087 "parser.tab.cpp"
+#line 2088 "parser.tab.cpp"
     break;
 
   case 107: /* types_list: types_list OP_BOR type_specifier  */
-#line 334 "parser.ypp"
+#line 335 "parser.ypp"
                                         { (yyval.tlist) = new Cmm::Typing::TypeListNode((yyvsp[-2].tlist), *(yyvsp[0].str)); }
-#line 2093 "parser.tab.cpp"
+#line 2094 "parser.tab.cpp"
     break;
 
   case 108: /* type_specifier: TYPE_INT  */
-#line 338 "parser.ypp"
+#line 339 "parser.ypp"
                   { (yyval.str) = new std::string("int"); }
-#line 2099 "parser.tab.cpp"
+#line 2100 "parser.tab.cpp"
     break;
 
   case 109: /* type_specifier: TYPE_REAL  */
-#line 339 "parser.ypp"
+#line 340 "parser.ypp"
                   { (yyval.str) = new std::string("real"); }
-#line 2105 "parser.tab.cpp"
+#line 2106 "parser.tab.cpp"
     break;
 
   case 110: /* type_specifier: TYPE_STR  */
-#line 340 "parser.ypp"
+#line 341 "parser.ypp"
                   { (yyval.str) = new std::string("str"); }
-#line 2111 "parser.tab.cpp"
+#line 2112 "parser.tab.cpp"
     break;
 
   case 111: /* type_specifier: TYPE_COMPLEX  */
-#line 341 "parser.ypp"
+#line 342 "parser.ypp"
                   { (yyval.str) = new std::string("complex"); }
-#line 2117 "parser.tab.cpp"
+#line 2118 "parser.tab.cpp"
     break;
 
   case 112: /* type_specifier: TYPE_BOOL  */
-#line 342 "parser.ypp"
+#line 343 "parser.ypp"
                   { (yyval.str) = new std::string("bool"); }
-#line 2123 "parser.tab.cpp"
+#line 2124 "parser.tab.cpp"
     break;
 
   case 113: /* type_specifier: TYPE_VOID  */
-#line 343 "parser.ypp"
+#line 344 "parser.ypp"
                   { (yyval.str) = new std::string("void"); }
-#line 2129 "parser.tab.cpp"
+#line 2130 "parser.tab.cpp"
     break;
 
 
-#line 2133 "parser.tab.cpp"
+#line 2134 "parser.tab.cpp"
 
       default: break;
     }
@@ -2322,4 +2323,4 @@ yyreturnlab:
   return yyresult;
 }
 
-#line 346 "parser.ypp"
+#line 347 "parser.ypp"

@@ -151,6 +151,39 @@ namespace Namespace::Program {
 //         throw VariableNotFoundError("[Ref: " + next_target + "]");
 //     }
 
+    static std::pair<bool, std::vector<bool>> SignatureMatch(const Cmm::FunctionDefinitionSignature& signature, const std::vector<Cmm::ValueType>& params, int i = 0, int j = 0, std::vector<bool> set = {}) {
+        if (i == signature.first.size() && j == params.size()) {
+            return {true, set}; // both done
+        }
+
+        if (i == signature.first.size()) {
+            return {false, {}}; // just one of them is done
+        }
+
+        if (j < params.size() && signature.first[i] != params[j]) { // param didn't match
+            if (signature.second[i]) { // but it's optional
+                std::vector<bool> newset = set;
+                newset.push_back(false);
+                return SignatureMatch(signature, params, i + 1, j, newset); // try to skip this param
+            }
+        } else { // param did match .. but we might actually also skip it
+            // attempt 1: add it
+            std::vector<bool> newset = set;
+            newset.push_back(true);
+            auto result = SignatureMatch(signature, params, i + 1, j + 1, newset);
+            if (result.first) return result; // that worked
+
+            // attempt 2: skip it
+            if (signature.second[i]) {
+                newset = set;
+                newset.push_back(false);
+                return SignatureMatch(signature, params, i + 1, j, newset);
+            }
+        }
+
+        return {false, {}}; // everything failed
+    }
+
     VariableBlock & getVariable(const std::string &name) {
         ProgramBlock& block = getCurrentProgram();
 
@@ -173,7 +206,7 @@ namespace Namespace::Program {
         throw VariableNotFoundError(name);
     }
 
-    void createFunction(const FunctionSignature &signature, Functional::FunctionNode* node) {
+    void createFunction(const std::string& name, const FunctionDefinitionSignature &signature, Functional::FunctionDeclarationNode* node) {
         ProgramBlock& block = getCurrentProgram();
         if (block.stack.empty()) {
             throw NoStackError();
@@ -181,28 +214,35 @@ namespace Namespace::Program {
 
         Scope& scope = block.stack.back();
 
-        auto it1 = scope.functions.find(signature.first);
+        auto it1 = scope.functions.find(name);
         if (it1 != scope.functions.end()) {
-            if (it1->second.find(signature.second) != it1->second.end()) {
-                throw AlreadyDefinedError(stringfy(signature));
+            for (auto& [k, v] : it1->second) {
+                if (SignatureMatch(k, signature.first).first || SignatureMatch(signature, k.first).first) {
+                    // if I match them .. or they match me (this feels wrong .. but can't really think of case where this failes ..
+                    throw AlreadyDefinedError(stringfy({name, signature.first}));
+                }
             }
         } else {
-            scope.functions[signature.first] = {};
-            it1 = scope.functions.find(signature.first);
+            scope.functions[name] = {};
+            it1 = scope.functions.find(name);
         }
 
         if (block.stack.size() == 1) { // creating a function on the global scope
-            auto it2 = block.native_functions.find(signature.first);
-            if (it2 != block.native_functions.end() && it2->second.find(signature.second) != it2->second.end()) {
-                throw AlreadyDefinedError(stringfy(signature));
+            auto it2 = block.native_functions.find(name);
+            if (it2 != block.native_functions.end()) {
+                for (auto& [k, v] : it2->second) {
+                    if (SignatureMatch(k, signature.first).first || SignatureMatch(signature, k.first).first) {
+                        throw AlreadyDefinedError(stringfy({name, signature.first}));
+                    }
+                }
             }
         }
 
 
-        scope.functions[signature.first][signature.second] = node;
+        scope.functions[name][signature] = node;
     }
 
-    void createFunction(const FunctionSignature &signature, NativeFunction handler) {
+    void createFunction(const std::string& name, const FunctionDefinitionSignature &signature, NativeFunction handler) {
         ProgramBlock& block = getCurrentProgram();
         if (block.stack.empty()) {
             throw NoStackError();
@@ -210,91 +250,93 @@ namespace Namespace::Program {
 
         Scope& scope = block.stack[0];
 
-        auto it1 = block.native_functions.find(signature.first);
+        auto it1 = block.native_functions.find(name);
         if (it1 != block.native_functions.end()) {
-            if (it1->second.find(signature.second) != it1->second.end()) {
-                throw AlreadyDefinedError(stringfy(signature));
+            for (auto& [k, v] : it1->second) {
+                if (SignatureMatch(k, signature.first).first || SignatureMatch(signature, k.first).first) {
+                    // if I match them .. or they match me (this feels wrong .. but can't really think of case where this failes ..
+                    throw AlreadyDefinedError(stringfy({name, signature.first}));
+                }
             }
         } else {
-            block.native_functions[signature.first] = {};
+            block.native_functions[name] = {};
         }
 
-        auto it2 = scope.functions.find(signature.first);
+        auto it2 = scope.functions.find(name);
         if (it2 != scope.functions.end()) {
-            if (it2->second.find(signature.second) != it2->second.end()) {
-                throw AlreadyDefinedError(stringfy(signature));
+            for (auto& [k, v] : it2->second) {
+                if (SignatureMatch(k, signature.first).first || SignatureMatch(signature, k.first).first) {
+                    throw AlreadyDefinedError(stringfy({name, signature.first}));
+                }
             }
         }
 
-        block.native_functions[signature.first][signature.second] = handler;
+        block.native_functions[name][signature] = {handler, nullptr};
     }
 
-    void validateNativeExists(const FunctionSignature &signature) {
+    void attachNativeFunctionDefinition(const std::string& name, const FunctionDefinitionSignature& signature, Functional::FunctionDeclarationNode* node) {
         ProgramBlock& block = getCurrentProgram();
         if (block.stack.size() > 1) {
             // not in the top level
             throw NativeError("Native functions can only be created on the top level of the program.");
         }
 
-        auto it = block.native_functions.find(signature.first);
+        auto it = block.native_functions.find(name);
         if (it == block.native_functions.end()) {
-            throw FunctionNotFoundError(stringfy(signature) + ":native");
+            throw FunctionNotFoundError(stringfy({name, signature.first}) + ":native");
         }
 
-        if (it->second.find(signature.second) == it->second.end()) {
-            throw FunctionNotFoundError(stringfy(signature) + ":native");
-        }
-    }
-
-    static ValueObject callFunctionNative(const FunctionSignature& signature, const std::vector<ValueObject>& params) {
-        ProgramBlock& block = getCurrentProgram();
-
-        auto it = block.native_functions.find(signature.first);
-        if (it != block.native_functions.end()) {
-            auto func_obj = it->second.find(signature.second);
-            if (func_obj == it->second.end()) {
-                throw FunctionNotFoundError(stringfy(signature));
+        auto exists = false;
+        for (auto& [k, v] : it->second) {
+            if (SignatureMatch(k, signature.first).first || SignatureMatch(signature, k.first).first) {
+                if (exists) {
+                    throw AlreadyDefinedError(stringfy({name, signature.first}));
+                }
+                v.second = node;
+                node->handler = v.first;
+                exists = true;
             }
-
-            const auto obj = func_obj->second;
-            // do the actual calling
-            const ValueObject result = obj(signature, params);
-            return result;
         }
 
-        throw FunctionNotFoundError(stringfy(signature));
+        if (!exists) {
+            throw FunctionNotFoundError(stringfy({name, signature.first}) + ":native");
+        }
     }
 
-
-    ValueObject callFunction(const FunctionSignature& signature, const std::vector<ValueObject>& params) {
-
-        try {
-            return callFunctionNative(signature, params);
-        } catch (FunctionNotFoundError& e) {
-            // do nothing
-        }
-
-        // bottom up search the function signature
+    std::pair<Functional::FunctionDeclarationNode*, std::vector<bool>> getFunction(const FunctionSignature &signature) {
+        // first search normal functions
         ProgramBlock& block = getCurrentProgram();
         int scope = block.stack.size() - 1;
         while (scope >= 0) {
             auto it = block.stack[scope].functions.find(signature.first);
             if (it != block.stack[scope].functions.end()) {
-                auto func_obj = it->second.find(signature.second);
-                if (func_obj == it->second.end()) {
-                    throw FunctionNotFoundError(stringfy(signature));
-                }
 
-                const auto obj = func_obj->second;
-                // do the actual calling
-                ValueObject result = obj->exec(params);
-                return result;
+                for (auto& [k, v]: it->second) {
+                    auto result = SignatureMatch(k, signature.second);
+                    if (result.first) {
+                        return {v, result.second};
+                    }
+                }
             }
             scope --;
         }
 
+        //then try to call native ones
+        auto it = block.native_functions.find(signature.first);
+        if (it != block.native_functions.end()) {
+            for (auto& [k, v]: it->second) {
+                auto result = SignatureMatch(k, signature.second);
+                if (result.first) {
+                    if (!v.second) {
+                        return {v.second, result.second};
+                    }
+                }
+            }
+        }
+
         throw FunctionNotFoundError(stringfy(signature));
     }
+
 
     NoStackError::NoStackError() = default;
 

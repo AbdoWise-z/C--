@@ -9,8 +9,8 @@
 #endif
 
 extern "C" {
-    void internal_native_insert(const Cmm::FunctionSignature &signature, Cmm::NativeFunction handler) {
-        Cmm::Program::createFunction(signature, handler);
+    void internal_native_insert(const std::string& name, const Cmm::FunctionDefinitionSignature &signature, Cmm::NativeFunction handler) {
+        Cmm::Program::createFunction(name, signature, handler);
     }
 }
 
@@ -35,13 +35,13 @@ static bool loadLibraryAndInitialize(const std::string& libPath) {
     }
 
     // Define function pointer type
-    typedef void (*InitFunc)(Cmm::NativeAddFunction);
+    // typedef void (*InitFunc)(Cmm::NativeAddFunction);
 
     // Get `init` function pointer
 #ifdef _WIN32
     auto init = reinterpret_cast<InitFunc>(GetProcAddress(handle, "init"));
 #else
-    auto init = reinterpret_cast<InitFunc>(dlsym(handle, "init"));
+    auto init = reinterpret_cast<Cmm::NativeInitFunction>(dlsym(handle, "init"));
 #endif
 
     if (!init) {

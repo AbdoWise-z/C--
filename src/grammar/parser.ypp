@@ -225,18 +225,19 @@ scope_stmt:
   ;
 func_def:
     MISC_FUNC ID D_LPAREN func_arg_list D_RPAREN D_ARROW types_list D_LBRACE statements_list D_RBRACE {
-      $$ = new Cmm::Functional::FunctionDeclarationNode(new Cmm::Functional::FunctionNode(
+      $$ = new Cmm::Functional::FunctionDeclarationNode(
         dynamic_cast<Cmm::Functional::FunctionArgumentListNode*>($4),
         dynamic_cast<Cmm::Program::StatementListNode*>($9),
         *$2,
         $7
-      ));
+      );
   }
   | MISC_FUNC ID D_LPAREN func_arg_list D_RPAREN D_ARROW types_list OP_ASSIGN MISC_NATIVE {
-      $$ = new Cmm::Functional::NativeFunctionDeclarationNode(
+      $$ = new Cmm::Functional::FunctionDeclarationNode(
         dynamic_cast<Cmm::Functional::FunctionArgumentListNode*>($4),
-        $7,
-        *$2
+        nullptr,
+        *$2,
+        $7
       );
    }
   ;

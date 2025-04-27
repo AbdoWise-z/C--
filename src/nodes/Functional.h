@@ -10,28 +10,34 @@ namespace Namespace::Functional {
     class FunctionArgumentNode;
     class FunctionArgumentListNode;
     class FunctionCallNode;
-    class FunctionNode;
 
 
 
-    class FunctionDeclarationNode: public ExecutableNode {
+    class FunctionDeclarationNode: public ExecutableNode, public Control::ReturnPointNode {
     public:
-        FunctionNode* node;
-        explicit FunctionDeclarationNode(FunctionNode* node);
+        FunctionArgumentListNode* arguments;
+        Program::StatementListNode* function;
+        std::string id;
+        Typing::TypeListNode* returnType;
+
+        NativeFunction handler;
+
+        explicit FunctionDeclarationNode(FunctionArgumentListNode* arguments, Program::StatementListNode* function, std::string id, Typing::TypeListNode* returnType);
         void exec() override;
+        virtual ValueObject invoke(const std::vector<ValueObject>&);
         ~FunctionDeclarationNode() override;
     };
 
-    class NativeFunctionDeclarationNode: public ExecutableNode {
-    public:
-        FunctionArgumentListNode* arguments;
-        Typing::TypeListNode* returnType;
-        std::string id;
-
-        explicit NativeFunctionDeclarationNode(FunctionArgumentListNode* arguments, Typing::TypeListNode* returnType, std::string id);
-        void exec() override;
-        ~NativeFunctionDeclarationNode() override;
-    };
+    // class NativeFunctionDeclarationNode: public ExecutableNode {
+    // public:
+    //     FunctionArgumentListNode* arguments;
+    //     Typing::TypeListNode* returnType;
+    //     std::string id;
+    //
+    //     explicit NativeFunctionDeclarationNode(FunctionArgumentListNode* arguments, Typing::TypeListNode* returnType, std::string id);
+    //     void exec() override;
+    //     ~NativeFunctionDeclarationNode() override;
+    // };
 
     class FunctionArgumentNode: public ASTNode {
     public:
@@ -69,19 +75,19 @@ namespace Namespace::Functional {
         ValueObject eval() override;
     };
 
-    class FunctionNode: public Control::ReturnPointNode {
-    public:
-        FunctionArgumentListNode* arguments;
-        Program::StatementListNode* function;
-        std::string id;
-        Typing::TypeListNode* returnType;
-
-        FunctionNode(FunctionArgumentListNode* arguments, Program::StatementListNode* function, std::string id, Typing::TypeListNode* returnType);
-
-        virtual void decl();
-        virtual ValueObject exec(const std::vector<ValueObject>&);
-        ~FunctionNode() override;
-    };
+    // class FunctionNode: public Control::ReturnPointNode {
+    // public:
+    //     FunctionArgumentListNode* arguments;
+    //     Program::StatementListNode* function;
+    //     std::string id;
+    //     Typing::TypeListNode* returnType;
+    //
+    //     FunctionNode(FunctionArgumentListNode* arguments, Program::StatementListNode* function, std::string id, Typing::TypeListNode* returnType);
+    //
+    //     virtual void decl();
+    //     virtual ValueObject exec(const std::vector<ValueObject>&);
+    //     ~FunctionNode() override;
+    // };
 };
 
 

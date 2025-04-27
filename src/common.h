@@ -22,11 +22,11 @@ namespace Cmm {
     };
 
     typedef std::pair<std::vector<ValueType>, std::vector<bool>>  FunctionDefinitionSignature;
-
     typedef std::pair<std::string, std::vector<ValueType>> FunctionSignature;
+
     typedef ValueObject (*NativeFunction)( const FunctionSignature&, std::vector<ValueObject> );
-    typedef void (* NativeAddFunction )( const FunctionSignature&, NativeFunction );
-    typedef void (* NativeLoad ) (NativeAddFunction);
+    typedef void (* NativeAddFunction )( const std::string&, const FunctionDefinitionSignature&, NativeFunction );
+    typedef void (* NativeInitFunction ) (NativeAddFunction);
 
 }
 #endif //NATIVE_H

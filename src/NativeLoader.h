@@ -9,7 +9,6 @@
 
 namespace Cmm::NativeLoader {
     void LoadNative(const std::string& path);
-
 };
 
 

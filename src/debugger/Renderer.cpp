@@ -470,7 +470,7 @@ static void buildStack(std::vector<stack>& stacks, bool skip_empty = false) {
                 Cmm::FunctionSignature signature;
 
                 _stack.variables.push_back({
-                    .name = Cmm::Program::stringfy({func.first, overloads.first}),
+                    .name = Cmm::Program::stringfy({func.first, overloads.first.first}),
                     .type = "func",
                     .value = "native"
             });
@@ -507,7 +507,7 @@ static void buildStack(std::vector<stack>& stacks, bool skip_empty = false) {
 
             for (const auto& overloads: func.second) {
                 _stack.variables.push_back({
-                .name = Cmm::Program::stringfy({func.first, overloads.first}),
+                .name = Cmm::Program::stringfy({func.first, overloads.first.first}),
                 .type = "func",
                 .value = "(" + listTypes(overloads.second->returnType) + ")"
             });

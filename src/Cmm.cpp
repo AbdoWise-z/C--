@@ -185,10 +185,19 @@ void compile_code(const std::string& file_path, const std::string& include_path,
     try {
         auto m_path = FileUtils::getSelfPath();
         m_path = std::filesystem::path(m_path).parent_path().string();
-        // std::cout << m_path << std::endl;
+
+        auto paths = {
+            m_path + "/..",
+            m_path + "/../Cmm",
+            m_path + "/../Cmm/std" ,
+            m_path + "/Cmm/std" ,
+            m_path + "/std" ,
+            m_path, include_path
+        };
+
+        std::cout << m_path << std::endl;
         auto [code, load] = Cmm::PreProcessor::processContent(
-            wrapper_code,
-            {m_path + "/..", m_path + "/../Cmm", m_path + "/../Cmm/std" , m_path + "/Cmm/std" , m_path + "/std" , m_path, include_path}
+            wrapper_code, paths
         );
 
         // auto lines = splitLines(code);

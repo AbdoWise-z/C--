@@ -298,15 +298,20 @@ static std::string getSwitchExitLabel(CodeGenContext* context) {
 }
 
 
-static std::pair<std::string, Cmm::ValueType> quoteStrings(std::pair<std::string, Cmm::ValueType> in) {
-    if (in.second == Cmm::V_String) {
-        return {"\"" + StringUtils::escapeString(in.first) + "\"", in.second};
+static std::tuple<std::string, Cmm::ValueType, bool> quoteStrings(std::tuple<std::string, Cmm::ValueType, bool> in) {
+
+    if (get<1>(in) == Cmm::V_String && !get<2>(in)) {
+        return {"\"" + StringUtils::escapeString( get<0>(in) ) + "\"", get<1>(in), get<2>(in)};
     }
 
     return in;
 }
 
-static std::pair<std::string, Cmm::ValueType> writeExpression(Cmm::EvaluableNode* node, CodeGenContext* context, size_t indentation, std::ostream& out) {
+static std::pair<std::string, Cmm::ValueType> asPair(std::tuple<std::string, Cmm::ValueType, bool> in) {
+    return {get<0>(in), get<1>(in)};
+}
+
+static std::tuple<std::string, Cmm::ValueType, bool> writeExpression(Cmm::EvaluableNode* node, CodeGenContext* context, size_t indentation, std::ostream& out) {
     if (auto mNode = dynamic_cast<Cmm::Variables::PreIncNode*>(node)) {
         auto type = Cmm::V_Any;
 
@@ -329,7 +334,7 @@ static std::pair<std::string, Cmm::ValueType> writeExpression(Cmm::EvaluableNode
 
         writeQuad(out, indentation, (mNode->op == "++" ? OP_PLUS : OP_MINUS), mNode->name, "1", mNode->name, context);
 
-        return {mNode->name, type};
+        return {mNode->name, type, true};
     }
 
     if (auto mNode = dynamic_cast<Cmm::Variables::PostIncNode*>(node)) {
@@ -358,19 +363,19 @@ static std::pair<std::string, Cmm::ValueType> writeExpression(Cmm::EvaluableNode
         writeQuad(out, indentation, OP_ASSIGN                               , mNode->name, "" , tName, context);
         writeQuad(out, indentation, (mNode->op == "++" ? OP_PLUS : OP_MINUS), mNode->name, "1", mNode->name, context);
 
-        return {tName, type};
+        return {tName, type, true};
     }
 
     if (auto mNode = dynamic_cast<Cmm::Expressions::VariableNode*>(node)) {
         try {
             auto _val = varTypeOrError(mNode->name, context);
-            return {mNode->name, _val.first};
+            return {mNode->name, _val.first, true};
         } catch (Cmm::Program::VariableNotFoundError& e) {
             CodeGenError err;
             err.exception = e.what(),
             err.line = node->_virtualLineNumber;
             context->errors.push_back(err);
-            return {mNode->name, Cmm::V_Any};
+            return {mNode->name, Cmm::V_Any, true};
         }
     }
 
@@ -382,13 +387,13 @@ static std::pair<std::string, Cmm::ValueType> writeExpression(Cmm::EvaluableNode
 
     if (auto mNode = dynamic_cast<Cmm::Expressions::CastNode*>(node)) {
         auto _internalResult = writeExpression(mNode->child, context, indentation, out);
-        auto _cL = Cmm::CastConversionMap.find(_internalResult.second);
+        auto _cL = Cmm::CastConversionMap.find(get<1>(_internalResult));
         if (!_cL->second.contains(mNode->targetType)) {
             CodeGenWarn err;
-            err.exception = std::string(Cmm::ValuesHelper::ConversionError(_internalResult.second, mNode->targetType).what());
+            err.exception = std::string(Cmm::ValuesHelper::ConversionError(get<1>(_internalResult), mNode->targetType).what());
             err.line = node->_virtualLineNumber;
 
-            if (_internalResult.second == Cmm::V_Any) {
+            if (get<1>(_internalResult) == Cmm::V_Any) {
                 err.exception = "Conversions with type [any] depends on runtime value.";
             }
 
@@ -401,29 +406,29 @@ static std::pair<std::string, Cmm::ValueType> writeExpression(Cmm::EvaluableNode
             out,
             indentation,
             std::string(OP_CAST) + " (" + Cmm::ValuesHelper::ValueTypeAsString(mNode->targetType) + ")",
-            _internalResult.first,
+            get<0>(_internalResult),
             "",
             tName,
             context
             );
-        return {tName, mNode->targetType};
+        return {tName, mNode->targetType, true};
     }
 
 
     if (auto mNode = dynamic_cast<Cmm::Expressions::ConstantValueNode*>(node)) {
         //fixme: maybe add some quotes to strings ? idk
-        return {Cmm::ValuesHelper::toString(mNode->value), mNode->value.type};
+        return {Cmm::ValuesHelper::toString(mNode->value), mNode->value.type, false};
     }
 
     if (auto mNode = dynamic_cast<Cmm::Expressions::NotNode*>(node)) {
         auto _internalResult = writeExpression(mNode->child, context, indentation, out);
-        auto _cL = Cmm::CastConversionMap.find(_internalResult.second);
+        auto _cL = Cmm::CastConversionMap.find(get<1>(_internalResult));
         if (!_cL->second.contains(Cmm::V_Bool)) {
             CodeGenWarn err;
-            err.exception = std::string(Cmm::ValuesHelper::ConversionError(_internalResult.second, Cmm::V_Bool).what());
+            err.exception = std::string(Cmm::ValuesHelper::ConversionError(get<1>(_internalResult), Cmm::V_Bool).what());
             err.line = node->_virtualLineNumber;
 
-            if (_internalResult.second == Cmm::V_Any) {
+            if (get<1>(_internalResult) == Cmm::V_Any) {
                 err.exception = "Conversions with type [any] depends on runtime value.";
             }
 
@@ -436,24 +441,24 @@ static std::pair<std::string, Cmm::ValueType> writeExpression(Cmm::EvaluableNode
             out,
             indentation,
             OP_NOT,
-            _internalResult.first,
+            get<0>(_internalResult),
             "",
             tName,
             context
             );
 
-        return {tName, Cmm::V_Bool};
+        return {tName, Cmm::V_Bool, true};
     }
 
     if (auto mNode = dynamic_cast<Cmm::Expressions::InvertNode*>(node)) {
         auto _internalResult = writeExpression(mNode->child, context, indentation, out);
-        auto _cL = Cmm::CastConversionMap.find(_internalResult.second);
+        auto _cL = Cmm::CastConversionMap.find(get<1>(_internalResult));
         if (!_cL->second.contains(Cmm::V_Integer)) {
             CodeGenWarn err;
-            err.exception = std::string(Cmm::ValuesHelper::ConversionError(_internalResult.second, Cmm::V_Integer).what());
+            err.exception = std::string(Cmm::ValuesHelper::ConversionError(get<1>(_internalResult), Cmm::V_Integer).what());
             err.line = node->_virtualLineNumber;
 
-            if (_internalResult.second == Cmm::V_Any) {
+            if (get<1>(_internalResult) == Cmm::V_Any) {
                 err.exception = "Conversions with type [any] depends on runtime value.";
             }
 
@@ -466,27 +471,27 @@ static std::pair<std::string, Cmm::ValueType> writeExpression(Cmm::EvaluableNode
             out,
             indentation,
             OP_NOT,
-            _internalResult.first,
+            get<0>(_internalResult),
             "",
             tName,
             context
             );
 
-        return {tName, Cmm::V_Integer};
+        return {tName, Cmm::V_Integer, false};
     }
 
     if (auto mNode = dynamic_cast<Cmm::Expressions::NegatedNode*>(node)) {
         auto _internalResult = writeExpression(mNode->child, context, indentation, out);
-        if (_internalResult.second == Cmm::V_Any || _internalResult.second == Cmm::V_String) {
+        if (get<1>(_internalResult) == Cmm::V_Any || get<1>(_internalResult) == Cmm::V_String) {
             CodeGenWarn err;
-            err.exception = std::string(Cmm::ValuesHelper::ConversionError(_internalResult.second, Cmm::V_Any).what());
+            err.exception = std::string(Cmm::ValuesHelper::ConversionError(get<1>(_internalResult), Cmm::V_Any).what());
             err.line = node->_virtualLineNumber;
 
-            if (_internalResult.second == Cmm::V_Any) {
+            if (get<1>(_internalResult) == Cmm::V_Any) {
                 err.exception = "Conversions with type [any] depends on runtime value.";
             }
 
-            if (_internalResult.second == Cmm::V_String) {
+            if (get<1>(_internalResult) == Cmm::V_String) {
                 err.exception = "Type [str] doesn't support negation.";
             }
 
@@ -499,13 +504,13 @@ static std::pair<std::string, Cmm::ValueType> writeExpression(Cmm::EvaluableNode
             out,
             indentation,
             OP_MINUS,
-            _internalResult.first,
+            get<0>(_internalResult),
             "",
             tName,
             context
             );
 
-        return {tName, Cmm::V_Integer};
+        return {tName, Cmm::V_Integer, true};
     }
 
 
@@ -519,8 +524,8 @@ static std::pair<std::string, Cmm::ValueType> writeExpression(Cmm::EvaluableNode
 
         auto temp = getTempVarName(context);
 
-        writeQuad(out, indentation, mNode->op, left_v.first, right_v.first, temp, context);
-        auto it = Cmm::TermConversionMap.find({left_v.second, right_v.second});
+        writeQuad(out, indentation, mNode->op, get<0>(left_v), get<0>(right_v), temp, context);
+        auto it = Cmm::TermConversionMap.find({get<1>(left_v), get<1>(right_v)});
         auto result_type = Cmm::V_Any;
         if (it == Cmm::TermConversionMap.end()) {
             // one of them is V_void
@@ -529,7 +534,7 @@ static std::pair<std::string, Cmm::ValueType> writeExpression(Cmm::EvaluableNode
             err.line = node->_virtualLineNumber;
             context->errors.push_back(err);
         } else result_type = it->second;
-        return {temp, result_type};
+        return {temp, result_type, true};
     }
 
     if (auto mNode = dynamic_cast<Cmm::Functional::FunctionCallNode*>(node)) {
@@ -539,8 +544,8 @@ static std::pair<std::string, Cmm::ValueType> writeExpression(Cmm::EvaluableNode
             Cmm::FunctionSignature func = {mNode->id, {}};
             for (auto param: mNode->funcParam->params) {
                 auto res = quoteStrings(writeExpression(param, context, indentation, out));
-                func.second.push_back(res.second);
-                writeQuad(out, indentation, OP_PARAM, res.first, "", "", context);
+                func.second.push_back(get<1>(res));
+                writeQuad(out, indentation, OP_PARAM, get<0>(res), "", "", context);
                 param_count++;
             }
             func_t = funcTypeOrError(func, context);
@@ -553,15 +558,15 @@ static std::pair<std::string, Cmm::ValueType> writeExpression(Cmm::EvaluableNode
 
         if (func_t == Cmm::V_Void) {
             writeQuad(out, indentation, OP_CALL, mNode->id, std::to_string(param_count), "", context);
-            return {"void_type", func_t};
+            return {"void_type", func_t, true};
         }
 
         auto tVar = getTempVarName(context);
         writeQuad(out, indentation, OP_CALL, mNode->id, std::to_string(param_count), tVar, context);
-        return {getTempVarName(context), func_t};
+        return {tVar, func_t, true};
     }
 
-    return {"__THIS_SHOULD_NEVER_HAPPEN__", Cmm::V_String};
+    return {"__THIS_SHOULD_NEVER_HAPPEN__", Cmm::V_String, true};
 }
 
 static void generateQuads_recv(Cmm::ASTNode* node, CodeGenContext* context, size_t indentation, std::ostream& out) {
@@ -574,7 +579,7 @@ static void generateQuads_recv(Cmm::ASTNode* node, CodeGenContext* context, size
             context->errors.push_back(err);
         } else {
 
-            auto expr = quoteStrings(writeExpression(mNode->value, context, indentation, out));
+            auto expr = asPair(quoteStrings(writeExpression(mNode->value, context, indentation, out)));
             writeQuad(out, indentation, OP_ASSIGN, expr.first, "", mNode->name, context);
 
             if (expr.second == Cmm::V_Void) {
@@ -624,13 +629,13 @@ static void generateQuads_recv(Cmm::ASTNode* node, CodeGenContext* context, size
                 context->warnings.push_back(err);
 
                 auto _shadowNode = new Cmm::Expressions::CastNode(mNode->value, Cmm::ValuesHelper::ValueTypeAsString(_externalType));
-                auto expr = quoteStrings(writeExpression(_shadowNode, context, indentation + 1, out));
+                auto expr = asPair(quoteStrings(writeExpression(_shadowNode, context, indentation + 1, out)));
                 _shadowNode->child = nullptr;
                 delete _shadowNode;
 
                 writeQuad(out, indentation, OP_ASSIGN, expr.first, "", mNode->name, context);
             } else {
-                auto expr = quoteStrings(writeExpression(mNode->value, context, indentation, out));
+                auto expr = asPair(quoteStrings(writeExpression(mNode->value, context, indentation, out)));
                 writeQuad(out, indentation, OP_ASSIGN, expr.first, "", mNode->name, context);
             }
 
@@ -686,13 +691,13 @@ static void generateQuads_recv(Cmm::ASTNode* node, CodeGenContext* context, size
             context->warnings.push_back(err);
 
             auto _shadowNode = new Cmm::Expressions::CastNode(mNode->expr, Cmm::ValuesHelper::ValueTypeAsString(_externalType));
-            auto expr = quoteStrings(writeExpression(_shadowNode, context, indentation + 1, out));
+            auto expr = asPair(quoteStrings(writeExpression(_shadowNode, context, indentation + 1, out)));
             _shadowNode->child = nullptr;
             delete _shadowNode; // nobody saw anything ...
 
             writeQuad(out, indentation, OP_ASSIGN, expr.first, "", mNode->name, context);
         } else {
-            auto expr = quoteStrings(writeExpression(mNode->expr, context, indentation, out));
+            auto expr = asPair(quoteStrings(writeExpression(mNode->expr, context, indentation, out)));
             writeQuad(out, indentation, OP_ASSIGN, expr.first, "", mNode->name, context);
         }
     }
@@ -790,12 +795,12 @@ static void generateQuads_recv(Cmm::ASTNode* node, CodeGenContext* context, size
                     auto res_type = inferType(i->defaultValue, context);
                     if (res_type != type) {
                         auto _shadowNode = new Cmm::Expressions::CastNode(i->defaultValue, Cmm::ValuesHelper::ValueTypeAsString(type));
-                        auto expr = quoteStrings(writeExpression(_shadowNode, context, indentation, out));
+                        auto expr = asPair(quoteStrings(writeExpression(_shadowNode, context, indentation, out)));
                         _shadowNode->child = nullptr;
                         delete _shadowNode;
                         value = expr.first;
                     } else {
-                        auto expr = quoteStrings(writeExpression(i->defaultValue, context, indentation, out));
+                        auto expr = asPair(quoteStrings(writeExpression(i->defaultValue, context, indentation, out)));
                         value = expr.first;
                     }
                 }
@@ -976,12 +981,12 @@ static void generateQuads_recv(Cmm::ASTNode* node, CodeGenContext* context, size
         std::string cond_name;
         if (result_type != Cmm::V_Bool) {
             auto _shadowNode = new Cmm::Expressions::CastNode(mNode->condition, "bool");
-            auto expr = quoteStrings(writeExpression(_shadowNode, context, indentation, out));
+            auto expr = asPair(quoteStrings(writeExpression(_shadowNode, context, indentation, out)));
             _shadowNode->child = nullptr;
             delete _shadowNode; // nobody saw anything ...
             cond_name = expr.first;
         } else {
-            auto expr = quoteStrings(writeExpression(mNode->condition, context, indentation, out));
+            auto expr = asPair(quoteStrings(writeExpression(mNode->condition, context, indentation, out)));
             cond_name = expr.first;
         }
 
@@ -1030,12 +1035,12 @@ static void generateQuads_recv(Cmm::ASTNode* node, CodeGenContext* context, size
             std::string cond_name;
             if (result_type != Cmm::V_Bool) {
                 auto _shadowNode = new Cmm::Expressions::CastNode(mNode->condition, "bool");
-                auto expr = quoteStrings(writeExpression(_shadowNode, context, indentation + 1, out));
+                auto expr = asPair(quoteStrings(writeExpression(_shadowNode, context, indentation + 1, out)));
                 _shadowNode->child = nullptr;
                 delete _shadowNode; // nobody saw anything ...
                 cond_name = expr.first;
             } else {
-                auto expr = quoteStrings(writeExpression(mNode->condition, context, indentation + 1, out));
+                auto expr = asPair(quoteStrings(writeExpression(mNode->condition, context, indentation + 1, out)));
                 cond_name = expr.first;
             }
 
@@ -1061,7 +1066,7 @@ static void generateQuads_recv(Cmm::ASTNode* node, CodeGenContext* context, size
     }
 
     if (auto mNode = dynamic_cast<Cmm::Control::SwitchNode*>(node)) {
-        auto expr = writeExpression(mNode->value, context, indentation, out);
+        auto expr = asPair(quoteStrings(writeExpression(mNode->value, context, indentation, out)));
         auto result_type = expr.second;
 
         auto exit = getSwitchExitLabel(context);
@@ -1078,12 +1083,12 @@ static void generateQuads_recv(Cmm::ASTNode* node, CodeGenContext* context, size
                 auto case_type = inferType(_case->value, context);
                 if (result_type != case_type) {
                     auto _shadowNode = new Cmm::Expressions::CastNode(_case->value, Cmm::ValuesHelper::ValueTypeAsString(result_type));
-                    auto sub_expr = quoteStrings(writeExpression(_shadowNode, context, indentation + 1, out));
+                    auto sub_expr = asPair(quoteStrings(writeExpression(_shadowNode, context, indentation + 1, out)));
                     _shadowNode->child = nullptr;
                     delete _shadowNode;
                     cond_name = sub_expr.first;
                 } else {
-                    auto sub_expr = quoteStrings(writeExpression(_case->value, context, indentation + 1, out));
+                    auto sub_expr = asPair(quoteStrings(writeExpression(_case->value, context, indentation + 1, out)));
                     cond_name = sub_expr.first;
                 }
             }
@@ -1170,12 +1175,12 @@ static void generateQuads_recv(Cmm::ASTNode* node, CodeGenContext* context, size
                     context->warnings.push_back(err);
 
                     auto _shadowNode = new Cmm::Expressions::CastNode(mNode->expr, Cmm::ValuesHelper::ValueTypeAsString(func_ret_type[0]));
-                    auto expr = quoteStrings(writeExpression(_shadowNode, context, indentation + 1, out));
+                    auto expr = asPair(quoteStrings(writeExpression(_shadowNode, context, indentation + 1, out)));
                     _shadowNode->child = nullptr;
                     delete _shadowNode;
                     writeQuad(out, indentation, "RETURN", expr.first, "", "", context);
                 } else {
-                    auto expr = quoteStrings(writeExpression(mNode->expr, context, indentation + 1, out));
+                    auto expr = asPair(quoteStrings(writeExpression(mNode->expr, context, indentation + 1, out)));
                     writeQuad(out, indentation, "RETURN", expr.first, "", "", context);
                 }
             } else {

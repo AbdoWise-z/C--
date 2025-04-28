@@ -496,8 +496,8 @@ namespace Cmm::Control {
         this->body = body;
         this->value = value;
 
-        body->_parent  = this;
-        value->_parent = this;
+        if (body)  body->_parent  = this;
+        if (value) value->_parent = this;
     }
 
     bool SwitchCaseNode::exec(ValueObject v, bool b) const {

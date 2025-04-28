@@ -241,7 +241,7 @@ export function activate(context: vscode.ExtensionContext) {
 			const symFile   = path.join(tmpDir, `sym_table-${Date.now()}.txt`);
 			const quadsFile = path.join(tmpDir, `quad_table-${Date.now()}.txt`);
 
-			const command = `Cmm --file '${filePath}' --I '${getParentFolder(vscode.Uri.file(filePath)).fsPath}' --symbols '${symFile}' --quads '${quadsFile}'`;
+			const command = `Cmm --file "${filePath}" --I "${getParentFolder(vscode.Uri.file(filePath)).fsPath}" --symbols "${symFile}" --quads "${quadsFile}"`;
 			const { raw, warnings, errors } = await runCmmCompiler(command);
 
 			const panel = vscode.window.createWebviewPanel(
@@ -287,7 +287,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 		const filePath  = event.document.fileName;
 		
-		const command = `Cmm --file '${filePath}' --I '${getParentFolder(vscode.Uri.file(filePath)).fsPath}' --symbols '${symFile}' --quads '${quadsFile}'`;
+		const command = `Cmm --file "${filePath}" --I "${getParentFolder(vscode.Uri.file(filePath)).fsPath}" --symbols "${symFile}" --quads "${quadsFile}"`;
 
 		const { raw, warnings, errors } = await runCmmCompiler(command);
 		console.log(raw);
@@ -326,8 +326,8 @@ function runInTerminal(action: 'run' | 'debug', fileUri?: vscode.Uri) {
 	}
 
 	let command = '';
-	if (action === 'run')   command = `Cmm --file '${filePath}' --I '${getParentFolder(vscode.Uri.file(filePath)).fsPath}'`;
-	if (action === 'debug') command = `Cmm --file '${filePath}' --I '${getParentFolder(vscode.Uri.file(filePath)).fsPath}' --debug`;
+	if (action === 'run')   command = `Cmm --file "${filePath}" --I "${getParentFolder(vscode.Uri.file(filePath)).fsPath}"`;
+	if (action === 'debug') command = `Cmm --file "${filePath}" --I "${getParentFolder(vscode.Uri.file(filePath)).fsPath}" --debug`;
 	// Use a VS Code terminal:
 	const terminal = vscode.window.createTerminal('CMM');
 	terminal.show();

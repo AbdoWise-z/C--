@@ -3,6 +3,7 @@
 func strlen(_s: str)                        -> int = native
 func charAt(_s: str, i: int)                -> str = native
 func slice(_s: str, _start: int, _end: int) -> str = native
+func charAdd(_s: str, i: int)               -> str = native
 
 func revert(_s: str) -> str {
     var out: str = "";

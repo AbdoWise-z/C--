@@ -22,6 +22,11 @@ namespace Cmm::Functional {
 
         this->_lineNumber = arguments->_lineNumber;
         this->_virtualLineNumber = arguments->_virtualLineNumber;
+
+        if (this->arguments) this->arguments->_parent = this;
+        if (this->function) this->function->_parent = this;
+        if (this->returnType) this->returnType->_parent = this;
+
     }
 
     void FunctionDeclarationNode::exec() {
@@ -127,7 +132,9 @@ namespace Cmm::Functional {
             std::string id,
             std::string type,
             EvaluableNode* defaultValue
-            ): id(std::move(id)), type(std::move(type)), defaultValue(defaultValue) {}
+            ): id(std::move(id)), type(std::move(type)), defaultValue(defaultValue) {
+        if (this->defaultValue) this->defaultValue->_parent = this;
+    }
 
     ValueObject FunctionArgumentNode::getDefaultValue() const {
         return defaultValue->eval();
@@ -151,6 +158,10 @@ namespace Cmm::Functional {
 
         if (next)
             arguments.push_back(next);
+
+        for (auto& _argument: arguments) {
+            _argument->_parent = this;
+        }
     }
 
     FunctionArgumentListNode::~FunctionArgumentListNode() {
@@ -169,6 +180,10 @@ namespace Cmm::Functional {
 
         if (next)
             params.push_back(next);
+
+        for (auto& _param: params) {
+            _param->_parent = this;
+        }
     }
 
     std::vector<ValueObject> FunctionParamListNode::getParams() const {
@@ -191,6 +206,8 @@ namespace Cmm::Functional {
         if (!this->funcParam) {
             this->funcParam = new FunctionParamListNode(nullptr, nullptr);
         }
+
+        this->funcParam->_parent = this;
     }
 
     FunctionCallNode::~FunctionCallNode() {
@@ -240,7 +257,10 @@ namespace Cmm::Functional {
         _curr_func.push(func);
         _curr_step_pos.push(0);
         _marker_node.push(new ASTNode());
+
+        _marker_node.top()->_parent = this;
         _marker_node.top()->_lineNumber = func->_lineNumber;
+        _marker_node.top()->_virtualLineNumber = func->_virtualLineNumber;
     }
 
     std::pair<ASTNode *, ValueObject> FunctionCallNode::step(ValueObject) {

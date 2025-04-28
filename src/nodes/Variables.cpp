@@ -13,6 +13,8 @@ namespace Cmm::Variables {
         this->name = std::move(name);
         this->type = std::move(type);
         this->value = value;
+
+        if (this->value) this->value->_parent = this;
     }
 
     void VariableDeclarationNode::exec() {
@@ -76,6 +78,8 @@ namespace Cmm::Variables {
         this->isConst = isConst;
         this->name = std::move(name);
         this->value = value;
+
+        if (this->value) this->value->_parent = this;
     }
 
     void InferredVariableDeclarationNode::exec() {
@@ -115,10 +119,12 @@ namespace Cmm::Variables {
     VariableAssignmentNode::VariableAssignmentNode(std::string name, EvaluableNode *value) {
         this->name = name;
         this->expr = value;
+
+        if (this->expr) this->expr->_parent = this;
     }
 
     void VariableAssignmentNode::exec() {
-        Program::VariableBlock& block = Program::getVariable(name);
+        Program::VariableBlock& block = Program::getVariable(name, this);
         ValueObject& original = block.Value;
         if (block.isConst) {
             throw Program::ConstantAssignmentError(name);
@@ -143,7 +149,7 @@ namespace Cmm::Variables {
     }
 
     ASTNode * VariableAssignmentNode::step(ValueObject mValue) {
-        Program::VariableBlock& block = Program::getVariable(name);
+        Program::VariableBlock& block = Program::getVariable(name, this);
         ValueObject& original = block.Value;
         if (block.isConst) {
             throw Program::ConstantAssignmentError(name);
@@ -179,6 +185,8 @@ namespace Cmm::Variables {
     CompoundAssignmentNode::CompoundAssignmentNode(const std::string& name, const std::string &op, EvaluableNode *value) {
         auto term = new Expressions::TermNode(new Expressions::VariableNode(name), value, op);
         this->_internal = new VariableAssignmentNode(name, term);
+
+        this->_internal->_parent = this;
     }
 
     void CompoundAssignmentNode::exec() {
@@ -215,11 +223,13 @@ namespace Cmm::Variables {
             op == "++" ? "+" : "-");
 
         this->op = op;
+
+        this->_internal->_parent = this;
     }
 
     ValueObject PreIncNode::eval() {
         auto result = _internal->eval();
-        Program::VariableBlock& block = Program::getVariable(name);
+        Program::VariableBlock& block = Program::getVariable(name, this);
         ValueObject& original = block.Value;
 
         if (block.isConst) {
@@ -245,7 +255,7 @@ namespace Cmm::Variables {
     }
 
     std::pair<ASTNode*, ValueObject> PreIncNode::step(ValueObject mValue) {
-        Program::VariableBlock& block = Program::getVariable(name);
+        Program::VariableBlock& block = Program::getVariable(name, this);
         ValueObject& original = block.Value;
         if (block.isConst) {
             throw Program::ConstantAssignmentError(name);
@@ -287,11 +297,13 @@ namespace Cmm::Variables {
             new Expressions::ConstantValueNode(Integer(1)),
             op == "++" ? "+" : "-");
         this->op = op;
+
+        this->_internal->_parent = this;
     }
 
     ValueObject PostIncNode::eval() {
         auto result = _internal->eval();
-        Program::VariableBlock& block = Program::getVariable(name);
+        Program::VariableBlock& block = Program::getVariable(name, this);
         ValueObject& original = block.Value;
         if (block.isConst) {
             throw Program::ConstantAssignmentError(name);
@@ -318,7 +330,7 @@ namespace Cmm::Variables {
     }
 
     std::pair<ASTNode*, ValueObject> PostIncNode::step(ValueObject mValue) {
-        Program::VariableBlock& block = Program::getVariable(name);
+        Program::VariableBlock& block = Program::getVariable(name, this);
         ValueObject& original = block.Value;
         if (block.isConst) {
             throw Program::ConstantAssignmentError(name);
@@ -356,8 +368,11 @@ namespace Cmm::Variables {
 
     DebuggerWaitEvalNode::DebuggerWaitEvalNode(EvaluableNode *internal) {
         this->_internal = internal;
-        this->_lineNumber = internal->_lineNumber;
 
+        this->_lineNumber = internal->_lineNumber;
+        this->_virtualLineNumber = internal->_virtualLineNumber;
+
+        this->_parent = _internal->_parent;
     }
 
     ValueObject DebuggerWaitEvalNode::eval() {

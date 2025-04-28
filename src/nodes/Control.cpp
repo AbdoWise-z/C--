@@ -14,6 +14,11 @@ Cmm::Control::IFNode::IFNode(EvaluableNode *condition, ExecutableNode *if_true, 
 
     _lineNumber = condition->_lineNumber;
     _virtualLineNumber = condition->_virtualLineNumber;
+
+    if (this->condition) this->condition->_parent = this;
+    if (this->if_true) this->if_true->_parent = this;
+    if (this->if_false) this->if_false->_parent = this;
+
 }
 
 void Cmm::Control::IFNode::exec() {
@@ -69,9 +74,15 @@ Cmm::Control::ForNode::ForNode(EvaluableNode *condition, ExecutableNode *init, E
     this->inc = inc;
     this->init = init;
     this->body = body;
+    this->_executeOnce = false;
 
     _lineNumber = condition->_lineNumber;
     _virtualLineNumber = condition->_virtualLineNumber;
+
+    if (this->condition) this->condition->_parent = this;
+    if (this->init) this->init->_parent = this;
+    if (this->body) this->body->_parent = this;
+    if (this->inc)  this->inc->_parent = this;
 }
 
 Cmm::Control::ForNode::ForNode(EvaluableNode *condition, ExecutableNode *init, ExecutableNode *inc,
@@ -82,6 +93,11 @@ Cmm::Control::ForNode::ForNode(EvaluableNode *condition, ExecutableNode *init, E
     this->init = init;
     this->body = body;
     this->_executeOnce = _executeOnce;
+
+    if (this->condition) this->condition->_parent = this;
+    if (this->init) this->init->_parent = this;
+    if (this->body) this->body->_parent = this;
+    if (this->inc)  this->inc->_parent = this;
 }
 
 void Cmm::Control::ForNode::exec() {
@@ -264,6 +280,7 @@ void Cmm::Control::ForNode::exitStack() {
 namespace Cmm::Control {
     ReturnStatementNode::ReturnStatementNode(EvaluableNode *expr) {
         this->expr = expr;
+        if (this->expr) this->expr->_parent = this;
     }
 
     void ReturnStatementNode::exec() {
@@ -318,6 +335,9 @@ namespace Cmm::Control {
 
         _lineNumber = value->_lineNumber;
         _virtualLineNumber = value->_virtualLineNumber;
+
+        body->_parent  = this;
+        value->_parent = this;
     }
 
     void SwitchNode::exec() {
@@ -381,6 +401,10 @@ namespace Cmm::Control {
         }
 
         if (next) cases.push_back(next);
+
+        for (auto& _case: cases) {
+            _case->_parent = this;
+        }
     }
 
     void SwitchBodyNode::exec(ValueObject v) const {
@@ -471,6 +495,9 @@ namespace Cmm::Control {
     SwitchCaseNode::SwitchCaseNode(ExecutableNode *body, EvaluableNode *value) {
         this->body = body;
         this->value = value;
+
+        body->_parent  = this;
+        value->_parent = this;
     }
 
     bool SwitchCaseNode::exec(ValueObject v, bool b) const {

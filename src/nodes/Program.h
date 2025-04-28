@@ -63,7 +63,7 @@ namespace Namespace::Program {
 
 
     void createVariable(const std::string& name, Cmm::ValueObject, bool isConst = false);
-    VariableBlock& getVariable(const std::string& name);
+    VariableBlock& getVariable(const std::string& name, ASTNode* _req);
 
     void createFunction(const std::string& name, const FunctionDefinitionSignature &signature, Functional::FunctionDeclarationNode*);
     void createFunction(const std::string& name, const FunctionDefinitionSignature &signature, NativeFunction handler);

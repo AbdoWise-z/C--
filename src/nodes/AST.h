@@ -18,6 +18,7 @@ namespace Namespace {
     public:
         int _lineNumber;
         int _virtualLineNumber;
+        ASTNode* _parent;
         ASTNode();
         virtual ~ASTNode() = default;
     };

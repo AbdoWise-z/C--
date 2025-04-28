@@ -31,6 +31,9 @@ Cmm::Expressions::TermNode::TermNode(EvaluableNode *left, EvaluableNode *right, 
     this->left = left;
     this->right = right;
     this->op = op;
+
+    if (this->left) this->left->_parent = this;
+    if (this->right) this->right->_parent = this;
 }
 
 Cmm::ValueObject Cmm::Expressions::TermNode::internal_eval(ValueObject left, ValueObject right) {
@@ -150,6 +153,8 @@ void Cmm::Expressions::TermNode::exitStack() {
 
 Cmm::Expressions::NegatedNode::NegatedNode(EvaluableNode *child) {
     this->child = child;
+
+    if (this->child) this->child->_parent = this;
 }
 
 Cmm::ValueObject Cmm::Expressions::NegatedNode::eval() {
@@ -206,6 +211,7 @@ void Cmm::Expressions::NegatedNode::exitStack() {
 
 Cmm::Expressions::NotNode::NotNode(EvaluableNode *child) {
     this->child = child;
+    if (this->child) this->child->_parent = this;
 }
 
 Cmm::ValueObject Cmm::Expressions::NotNode::eval() {
@@ -242,6 +248,7 @@ void Cmm::Expressions::NotNode::exitStack() {
 
 Cmm::Expressions::InvertNode::InvertNode(EvaluableNode *child) {
     this->child = child;
+    if (this->child) this->child->_parent = this;
 }
 
 Cmm::ValueObject Cmm::Expressions::InvertNode::eval() {
@@ -282,6 +289,8 @@ Cmm::Expressions::CastNode::CastNode(EvaluableNode *child, const std::string& ty
     this->targetType = ValuesHelper::StringToValueType(type);
     this->_lineNumber = child->_lineNumber;
     this->_virtualLineNumber = child->_virtualLineNumber;
+
+    if (this->child) this->child->_parent = this;
 }
 
 Cmm::ValueObject Cmm::Expressions::CastNode::eval() {
@@ -319,7 +328,7 @@ Cmm::Expressions::VariableNode::VariableNode(const std::string &n) {
 }
 
 Cmm::ValueObject Cmm::Expressions::VariableNode::eval() {
-    return ValuesHelper::clone(Program::getVariable(name).Value);
+    return ValuesHelper::clone(Program::getVariable(name, this).Value);
 }
 
 // nothing to do here
@@ -330,7 +339,7 @@ void Cmm::Expressions::VariableNode::enterStack() {
 }
 
 std::pair<Cmm::ASTNode *, Cmm::ValueObject> Cmm::Expressions::VariableNode::step(ValueObject) {
-    return {nullptr, ValuesHelper::clone(Program::getVariable(name).Value)};
+    return {nullptr, ValuesHelper::clone(Program::getVariable(name, this).Value)};
 }
 
 void Cmm::Expressions::VariableNode::exitStack() {

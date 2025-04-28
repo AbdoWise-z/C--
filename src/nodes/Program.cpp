@@ -130,7 +130,7 @@ namespace Namespace::Program {
         };
     }
 
-//     static VariableBlock& resolveRef(int scope, ValueObject val) {
+    //     static VariableBlock& resolveRef(int scope, ValueObject val) {
 //         ProgramBlock& block = getCurrentProgram();
 //         while (scope >= 0) {
 //             std::string next_target = *static_cast<std::string*>(val.value);
@@ -187,7 +187,30 @@ namespace Namespace::Program {
         return {false, {}}; // everything failed
     }
 
-    VariableBlock & getVariable(const std::string &name) {
+    static bool checkIsAncestor(ASTNode* child, int scope) {
+        if (child == nullptr) return true;
+        if (child->_parent == nullptr) {
+            std::cerr << "[Warn] 1 child node with no parent ?";
+        }
+
+        ProgramBlock& block = getCurrentProgram();
+        ASTNode* owner = nullptr;
+        while (scope >= 0) {
+            owner = block.stack[scope].owner;
+            if (owner) break;
+            --scope;
+        }
+
+        ASTNode* curr = child;
+        while (curr != nullptr) {
+            if (curr == owner) return true;
+            curr = curr->_parent;
+        }
+
+        return curr == owner; // both at the global scope
+    }
+
+    VariableBlock & getVariable(const std::string &name, ASTNode* _req) {
         ProgramBlock& block = getCurrentProgram();
 
         // search scopes from bottom to top. and try to find the variable
@@ -198,10 +221,8 @@ namespace Namespace::Program {
                 VariableBlock& block = it->second;
                 ValueObject& obj = block.Value;
 
-//                if (obj.type != V_Ref) {
+                if (checkIsAncestor(_req, scope))
                     return block;
-//                }
-//                return resolveRef(scope - 1, obj);
             }
             scope --;
         }
@@ -394,6 +415,7 @@ namespace Namespace::Program {
 
     ProgramNode::ProgramNode(ExecutableNode *source) {
         this->source = source;
+        if (this->source) this->source->_parent = this;
     }
 
     ProgramNode::ProgramNode() {
@@ -416,6 +438,7 @@ namespace Namespace::Program {
 
     ExpressionStatementNode::ExpressionStatementNode(EvaluableNode *value) {
         expr = value;
+        if (this->expr) this->expr->_parent = this;
     }
 
     void ExpressionStatementNode::exec() {
@@ -453,6 +476,10 @@ namespace Namespace::Program {
 
         if (next)
             statements.push_back(next);
+
+        for (auto& _stmnt: statements) {
+            _stmnt->_parent = this;
+        }
     }
 
     StatementListNode::~StatementListNode() {
@@ -500,6 +527,7 @@ namespace Namespace::Program {
 
     ScopeNode::ScopeNode(ExecutableNode *node) {
         this->statements = node;
+        if (this->statements) this->statements->_parent = this;
     }
 
     void ScopeNode::exec() {

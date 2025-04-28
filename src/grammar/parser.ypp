@@ -136,10 +136,6 @@ statement:
 
   | line_rule                        { $$ = nullptr; } // just a line rule
   | MARCO_CLEAR                      { $$ = new Cmm::Macros::ClearMacro(); }
-  | error                            {
-                                        yyerrok;
-                                        $$ = nullptr;
-                                     }
   ;
 
 //               ==============  CONTROL   ==============
@@ -290,42 +286,42 @@ expr_casted_term:
   ;
 
 expr_term_l0:
-    expr_term_l1 OP_OR  expr_term_l1                 { $$ = new Cmm::Expressions::TermNode($1, $3, *$2); }
-  | expr_term_l1 OP_AND expr_term_l1                 { $$ = new Cmm::Expressions::TermNode($1, $3, *$2); }
+    expr_term_l0 OP_OR  expr_term_l1                 { $$ = new Cmm::Expressions::TermNode($1, $3, *$2); }
+  | expr_term_l0 OP_AND expr_term_l1                 { $$ = new Cmm::Expressions::TermNode($1, $3, *$2); }
   | expr_term_l1
   ;
 
 expr_term_l1:
-     expr_term_l2
-  | expr_term_l2 OP_EQUAL   expr_term_l2             { $$ = new Cmm::Expressions::TermNode($1, $3, *$2); }
-  | expr_term_l2 OP_GREATER expr_term_l2             { $$ = new Cmm::Expressions::TermNode($1, $3, *$2); }
-  | expr_term_l2 OP_LESS    expr_term_l2             { $$ = new Cmm::Expressions::TermNode($1, $3, *$2); }
-  | expr_term_l2 OP_LE      expr_term_l2             { $$ = new Cmm::Expressions::TermNode($1, $3, *$2); }
-  | expr_term_l2 OP_GE      expr_term_l2             { $$ = new Cmm::Expressions::TermNode($1, $3, *$2); }
-  | expr_term_l2 OP_NEQUAL  expr_term_l2             { $$ = new Cmm::Expressions::TermNode($1, $3, *$2); }
+    expr_term_l2
+  | expr_term_l1 OP_EQUAL   expr_term_l2             { $$ = new Cmm::Expressions::TermNode($1, $3, *$2); }
+  | expr_term_l1 OP_GREATER expr_term_l2             { $$ = new Cmm::Expressions::TermNode($1, $3, *$2); }
+  | expr_term_l1 OP_LESS    expr_term_l2             { $$ = new Cmm::Expressions::TermNode($1, $3, *$2); }
+  | expr_term_l1 OP_LE      expr_term_l2             { $$ = new Cmm::Expressions::TermNode($1, $3, *$2); }
+  | expr_term_l1 OP_GE      expr_term_l2             { $$ = new Cmm::Expressions::TermNode($1, $3, *$2); }
+  | expr_term_l1 OP_NEQUAL  expr_term_l2             { $$ = new Cmm::Expressions::TermNode($1, $3, *$2); }
   ;
 
 expr_term_l2:
     expr_term_l3
-  | expr_term_l3 OP_PLUS  expr_term_l3               { $$ = new Cmm::Expressions::TermNode($1, $3, *$2); }
-  | expr_term_l3 OP_MINUS expr_term_l3               { $$ = new Cmm::Expressions::TermNode($1, $3, *$2); }
-  | expr_term_l3 OP_BOR   expr_term_l3               { $$ = new Cmm::Expressions::TermNode($1, $3, *$2); }
-  | expr_term_l3 OP_BAND  expr_term_l3               { $$ = new Cmm::Expressions::TermNode($1, $3, *$2); }
-  | expr_term_l3 OP_XOR   expr_term_l3               { $$ = new Cmm::Expressions::TermNode($1, $3, *$2); }
+  | expr_term_l2 OP_PLUS  expr_term_l3               { $$ = new Cmm::Expressions::TermNode($1, $3, *$2); }
+  | expr_term_l2 OP_MINUS expr_term_l3               { $$ = new Cmm::Expressions::TermNode($1, $3, *$2); }
   ;
 
 
 expr_term_l3:
     expr_term_l4
-  | expr_term_l4 OP_MULT expr_term_l4                { $$ = new Cmm::Expressions::TermNode($1, $3, *$2); }
-  | expr_term_l4 OP_DIV  expr_term_l4                { $$ = new Cmm::Expressions::TermNode($1, $3, *$2); }
-  | expr_term_l4 OP_MOD  expr_term_l4                { $$ = new Cmm::Expressions::TermNode($1, $3, *$2); }
+  | expr_term_l3 OP_MULT expr_term_l4                { $$ = new Cmm::Expressions::TermNode($1, $3, *$2); }
+  | expr_term_l3 OP_DIV  expr_term_l4                { $$ = new Cmm::Expressions::TermNode($1, $3, *$2); }
+  | expr_term_l3 OP_MOD  expr_term_l4                { $$ = new Cmm::Expressions::TermNode($1, $3, *$2); }
   ;
 
 expr_term_l4:
     expr_term_l5
-  | expr_term_l5 OP_LS   expr_term_l5                { $$ = new Cmm::Expressions::TermNode($1, $3, *$2); }
-  | expr_term_l5 OP_RS   expr_term_l5                { $$ = new Cmm::Expressions::TermNode($1, $3, *$2); }
+  | expr_term_l4 OP_LS    expr_term_l5               { $$ = new Cmm::Expressions::TermNode($1, $3, *$2); }
+  | expr_term_l4 OP_RS    expr_term_l5               { $$ = new Cmm::Expressions::TermNode($1, $3, *$2); }
+  | expr_term_l4 OP_BOR   expr_term_l5               { $$ = new Cmm::Expressions::TermNode($1, $3, *$2); }
+  | expr_term_l4 OP_BAND  expr_term_l5               { $$ = new Cmm::Expressions::TermNode($1, $3, *$2); }
+  | expr_term_l4 OP_XOR   expr_term_l5               { $$ = new Cmm::Expressions::TermNode($1, $3, *$2); }
   ;
 
 
@@ -333,7 +329,7 @@ expr_term_l5:
     constant_value                               { $$ = $1; }
   | func_call                                    { $$ = $1; }
   | ID                                           { $$ = new Cmm::Expressions::VariableNode(*$1); }
-  | D_LPAREN expr D_RPAREN                       { $$ = $2; }
+  | D_LPAREN  expr D_RPAREN                      { $$ = $2; }
   | OP_MINUS  expr_term_l5 %prec OP_UNARY_MINUS  { $$ = new Cmm::Expressions::NegatedNode($2); }
   | OP_PLUS   expr_term_l5 %prec OP_UNARY_MINUS  { $$ = $2; }
   | OP_NOT    expr_term_l5 %prec OP_UNARY_MINUS  { $$ = new Cmm::Expressions::NotNode($2); }

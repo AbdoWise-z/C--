@@ -1,4 +1,3 @@
-// import the standard library
 #include <std>
 
 print("[Current Date Time is]\n");

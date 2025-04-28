@@ -2,12 +2,8 @@
 
 print("Current Time is\n");
 
-var i = 64;
-var g = false;
-
 while (true) {
     print("\r");
-
     print(
         year() + "/" + month() + "/" + day() + "  " +
         hour() + ":" + minute() + ":" + second() + "." + millis()

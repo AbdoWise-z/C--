@@ -15,11 +15,13 @@
 #define MAX_LABEL_SIZE 0
 
 #define OP_ASSIGN     "Assign"
+#define OP_DECLARE    "Declare"
 #define OP_PLUS       "+"
 #define OP_MINUS      "-"
 #define OP_MULTIPLY   "*"
 #define OP_DIVIDE     "/"
 #define OP_NOT        "not"
+#define OP_INVERT     "invert"
 #define OP_CAST       "cast"
 
 #define OP_PARAM      "param"

@@ -76,7 +76,7 @@ static std::pair<bool, std::vector<bool>> SignatureMatch(const Cmm::FunctionDefi
     return {false, {}}; // everything failed
 }
 
-static Cmm::ValueType funcTypeOrError(Cmm::FunctionSignature s, CodeGenContext* context) {
+static Cmm::ValueType funcTypeOrError(Cmm::FunctionSignature s, CodeGenContext* context, bool one_scope_only = false) {
     std::vector<CodeGenScope>& stack = context->stack;
     int scope = stack.size() - 1;
     while (scope >= 0) {
@@ -123,6 +123,10 @@ static Cmm::ValueType funcTypeOrError(Cmm::FunctionSignature s, CodeGenContext* 
 
                 return Candidates.front();
             }
+        }
+
+        if (one_scope_only) {
+            throw Cmm::Program::FunctionNotFoundError(Cmm::Program::stringfy(s));
         }
         scope --;
     }
@@ -470,7 +474,7 @@ static std::tuple<std::string, Cmm::ValueType, bool> writeExpression(Cmm::Evalua
         writeQuad(
             out,
             indentation,
-            OP_NOT,
+            OP_INVERT,
             get<0>(_internalResult),
             "",
             tName,
@@ -580,6 +584,7 @@ static void generateQuads_recv(Cmm::ASTNode* node, CodeGenContext* context, size
         } else {
 
             auto expr = asPair(quoteStrings(writeExpression(mNode->value, context, indentation, out)));
+            writeQuad(out, indentation, OP_DECLARE, mNode->isConst ? "True" : "False", "", mNode->name, context);
             writeQuad(out, indentation, OP_ASSIGN, expr.first, "", mNode->name, context);
 
             if (expr.second == Cmm::V_Void) {
@@ -622,6 +627,8 @@ static void generateQuads_recv(Cmm::ASTNode* node, CodeGenContext* context, size
 
             auto _internalType = inferType(mNode->value, context);
             auto _externalType = Cmm::ValuesHelper::StringToValueType(mNode->type);
+
+
             if (_internalType != _externalType) {
                 CodeGenWarn err;
                 err.exception = "Implicit conversion from [" + Cmm::ValuesHelper::ValueTypeAsString(_internalType) + "] to [" + Cmm::ValuesHelper::ValueTypeAsString(_externalType) + "].";
@@ -633,9 +640,11 @@ static void generateQuads_recv(Cmm::ASTNode* node, CodeGenContext* context, size
                 _shadowNode->child = nullptr;
                 delete _shadowNode;
 
+                writeQuad(out, indentation, OP_DECLARE, mNode->isConst ? "True" : "False", "", mNode->name, context);
                 writeQuad(out, indentation, OP_ASSIGN, expr.first, "", mNode->name, context);
             } else {
                 auto expr = asPair(quoteStrings(writeExpression(mNode->value, context, indentation, out)));
+                writeQuad(out, indentation, OP_DECLARE, mNode->isConst ? "True" : "False", "", mNode->name, context);
                 writeQuad(out, indentation, OP_ASSIGN, expr.first, "", mNode->name, context);
             }
 
@@ -747,10 +756,19 @@ static void generateQuads_recv(Cmm::ASTNode* node, CodeGenContext* context, size
             retType.push_back(i);
         }
 
+        if (mNode->function == nullptr) {
+            if (context->stack.size() > 1) {
+                CodeGenError err;
+                err.exception = "Attempting to create a native function outside the global scope.";
+                err.line = mNode->_virtualLineNumber;
+                context->errors.push_back(err);
+            }
+        }
+
         bool alreadyDeclared = false;
 
         try {
-            auto dummy = funcTypeOrError({mNode->id, args}, context);
+            auto dummy = funcTypeOrError({mNode->id, args}, context, true);
             alreadyDeclared = true;
 
             CodeGenError err;
@@ -1175,13 +1193,13 @@ static void generateQuads_recv(Cmm::ASTNode* node, CodeGenContext* context, size
                     context->warnings.push_back(err);
 
                     auto _shadowNode = new Cmm::Expressions::CastNode(mNode->expr, Cmm::ValuesHelper::ValueTypeAsString(func_ret_type[0]));
-                    auto expr = asPair(quoteStrings(writeExpression(_shadowNode, context, indentation + 1, out)));
+                    auto expr = asPair(quoteStrings(writeExpression(_shadowNode, context, indentation, out)));
                     _shadowNode->child = nullptr;
                     delete _shadowNode;
-                    writeQuad(out, indentation, "RETURN", expr.first, "", "", context);
+                    writeQuad(out, indentation, "RETURN", "", "", expr.first, context);
                 } else {
-                    auto expr = asPair(quoteStrings(writeExpression(mNode->expr, context, indentation + 1, out)));
-                    writeQuad(out, indentation, "RETURN", expr.first, "", "", context);
+                    auto expr = asPair(quoteStrings(writeExpression(mNode->expr, context, indentation, out)));
+                    writeQuad(out, indentation, "RETURN", "", "", expr.first, context);
                 }
             } else {
                 CodeGenError err;

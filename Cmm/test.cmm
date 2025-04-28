@@ -1,18 +1,21 @@
+#line 1
+
 func bb() -> int {
     return 1;
 }
-
 
 func aa() -> int {
     return bb();
 }
 
+func n() -> int = native
+
 func rec() -> int {
     func bb() -> int {
         return 2;
     }
-    return aa();
+    return aa() + bb();
 }
 
 
-rec();
+var i = rec();

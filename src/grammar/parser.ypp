@@ -136,6 +136,7 @@ statement:
 
   | line_rule                        { $$ = nullptr; } // just a line rule
   | MARCO_CLEAR                      { $$ = new Cmm::Macros::ClearMacro(); }
+  | error D_SEMICOLON                { YYABORT; yyerrok; $$ = nullptr; }
   ;
 
 //               ==============  CONTROL   ==============

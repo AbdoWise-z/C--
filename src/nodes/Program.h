@@ -78,12 +78,6 @@ namespace Namespace::Program {
         [[nodiscard]] const char *what() const noexcept override;
     };
 
-    class DivisionByZeroError : public std::exception {
-    public:
-        DivisionByZeroError();
-        [[nodiscard]] const char *what() const noexcept override;
-    };
-
     class AlreadyDefinedError : public std::exception {
         std::string id;
     public:

@@ -38,5 +38,5 @@ Cmm::ValueObject m_system(const Cmm::FunctionSignature& sig, std::vector<Cmm::Va
 }
 
 void do_register(Cmm::NativeAddFunction add) {
-    add({"system", {Cmm::V_String}}, reinterpret_cast<Cmm::NativeFunction>(m_system));
+    add("system", {{Cmm::V_String}, {false}}, reinterpret_cast<Cmm::NativeFunction>(m_system));
 }

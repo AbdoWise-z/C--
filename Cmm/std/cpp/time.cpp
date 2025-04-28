@@ -141,17 +141,16 @@ Cmm::ValueObject m_year(const Cmm::FunctionSignature& sig, std::vector<Cmm::Valu
     };
 }
 
-#define reg(name, param, f_name) add({ name , { param }}, reinterpret_cast<Cmm::NativeFunction>(f_name));
+#define reg(name, f_name) add( name , { {}, {} }, reinterpret_cast<Cmm::NativeFunction>(f_name));
 
 void do_register(Cmm::NativeAddFunction add) {
-    add({"sleep", {Cmm::V_Integer, Cmm::V_Integer, Cmm::V_Integer}}, reinterpret_cast<Cmm::NativeFunction>(m_sleep));
-
-    reg("nano", , m_nano);
-    reg("millis", , m_millis);
-    reg("second", , m_seconds);
-    reg("minute", , m_minute);
-    reg("hour", , m_hour);
-    reg("day", , m_day);
-    reg("month", , m_month);
-    reg("year", , m_year);
+    add("sleep", {{Cmm::V_Integer, Cmm::V_Integer, Cmm::V_Integer},  {false, false, false}}, reinterpret_cast<Cmm::NativeFunction>(m_sleep));
+    reg("nano", m_nano);
+    reg("millis", m_millis);
+    reg("second", m_seconds);
+    reg("minute", m_minute);
+    reg("hour", m_hour);
+    reg("day", m_day);
+    reg("month", m_month);
+    reg("year", m_year);
 }

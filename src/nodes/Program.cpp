@@ -330,7 +330,7 @@ namespace Namespace::Program {
             for (auto& [k, v]: it->second) {
                 auto result = SignatureMatch(k, signature.second);
                 if (result.first) {
-                    if (!v.second) {
+                    if (v.second) {
                         return {v.second, result.second};
                     }
                 }
@@ -345,13 +345,6 @@ namespace Namespace::Program {
 
     const char * NoStackError::what() const noexcept {
         return "No stack found while trying to create a variable or a function";
-    }
-
-    DivisionByZeroError::DivisionByZeroError() {
-    }
-
-    const char * DivisionByZeroError::what() const noexcept {
-        return "Division by zero";
     }
 
     AlreadyDefinedError::AlreadyDefinedError(std::string id) : id(std::move(id)) {}

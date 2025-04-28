@@ -1,7 +1,7 @@
 #bind <libs/libio.so>
 
 // read value from input stream
-func input(type: str) -> str | int | real | complex | bool = native
+func input(type: str = "str") -> str | int | real | complex | bool = native
 func input(prefix: str, type: str) -> str | int | real | complex | bool {
     print(prefix);
     return input(type);

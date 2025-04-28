@@ -190,22 +190,22 @@ Cmm::ValueObject m_rand_r(const Cmm::FunctionSignature& sig, std::vector<Cmm::Va
 
 
 void do_register(Cmm::NativeAddFunction add) {
-    add({"sqrt", {Cmm::V_Real}}, reinterpret_cast<Cmm::NativeFunction>(sqrt_r));
-    add({"sqrt", {Cmm::V_Integer}}, reinterpret_cast<Cmm::NativeFunction>(sqrt_i));
+    add("sqrt", {{Cmm::V_Real}, {false}}, reinterpret_cast<Cmm::NativeFunction>(sqrt_r));
+    add("sqrt", {{Cmm::V_Integer}, {false}}, reinterpret_cast<Cmm::NativeFunction>(sqrt_i));
 
-    add({"abs", {Cmm::V_Real}}, reinterpret_cast<Cmm::NativeFunction>(abs_r));
-    add({"abs", {Cmm::V_Integer}}, reinterpret_cast<Cmm::NativeFunction>(abs_i));
-    add({"abs", {Cmm::V_Complex}}, reinterpret_cast<Cmm::NativeFunction>(abs_c));
+    add("abs", {{Cmm::V_Real}, {false}}, reinterpret_cast<Cmm::NativeFunction>(abs_r));
+    add("abs", {{Cmm::V_Integer}, {false}}, reinterpret_cast<Cmm::NativeFunction>(abs_i));
+    add("abs", {{Cmm::V_Complex}, {false}}, reinterpret_cast<Cmm::NativeFunction>(abs_c));
 
-    add({"mag", {Cmm::V_Real}}, reinterpret_cast<Cmm::NativeFunction>(mag_r));
-    add({"mag", {Cmm::V_Integer}}, reinterpret_cast<Cmm::NativeFunction>(mag_i));
-    add({"mag", {Cmm::V_Complex}}, reinterpret_cast<Cmm::NativeFunction>(mag_c));
+    add("mag", {{Cmm::V_Real}, {false}}, reinterpret_cast<Cmm::NativeFunction>(mag_r));
+    add("mag", {{Cmm::V_Integer}, {false}}, reinterpret_cast<Cmm::NativeFunction>(mag_i));
+    add("mag", {{Cmm::V_Complex}, {false}}, reinterpret_cast<Cmm::NativeFunction>(mag_c));
 
-    add({"rel", {Cmm::V_Complex}}, reinterpret_cast<Cmm::NativeFunction>(rel));
-    add({"img", {Cmm::V_Complex}}, reinterpret_cast<Cmm::NativeFunction>(img));
+    add("rel", {{Cmm::V_Complex}, {false}}, reinterpret_cast<Cmm::NativeFunction>(rel));
+    add("img", {{Cmm::V_Complex}, {false}}, reinterpret_cast<Cmm::NativeFunction>(img));
 
-    add({"pow", {Cmm::V_Real, Cmm::V_Real}}, reinterpret_cast<Cmm::NativeFunction>(pow_r));
-    add({"pow", {Cmm::V_Integer, Cmm::V_Integer}}, reinterpret_cast<Cmm::NativeFunction>(pow_i));
+    add("pow", {{Cmm::V_Real, Cmm::V_Real}, {false}}, reinterpret_cast<Cmm::NativeFunction>(pow_r));
+    add("pow", {{Cmm::V_Integer, Cmm::V_Integer}, {false}}, reinterpret_cast<Cmm::NativeFunction>(pow_i));
 
-    add({"rand", {}}, reinterpret_cast<Cmm::NativeFunction>(m_rand_r));
+    add("rand", {{}, {}}, reinterpret_cast<Cmm::NativeFunction>(m_rand_r));
 }

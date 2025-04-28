@@ -50,6 +50,11 @@ namespace Namespace {
         ValueObject less_equal(ValueObject& left, ValueObject& right);
         ValueObject not_equal(ValueObject& left, ValueObject& right);
 
+        class DivisionByZeroError : public std::exception {
+        public:
+            DivisionByZeroError();
+            [[nodiscard]] const char *what() const noexcept override;
+        };
     }
 
 }

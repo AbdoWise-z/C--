@@ -242,6 +242,12 @@ Cmm::ValueObject Cmm::MathHelper::mul(ValueObject &left, ValueObject &right) {
     return result;
 }
 
+Cmm::MathHelper::DivisionByZeroError::DivisionByZeroError() = default;
+
+const char * Cmm::MathHelper::DivisionByZeroError::what() const noexcept {
+    return "Division by zero";
+}
+
 
 Cmm::ValueObject Cmm::MathHelper::div(ValueObject &left, ValueObject &right) {
     auto cIt = TermConversionMap.find({left.type, right.type});
@@ -278,7 +284,7 @@ Cmm::ValueObject Cmm::MathHelper::div(ValueObject &left, ValueObject &right) {
     switch (common) {
         case Cmm::V_Integer:
             if (*static_cast<Integer*>(r_ptr->value) == Integer(0)) {
-                throw Program::DivisionByZeroError();
+                throw DivisionByZeroError();
             }
 
             result.value = new Integer(
@@ -287,7 +293,7 @@ Cmm::ValueObject Cmm::MathHelper::div(ValueObject &left, ValueObject &right) {
         break;
         case Cmm::V_Real:
             if (*static_cast<Real*>(r_ptr->value) == Real(0.0)) {
-                throw Program::DivisionByZeroError();
+                throw DivisionByZeroError();
             }
             result.value = new Real(
                 *static_cast<Real*>(l_ptr->value) / *static_cast<Real*>(r_ptr->value)
@@ -295,7 +301,7 @@ Cmm::ValueObject Cmm::MathHelper::div(ValueObject &left, ValueObject &right) {
         break;
         case Cmm::V_Complex:
             if (*static_cast<Complex*>(r_ptr->value) == Complex(0.0, 0.0)) {
-                throw Program::DivisionByZeroError();
+                throw DivisionByZeroError();
             }
             result.value = new Complex(
                 *static_cast<Complex*>(l_ptr->value) / *static_cast<Complex*>(r_ptr->value)

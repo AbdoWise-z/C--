@@ -8,6 +8,7 @@
 #include <windows.h>
 #endif
 
+
 extern "C" {
     void internal_native_insert(const std::string& name, const Cmm::FunctionDefinitionSignature &signature, Cmm::NativeFunction handler) {
         Cmm::Program::createFunction(name, signature, handler);

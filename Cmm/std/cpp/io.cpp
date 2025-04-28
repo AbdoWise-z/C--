@@ -68,7 +68,7 @@ Cmm::ValueObject input(const Cmm::FunctionSignature& sig, std::vector<Cmm::Value
 
     if (type == "complex") {
         // fixme: need a str to complex number parser (which I'm too damn lazy to implement)
-        result.type = Cmm::V_Error;
+        result.type = Cmm::V_Void;
         result.value = nullptr;
     }
 
@@ -104,15 +104,15 @@ Cmm::ValueObject _endl(const Cmm::FunctionSignature& sig, std::vector<Cmm::Value
 
 
 void do_register(Cmm::NativeAddFunction add) {
-    add({"input", {Cmm::V_String}}, reinterpret_cast<Cmm::NativeFunction>(input));
+    add("input", {{Cmm::V_String}, {true}}, reinterpret_cast<Cmm::NativeFunction>(input));
 
-    add({"getLine", {}}, reinterpret_cast<Cmm::NativeFunction>(getLine));
+    add("getLine", {{}, {}}, reinterpret_cast<Cmm::NativeFunction>(getLine));
 
-    add({"print", {Cmm::V_String}}, reinterpret_cast<Cmm::NativeFunction>(print));
-    add({"print", {Cmm::V_Integer}}, reinterpret_cast<Cmm::NativeFunction>(print));
-    add({"print", {Cmm::V_Bool}}, reinterpret_cast<Cmm::NativeFunction>(print));
-    add({"print", {Cmm::V_Complex}}, reinterpret_cast<Cmm::NativeFunction>(print));
-    add({"print", {Cmm::V_Real}}, reinterpret_cast<Cmm::NativeFunction>(print));
+    add("print", {{Cmm::V_String}, {false}}, reinterpret_cast<Cmm::NativeFunction>(print));
+    add("print", {{Cmm::V_Integer}, {false}}, reinterpret_cast<Cmm::NativeFunction>(print));
+    add("print", {{Cmm::V_Bool}, {false}}, reinterpret_cast<Cmm::NativeFunction>(print));
+    add("print", {{Cmm::V_Complex}, {false}}, reinterpret_cast<Cmm::NativeFunction>(print));
+    add("print", {{Cmm::V_Real}, {false}}, reinterpret_cast<Cmm::NativeFunction>(print));
 
-    add({"endl", {}}, reinterpret_cast<Cmm::NativeFunction>(_endl));
+    add("endl", {{},{}}, reinterpret_cast<Cmm::NativeFunction>(_endl));
 }

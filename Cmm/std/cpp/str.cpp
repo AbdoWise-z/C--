@@ -60,7 +60,7 @@ Cmm::ValueObject slice(const Cmm::FunctionSignature& sig, std::vector<Cmm::Value
 
 
 void do_register(Cmm::NativeAddFunction add) {
-    add({"strlen", {Cmm::V_String}}, reinterpret_cast<Cmm::NativeFunction>(m_strlen));
-    add({"charAt", {Cmm::V_String, Cmm::V_Integer}}, reinterpret_cast<Cmm::NativeFunction>(charAt));
-    add({"slice", {Cmm::V_String, Cmm::V_Integer, Cmm::V_Integer}}, reinterpret_cast<Cmm::NativeFunction>(slice));
+    add("strlen", {{Cmm::V_String}, {false}}, reinterpret_cast<Cmm::NativeFunction>(m_strlen));
+    add("charAt", {{Cmm::V_String, Cmm::V_Integer}, {false, false}}, reinterpret_cast<Cmm::NativeFunction>(charAt));
+    add("slice", {{Cmm::V_String, Cmm::V_Integer, Cmm::V_Integer}, {false, false, false}}, reinterpret_cast<Cmm::NativeFunction>(slice));
 }

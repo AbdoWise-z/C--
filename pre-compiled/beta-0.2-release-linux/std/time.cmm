@@ -1,0 +1,18 @@
+#bind <libs/libtime.so>
+
+func sleep(s: int, ms: int, ns: int) -> void = native
+func sleep(s: int) -> void { sleep(s, 0, 0); }
+func sleep_ms(ms: int) -> void { sleep(0, ms, 0); }
+func sleep_ns(ns: int) -> void { sleep(0, 0, ns); }
+
+func nano()   -> int = native
+func millis() -> int = native
+func second() -> int = native
+func minute() -> int = native
+func hour()   -> int = native
+func day()    -> int = native
+func month()  -> int = native
+func year()   -> int = native
+
+#clear
+#line 1

@@ -1,0 +1,31 @@
+#bind <libs/libio.so>
+
+// reads a line from input
+func getLine() -> str = native
+
+// output a value to the output stream
+func print(v: str)      -> void = native
+func print(v: int)      -> void = native
+func print(v: real)     -> void = native
+func print(v: bool)     -> void = native
+func print(v: complex)  -> void = native
+
+// read value from input stream
+func input(type: str = "str") -> str | int | real | complex | bool = native
+func input(prefix: str, type: str) -> str | int | real | complex | bool {
+    print(prefix);
+    return input(type);
+}
+
+// \n char
+func endl() -> str = native
+
+// output a value to the output stream and end the line
+func println(v: str)     -> void { print(v + endl()); }
+func println(v: int)     -> void { print(v + endl()); }
+func println(v: real)    -> void { print(v + endl()); }
+func println(v: bool)    -> void { print(v + endl()); }
+func println(v: complex) -> void { print(v + endl()); }
+
+#clear
+#line 1

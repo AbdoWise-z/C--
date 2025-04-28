@@ -1,0 +1,9 @@
+
+func typeOf(a: int) -> str { return "int"; }
+func typeOf(a: str) -> str { return "str"; }
+func typeOf(a: real) -> str { return "real"; }
+func typeOf(a: complex) -> str { return "complex"; }
+func typeOf(a: bool) -> str { return "bool"; }
+
+#clear
+#line 1

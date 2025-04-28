@@ -1,0 +1,9 @@
+#include <std>
+
+print("Enter a number: ");
+var n1: real = input("real");
+
+print("Enter a second number: ");
+var n2: real = input("real");
+
+println("the sum is: " + (n1 + n2));

@@ -217,12 +217,10 @@ namespace Namespace::Program {
         int scope = block.stack.size() - 1;
         while (scope >= 0) {
             auto it = block.stack[scope].variables.find(name);
-            if (it != block.stack[scope].variables.end()) {
+            if (it != block.stack[scope].variables.end() && checkIsAncestor(_req, scope)) {
                 VariableBlock& block = it->second;
                 ValueObject& obj = block.Value;
-
-                if (checkIsAncestor(_req, scope))
-                    return block;
+                return block;
             }
             scope --;
         }
@@ -327,14 +325,13 @@ namespace Namespace::Program {
         }
     }
 
-    std::pair<Functional::FunctionDeclarationNode*, std::vector<bool>> getFunction(const FunctionSignature &signature) {
+    std::pair<Functional::FunctionDeclarationNode*, std::vector<bool>> getFunction(const FunctionSignature &signature, ASTNode* _req) {
         // first search normal functions
         ProgramBlock& block = getCurrentProgram();
         int scope = block.stack.size() - 1;
         while (scope >= 0) {
             auto it = block.stack[scope].functions.find(signature.first);
-            if (it != block.stack[scope].functions.end()) {
-
+            if (it != block.stack[scope].functions.end() && checkIsAncestor(_req, scope)) {
                 for (auto& [k, v]: it->second) {
                     auto result = SignatureMatch(k, signature.second);
                     if (result.first) {

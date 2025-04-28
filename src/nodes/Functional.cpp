@@ -222,7 +222,7 @@ namespace Cmm::Functional {
         }
 
         std::pair sig = {id, types};
-        auto func_pair = Program::getFunction(sig);
+        auto func_pair = Program::getFunction(sig, this);
         auto func = func_pair.first;
         for (int i = 0; i < func_pair.second.size(); ++i) {
             if (!func_pair.second[i]) {
@@ -243,7 +243,7 @@ namespace Cmm::Functional {
         }
 
         std::pair sig = {id, types};
-        auto func_pair = Program::getFunction(sig);
+        auto func_pair = Program::getFunction(sig, this);
         auto func = func_pair.first;
         for (int i = 0; i < func_pair.second.size(); ++i) {
             if (!func_pair.second[i]) {

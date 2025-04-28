@@ -68,7 +68,7 @@ namespace Namespace::Program {
     void createFunction(const std::string& name, const FunctionDefinitionSignature &signature, Functional::FunctionDeclarationNode*);
     void createFunction(const std::string& name, const FunctionDefinitionSignature &signature, NativeFunction handler);
     void attachNativeFunctionDefinition(const std::string& name, const FunctionDefinitionSignature& signature, Functional::FunctionDeclarationNode*);
-    std::pair<Functional::FunctionDeclarationNode*, std::vector<bool>> getFunction(const FunctionSignature& signature);
+    std::pair<Functional::FunctionDeclarationNode*, std::vector<bool>> getFunction(const FunctionSignature& signature, ASTNode* _req);
 
     // ========================= ERRORS =========================
 

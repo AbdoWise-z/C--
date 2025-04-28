@@ -76,13 +76,15 @@ Cmm::Control::ForNode::ForNode(EvaluableNode *condition, ExecutableNode *init, E
     this->body = body;
     this->_executeOnce = false;
 
-    _lineNumber = condition->_lineNumber;
-    _virtualLineNumber = condition->_virtualLineNumber;
+    if (this->condition) {
+        _lineNumber = condition->_lineNumber;
+        _virtualLineNumber = condition->_virtualLineNumber;
+    }
 
     if (this->condition) this->condition->_parent = this;
-    if (this->init) this->init->_parent = this;
-    if (this->body) this->body->_parent = this;
-    if (this->inc)  this->inc->_parent = this;
+    if (this->init)      this->init->_parent = this;
+    if (this->body)      this->body->_parent = this;
+    if (this->inc)       this->inc->_parent = this;
 }
 
 Cmm::Control::ForNode::ForNode(EvaluableNode *condition, ExecutableNode *init, ExecutableNode *inc,
@@ -93,6 +95,11 @@ Cmm::Control::ForNode::ForNode(EvaluableNode *condition, ExecutableNode *init, E
     this->init = init;
     this->body = body;
     this->_executeOnce = _executeOnce;
+
+    if (this->condition) {
+        _lineNumber = condition->_lineNumber;
+        _virtualLineNumber = condition->_virtualLineNumber;
+    }
 
     if (this->condition) this->condition->_parent = this;
     if (this->init) this->init->_parent = this;

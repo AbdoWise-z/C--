@@ -25,6 +25,9 @@ namespace StringUtils {
 
         return other;
     }
+
+    std::string unescapeString(const std::string& input);
+    std::string escapeString(const std::string &input);
 }
 
 

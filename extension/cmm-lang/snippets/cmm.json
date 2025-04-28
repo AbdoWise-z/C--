@@ -1,0 +1,231 @@
+{
+    "Function": {
+      "prefix": "func",
+      "body": [
+        "func ${1:functionName}(${2:args}) -> ${3:type} {",
+        "    $0",
+        "}"
+      ],
+      "description": "Function definition"
+    },
+    "Constant Declaration": {
+      "prefix": "const",
+      "body": [
+        "const ${1:NAME}: ${2:type} = ${3:initial_value};"
+      ],
+      "description": "Constant declaration"
+    },
+    "Variable Declaration": {
+      "prefix": "var",
+      "body": [
+        "var ${1:name}: ${2:type} = ${3:initial_value};"
+      ],
+      "description": "Variable declaration"
+    },
+    "Variable Declaration (Inferred Type)": {
+      "prefix": "varin",
+      "body": [
+        "var ${1:name} = ${2:initial_value};"
+      ],
+      "description": "Variable declaration with inferred type"
+    },
+    "For Loop": {
+      "prefix": "for",
+      "body": [
+        "for (var ${1:i}: ${2:int} = ${3:0}; ${1:i} < ${4:count}; ${1:i}++) {",
+        "    $0",
+        "}"
+      ],
+      "description": "For loop"
+    },
+    "While Loop": {
+      "prefix": "while",
+      "body": [
+        "while (${1:condition}) {",
+        "    $0",
+        "}"
+      ],
+      "description": "While loop"
+    },
+    "Do While Loop": {
+      "prefix": "dowhile",
+      "body": [
+        "do {",
+        "    $0",
+        "} while (${1:condition});"
+      ],
+      "description": "Do-while loop"
+    },
+    "If Statement": {
+      "prefix": "if",
+      "body": [
+        "if (${1:condition}) {",
+        "    $0",
+        "}"
+      ],
+      "description": "If statement"
+    },
+    "If Else Statement": {
+      "prefix": "ifelse",
+      "body": [
+        "if (${1:condition}) {",
+        "    $2",
+        "} else {",
+        "    $0",
+        "}"
+      ],
+      "description": "If-else statement"
+    },
+    "Switch Statement": {
+      "prefix": "switch",
+      "body": [
+        "switch (${1:variable}) {",
+        "    case ${2:value1}:",
+        "        $0",
+        "        break;",
+        "    default:",
+        "        break;",
+        "}"
+      ],
+      "description": "Switch statement"
+    },
+    "Break Statement": {
+      "prefix": "break",
+      "body": [ "break;" ],
+      "description": "Break statement"
+    },
+    "Continue Statement": {
+      "prefix": "continue",
+      "body": [ "continue;" ],
+      "description": "Continue statement"
+    },
+    "Return Statement": {
+      "prefix": "return",
+      "body": [ "return${1:};" ],
+      "description": "Return statement"
+    },
+    "Function Call": {
+      "prefix": "call",
+      "body": [ "${1:function}(${2:arguments});" ],
+      "description": "Function call"
+    },
+    "Assignment": {
+      "prefix": "set",
+      "body": [ "${1:var} = ${2:value};" ],
+      "description": "Variable assignment"
+    },
+    "Compound Assignment": {
+      "prefix": "setop",
+      "body": [ "${1:var} ${2:+=} ${3:value};" ],
+      "description": "Compound assignment (+=, -=, etc.)"
+    },
+    "Type Union": {
+        "prefix": "union",
+        "body": [
+          "${1:type1} | ${2:type2}"
+        ],
+        "description": "Type union definition"
+    },
+    "Explicit Cast": {
+        "prefix": "cast",
+        "body": [
+          "(${1:type}) ${2:expression}"
+        ],
+        "description": "Explicit type cast"
+    },
+    "Scope Block": {
+        "prefix": "scope",
+        "body": [
+          "{",
+          "    $0",
+          "}"
+        ],
+        "description": "Braced scope block"
+    },
+    "Switch Case": {
+        "prefix": "case",
+        "body": [
+          "case ${1:value}:",
+          "    $0"
+        ],
+        "description": "Switch/case block"
+    },
+    "Pre-increment": {
+        "prefix": "preinc",
+        "body": [
+          "++${1:variable};"
+        ],
+        "description": "Pre-increment"
+    },
+    "Pre-decrement": {
+        "prefix": "predec",
+        "body": [
+          "--${1:variable};"
+        ],
+        "description": "Pre-decrement"
+    },
+    "Post-increment": {
+        "prefix": "postinc",
+        "body": [
+          "${1:variable}++;"
+        ],
+        "description": "Post-increment"
+    },
+    "Post-decrement": {
+        "prefix": "postdec",
+        "body": [
+          "${1:variable}--;"
+        ],
+        "description": "Post-decrement"
+    },
+    "Boolean Expression": {
+        "prefix": "bool",
+        "body": [
+          "${1:expr1} ${2:&&} ${3:expr2}"
+        ],
+        "description": "Boolean operation"
+    },
+    "Negation": {
+        "prefix": "not",
+        "body": [
+          "!${1:expression}"
+        ],
+        "description": "Logical NOT"
+    },
+    "Bitwise Invert": {
+        "prefix": "invert",
+        "body": [
+          "~${1:expression}"
+        ],
+        "description": "Bitwise invert"
+    },
+    "Complex Literal": {
+        "prefix": "cmplx",
+        "body": [
+          "${1:value}i"
+        ],
+        "description": "Complex number literal"
+    },
+    "Function Argument List": {
+        "prefix": "fargs",
+        "body": [
+          "${1:name}: ${2:type}${3:, $4:name: $5:type}"
+        ],
+        "description": "Function argument list"
+    },
+    "Function Arg With Default": {
+        "prefix": "fargdef",
+        "body": [
+          "${1:name}: ${2:type} = ${3:default}"
+        ],
+        "description": "Function argument with default"
+    },
+      "Compound Expression": {
+        "prefix": "expr",
+        "body": [
+          "${1:left} ${2:+} ${3:right}"
+        ],
+        "description": "Compound expression"
+    }
+    
+}

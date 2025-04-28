@@ -25,6 +25,8 @@ void remove_first_and_last_char(std::string* str_ptr) {
     str_ptr->pop_back();
 }
 
+extern int yyvlineno;
+extern int yylineno;
 %}
 
 %option noyywrap
@@ -136,8 +138,9 @@ void remove_first_and_last_char(std::string* str_ptr) {
 "const"   { return MISC_CONST; }
 "native"  { return MISC_NATIVE; }
 
-"//".*        { /* Ignore single-line comments */ }
-"#".*         { /* Ignore single-line comments */ }
+
+"#line"          { return MARCO_LINE; }
+"#clear"         { return MARCO_CLEAR; }
 
 [a-zA-Z_][a-zA-Z0-9_]*  { 
     std::string* val = new std::string(yytext);
@@ -146,12 +149,15 @@ void remove_first_and_last_char(std::string* str_ptr) {
 }
 
 [ \t]+    { /* Skip spaces and tabs only */ }
-\n        { ++yylineno; }
+
+\n               { ++yylineno; ++yyvlineno; }
+"//".*           { /* Skip single line comments */ }
 
 <<EOF>>         { return END; }
 
 .               { 
-    std::cerr << "Unexpected character: " << yytext << std::endl; 
+    //std::cout  << "[Error] " << yylineno << " "
+    //              << "(unexpected token: '" << yytext << "')" << std::endl;
     return 0; 
 }
 

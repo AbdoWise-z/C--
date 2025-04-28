@@ -123,8 +123,10 @@ extern int yydebug;
     MISC_VAR = 324,                /* MISC_VAR  */
     MISC_CONST = 325,              /* MISC_CONST  */
     MISC_NATIVE = 326,             /* MISC_NATIVE  */
-    OP_UNARY_MINUS = 327,          /* OP_UNARY_MINUS  */
-    LOWER_THAN_ELSE = 328          /* LOWER_THAN_ELSE  */
+    MARCO_LINE = 327,              /* MARCO_LINE  */
+    MARCO_CLEAR = 328,             /* MARCO_CLEAR  */
+    OP_UNARY_MINUS = 329,          /* OP_UNARY_MINUS  */
+    LOWER_THAN_ELSE = 330          /* LOWER_THAN_ELSE  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -133,7 +135,7 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 38 "parser.ypp"
+#line 40 "parser.ypp"
 
     std::string* str;
     Cmm::EvaluableNode* evaluable;
@@ -143,7 +145,7 @@ union YYSTYPE
     Cmm::Control::SwitchCaseNode* sw_case_t;
     Cmm::Control::SwitchBodyNode* sw_body_t;
 
-#line 147 "parser.tab.hpp"
+#line 149 "parser.tab.hpp"
 
 };
 typedef union YYSTYPE YYSTYPE;

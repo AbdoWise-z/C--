@@ -15,6 +15,7 @@
 #include "../nodes/Control.h"
 #include "../nodes/Variables.h"
 #include "../nodes/Functional.h"
+#include "../nodes/Macros.hpp"
 
 #include "parser.tab.hpp"
 
@@ -22,13 +23,14 @@
 extern int yylex();
 
 extern char* yytext;
-extern int yylineno;
 extern int yydebug;
 
+extern int yyvlineno;
+extern int yylineno;
+
 void yyerror(const char* s) {
-  std::cout << "\033[31m" << "Error at line " << yylineno << ": " << s 
-              << " (unexpected token: '" << yytext << "')" 
-              << "\033[0m" << std::endl;
+  std::cout  << "[Error] " << yyvlineno << " " << s
+              << " (unexpected token: '" << yytext << "')" << std::endl;
 }
 
 extern Cmm::Program::ProgramNode* root;
@@ -67,6 +69,9 @@ extern Cmm::Program::ProgramNode* root;
 %token CONTROL_IF CONTROL_ELSE CONTROL_WHILE CONTROL_FOR CONTROL_SWITCH
 %token CONTROL_CASE CONTROL_DEFAULT CONTROL_DO CONTROL_RETURN CONTROL_BREAK CONTROL_CONTINUE
 %token MISC_FUNC MISC_VAR MISC_CONST MISC_NATIVE
+
+%token MARCO_LINE
+%token MARCO_CLEAR
 
 // Type declarations
 %type <str> OP_EQUAL OP_ASSIGN OP_PLUS OP_MINUS OP_MULT OP_DIV OP_MOD OP_LS OP_RS OP_BOR OP_BAND OP_XOR OP_OR OP_AND OP_NOT OP_INVERT
@@ -131,7 +136,10 @@ statement:
   | continue_stmt D_SEMICOLON        { $$ = $1; }
   | break_stmt D_SEMICOLON           { $$ = $1; }
   | D_SEMICOLON                      { $$ = nullptr; } // just a semicolon
-  // | error D_SEMICOLON                { yyerrok; }
+
+  | line_rule                        { $$ = nullptr; } // just a line rule
+  | MARCO_CLEAR                      { $$ = new Cmm::Macros::ClearMacro(); }
+  | error D_SEMICOLON                { yyerrok; $$ = nullptr; }
   ;
 
 //               ==============  CONTROL   ==============
@@ -345,4 +353,11 @@ type_specifier:
   | TYPE_VOID     { $$ = new std::string("void"); }
   ;
 
+
+//              ============== Shift handling ==============
+
+line_rule:
+    MARCO_LINE V_INTEGER {
+        yyvlineno = std::stoi(*$2);
+    }
 %%

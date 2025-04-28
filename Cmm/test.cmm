@@ -1,3 +1,5 @@
+#include <std>
+
 func dina_man(project: str = "yay") -> real {
     return -1.0;
 }
@@ -5,5 +7,7 @@ func dina_man(project: str = "yay") -> real {
 func dina_man(project: str = "yay", param1: str, param2: str) -> void {
     return -1.0;
 }
+
+// this is a comment
 
 var i = dina_man("yay", "yay", "yay");

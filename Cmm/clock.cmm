@@ -1,8 +1,9 @@
-// import the standard library
 #include <std>
 
-
 print("Current Time is\n");
+
+var i = 64;
+var g = false;
 
 while (true) {
     print("\r");

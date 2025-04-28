@@ -18,7 +18,10 @@ namespace Cmm::Functional {
         this->_returnValue = {};
         this->_shouldReturn = {};
 
+        this->handler = nullptr;
+
         this->_lineNumber = arguments->_lineNumber;
+        this->_virtualLineNumber = arguments->_virtualLineNumber;
     }
 
     void FunctionDeclarationNode::exec() {

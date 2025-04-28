@@ -13,6 +13,7 @@ Cmm::Control::IFNode::IFNode(EvaluableNode *condition, ExecutableNode *if_true, 
     this->if_false = if_false;
 
     _lineNumber = condition->_lineNumber;
+    _virtualLineNumber = condition->_virtualLineNumber;
 }
 
 void Cmm::Control::IFNode::exec() {
@@ -70,6 +71,7 @@ Cmm::Control::ForNode::ForNode(EvaluableNode *condition, ExecutableNode *init, E
     this->body = body;
 
     _lineNumber = condition->_lineNumber;
+    _virtualLineNumber = condition->_virtualLineNumber;
 }
 
 Cmm::Control::ForNode::ForNode(EvaluableNode *condition, ExecutableNode *init, ExecutableNode *inc,
@@ -315,6 +317,7 @@ namespace Cmm::Control {
         this->value = value;
 
         _lineNumber = value->_lineNumber;
+        _virtualLineNumber = value->_virtualLineNumber;
     }
 
     void SwitchNode::exec() {

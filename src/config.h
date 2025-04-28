@@ -2,5 +2,4 @@
 
 #define Namespace Cmm
 
-
 //#define CMM_DEBUG

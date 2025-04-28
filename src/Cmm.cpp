@@ -2,6 +2,7 @@
 #include <string>
 
 // ========== must have these includes before including parser.tab ==========
+#include <filesystem>
 #include <iomanip>
 
 #include "config.h"
@@ -137,11 +138,21 @@ void run_code(const std::string& file_path, const std::string& include_path) {
 
     Cmm::debugger::beginSession();
 
+    auto m_path = FileUtils::getSelfPath();
+    m_path = std::filesystem::path(m_path).parent_path().string();
+
     std::string wrapper_code = "#include <" + file_path + ">"; // code injection :goose:
     auto [code, load] = Cmm::PreProcessor::processContent(
-        wrapper_code,
-        {"./Cmm/std" , "./std" , ".", include_path}
-        );
+            wrapper_code,
+            {
+                m_path + "/..",
+                m_path + "/../Cmm",
+                m_path + "/../Cmm/std" ,
+                m_path + "/Cmm/std" ,
+                m_path + "/std" ,
+                m_path,
+                include_path
+            });
 
     // std::cout << code << std::endl;
     for (const auto& lib: load) {
@@ -155,75 +166,95 @@ void run_code(const std::string& file_path, const std::string& include_path) {
     Cmm::debugger::endSession();
 }
 
+static std::vector<std::string> splitLines(const std::string &input) {
+    std::vector<std::string> lines;
+    std::istringstream stream(input);
+    std::string line;
+    while (std::getline(stream, line)) {
+        lines.push_back(line);
+    }
+    return lines;
+}
+
 void compile_code(const std::string& file_path, const std::string& include_path, const std::string& quads, const std::string& symbols) {
     std::ios::sync_with_stdio(false);
     yydebug = 0;
 
     std::string wrapper_code = "#include <" + file_path + ">";
-    auto [code, load] = Cmm::PreProcessor::processContent(
-        wrapper_code,
-        {"./Cmm/std" , "./std" , ".", include_path}
+
+    try {
+        auto m_path = FileUtils::getSelfPath();
+        m_path = std::filesystem::path(m_path).parent_path().string();
+        // std::cout << m_path << std::endl;
+        auto [code, load] = Cmm::PreProcessor::processContent(
+            wrapper_code,
+            {m_path + "/..", m_path + "/../Cmm", m_path + "/../Cmm/std" , m_path + "/Cmm/std" , m_path + "/std" , m_path, include_path}
         );
 
-    // std::cout << code << std::endl;
-    // no session, so we shouldn't be attaching any native libraries
-    // for (const auto& lib: load) {
-    //     Cmm::NativeLoader::LoadNative(lib);
-    // }
+        // auto lines = splitLines(code);
+        // for (int i = 0; i < lines.size(); ++i) {
+        //     std::cout << std::setw(8) << std::left << std::to_string(i + 1) << lines[i] << std::endl;
+        // }
+        // for (const auto& lib: load) {
+        //     Cmm::NativeLoader::LoadNative(lib);
+        // }
 
-    auto program = Cmm::debugger::compileCode(code);
-    if (program) {
-        auto ok = Cmm::QuadGenerator::generate(program, quads);
-        if (!ok) std::cerr << "Failed to generate quads" << std::endl;
-        else {
+        auto program = Cmm::debugger::compileCode(code);
+        if (program) {
+            auto ok = Cmm::QuadGenerator::generate(program, quads);
+            if (!ok) std::cerr << "Failed to generate quads" << std::endl;
+            else {
 
-            std::cout << bcolor("Warns:", CYAN_BG) << std::endl;
-            for (const auto& warn: ok->warnings) {
-                std::cout << "  " << std::setw(8) << std::left << std::to_string(warn.line) << warn.exception << std::endl;
-            }
-
-            if (ok->warnings.empty()) std::cout << "  None" << std::endl;
-
-            std::cout << bcolor("Errors:", RED_BG) << std::endl;
-            for (const auto& err: ok->errors) {
-                std::cout << "  " << std::setw(8) << std::left << std::to_string(err.line) << err.exception << std::endl;
-            }
-
-            if (ok->errors.empty()) std::cout << "  None" << std::endl;
-
-            std::cout << "Generated: " << quads << std::endl;
-
-            // symbol table
-            if (!symbols.empty()) {
-                std::stringstream ss;
-                ss << "|" << std::setw(30) << std::left << "Name"
-                       << "|" << std::setw(30) << std::left << "Value Type"
-                       << "|" << std::setw(30) << std::left << "Accept Types"
-                       << "|" << std::setw(30) << std::left << "Value"
-                       << "|" << std::setw(20) << std::left << "Code Line"
-                       << "|" << std::setw(20) << std::left << "Quad Line"
-                       << "|" << std::setw(20) << std::left << "Scope level"
-                       << "|" << std::setw(20) << std::left << "Symbol class"
-                       << "|" << std::setw(20) << std::left << "Use count"
-                       << "|" << std::endl;
-
-                for (const auto& sym: ok->symbolTable) {
-                    ss << "|" << std::setw(30) << std::left << sym.name
-                       << "|" << std::setw(30) << std::left << Cmm::Program::stringfy({"", sym.type})
-                       << "|" << std::setw(30) << std::left << Cmm::Program::stringfy({"", sym.accept_type})
-                       << "|" << std::setw(30) << std::left << sym.value
-                       << "|" << std::setw(20) << std::left << sym.codeLine
-                       << "|" << std::setw(20) << std::left << sym.quadLine
-                       << "|" << std::setw(20) << std::left << sym.scope
-                       << "|" << std::setw(20) << std::left << (sym.objectType == Cmm::QuadGenerator::Variable ? "Variable" : "Function")
-                       << "|" << std::setw(20) << std::left << sym.useCount
-                       << "|" << std::endl;
+                // std::cout << bcolor("Warns:", CYAN_BG) << std::endl;
+                for (const auto& warn: ok->warnings) {
+                    std::cout << "[Warn]" << " " << std::to_string(warn.line) << " " << warn.exception << std::endl;
                 }
 
-                FileUtils::writeContent(symbols, ss.str());
-                std::cout << "Generated: " << symbols << std::endl;
+                // if (ok->warnings.empty()) std::cout << "  None" << std::endl;
+
+                // std::cout << bcolor("Errors:", RED_BG) << std::endl;
+                for (const auto& err: ok->errors) {
+                    std::cout << "[Error]" << " " << std::to_string(err.line) << " " << err.exception << std::endl;
+                }
+
+                // if (ok->errors.empty()) std::cout << "  None" << std::endl;
+
+                std::cout << "Generated: " << quads << std::endl;
+
+                // symbol table
+                if (!symbols.empty()) {
+                    std::stringstream ss;
+                    ss << "|" << std::setw(30) << std::left << "Name"
+                           << "|" << std::setw(30) << std::left << "Value Type"
+                           << "|" << std::setw(30) << std::left << "Accept Types"
+                           << "|" << std::setw(30) << std::left << "Value"
+                           << "|" << std::setw(20) << std::left << "Code Line"
+                           << "|" << std::setw(20) << std::left << "Quad Line"
+                           << "|" << std::setw(20) << std::left << "Scope level"
+                           << "|" << std::setw(20) << std::left << "Symbol class"
+                           << "|" << std::setw(20) << std::left << "Use count"
+                           << "|" << std::endl;
+
+                    for (const auto& sym: ok->symbolTable) {
+                        ss << "|" << std::setw(30) << std::left << sym.name
+                           << "|" << std::setw(30) << std::left << Cmm::Program::stringfy({"", sym.type})
+                           << "|" << std::setw(30) << std::left << Cmm::Program::stringfy({"", sym.accept_type})
+                           << "|" << std::setw(30) << std::left << sym.value
+                           << "|" << std::setw(20) << std::left << sym.codeLine
+                           << "|" << std::setw(20) << std::left << sym.quadLine
+                           << "|" << std::setw(20) << std::left << sym.scope
+                           << "|" << std::setw(20) << std::left << (sym.objectType == Cmm::QuadGenerator::Variable ? "Variable" : "Function")
+                           << "|" << std::setw(20) << std::left << sym.useCount
+                           << "|" << std::endl;
+                    }
+
+                    FileUtils::writeContent(symbols, ss.str());
+                    std::cout << "Generated: " << symbols << std::endl;
+                }
             }
         }
+    } catch (std::exception& e) {
+        std::cout << "[Error]" << " " << 1 << " " << e.what() << std::endl;
     }
     yylex_destroy();
 }

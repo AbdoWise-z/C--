@@ -14,6 +14,7 @@
 #include <stack>
 
 #include "nodes/Functional.h"
+#include "nodes/Macros.hpp"
 #include "nodes/Variables.h"
 #include "utils/string_utils.hpp"
 
@@ -136,7 +137,7 @@ static Cmm::ValueType inferType(Cmm::EvaluableNode* node, CodeGenContext* contex
         } catch (Cmm::Program::VariableNotFoundError& e) {
             // CodeGenError err;
             // err.exception = e.what(),
-            // err.line = node->_lineNumber;
+            // err.line = node->_virtualLineNumber;
             // context->errors.push_back(err);
             return Cmm::V_Any;
         }
@@ -148,7 +149,7 @@ static Cmm::ValueType inferType(Cmm::EvaluableNode* node, CodeGenContext* contex
         } catch (Cmm::Program::VariableNotFoundError& e) {
             // CodeGenError err;
             // err.exception = e.what(),
-            // err.line = node->_lineNumber;
+            // err.line = node->_virtualLineNumber;
             // context->errors.push_back(err);
             return Cmm::V_Any;
         }
@@ -160,7 +161,7 @@ static Cmm::ValueType inferType(Cmm::EvaluableNode* node, CodeGenContext* contex
         } catch (Cmm::Program::VariableNotFoundError& e) {
             // CodeGenError err;
             // err.exception = e.what(),
-            // err.line = node->_lineNumber;
+            // err.line = node->_virtualLineNumber;
             // context->errors.push_back(err);
             return Cmm::V_Any;
         }
@@ -176,7 +177,7 @@ static Cmm::ValueType inferType(Cmm::EvaluableNode* node, CodeGenContext* contex
         if (!_cL->second.contains(mNode->targetType)) {
             // CodeGenWarn err;
             // err.exception = std::string(Cmm::ValuesHelper::ConversionError(_internalType, mNode->targetType).what());
-            // err.line = node->_lineNumber;
+            // err.line = node->_virtualLineNumber;
             //
             // if (_internalType == Cmm::V_Any) {
             //     err.exception = "Conversions with type [Any] depends on runtime value.";
@@ -216,19 +217,19 @@ static Cmm::ValueType inferType(Cmm::EvaluableNode* node, CodeGenContext* contex
             for (auto param: mNode->funcParam->params) {
                 func.second.push_back(inferType(param, context));
             }
-            funcTypeOrError(func, context);
+            return funcTypeOrError(func, context);
         } catch (Cmm::Program::FunctionNotFoundError& e) {
             // CodeGenError err;
             // err.exception = e.what(),
-            // err.line = node->_lineNumber;
+            // err.line = node->_virtualLineNumber;
             // context->errors.push_back(err);
             return Cmm::V_Any;
         }
     }
 
     CodeGenError err;
-    err.exception = "Unknown Node Type",
-    err.line = node->_lineNumber;
+    err.exception = "Unknown Node Type";
+    err.line = node->_virtualLineNumber;
     context->errors.push_back(err);
     return Cmm::V_Any;
 }
@@ -252,12 +253,12 @@ static inline void writeQuad(std::ostream&out, size_t indentation, std::string o
             << std::setw(QUAD_SIZE) << std::left << res
             << std::endl;
 
-    std::cout << IndentationAsString(indentation)
-            << std::setw(QUAD_SIZE) << std::left << op
-            << std::setw(QUAD_SIZE) << std::left << arg1
-            << std::setw(QUAD_SIZE) << std::left << arg2
-            << std::setw(QUAD_SIZE) << std::left << res
-            << std::endl;
+    // std::cout << IndentationAsString(indentation)
+    //         << std::setw(QUAD_SIZE) << std::left << op
+    //         << std::setw(QUAD_SIZE) << std::left << arg1
+    //         << std::setw(QUAD_SIZE) << std::left << arg2
+    //         << std::setw(QUAD_SIZE) << std::left << res
+    //         << std::endl;
 }
 
 static std::string getTempVarName(CodeGenContext* context) {
@@ -299,7 +300,7 @@ static std::string getSwitchExitLabel(CodeGenContext* context) {
 
 static std::pair<std::string, Cmm::ValueType> quoteStrings(std::pair<std::string, Cmm::ValueType> in) {
     if (in.second == Cmm::V_String) {
-        return {"\"" + in.first + "\"", in.second};
+        return {"\"" + StringUtils::escapeString(in.first) + "\"", in.second};
     }
 
     return in;
@@ -315,14 +316,14 @@ static std::pair<std::string, Cmm::ValueType> writeExpression(Cmm::EvaluableNode
                 // this is a const
                 CodeGenError err;
                 err.exception = Cmm::Program::ConstantAssignmentError(mNode->name).what(),
-                err.line = node->_lineNumber;
+                err.line = node->_virtualLineNumber;
                 context->errors.push_back(err);
             }
             type = var.first;
         } catch (Cmm::Program::VariableNotFoundError& e) {
             CodeGenError err;
             err.exception = e.what(),
-            err.line = node->_lineNumber;
+            err.line = node->_virtualLineNumber;
             context->errors.push_back(err);
         }
 
@@ -340,14 +341,14 @@ static std::pair<std::string, Cmm::ValueType> writeExpression(Cmm::EvaluableNode
                 // this is a const
                 CodeGenError err;
                 err.exception = Cmm::Program::ConstantAssignmentError(mNode->name).what(),
-                err.line = node->_lineNumber;
+                err.line = node->_virtualLineNumber;
                 context->errors.push_back(err);
             }
             type = var.first;
         } catch (Cmm::Program::VariableNotFoundError& e) {
             CodeGenError err;
             err.exception = e.what(),
-            err.line = node->_lineNumber;
+            err.line = node->_virtualLineNumber;
             context->errors.push_back(err);
         }
 
@@ -367,7 +368,7 @@ static std::pair<std::string, Cmm::ValueType> writeExpression(Cmm::EvaluableNode
         } catch (Cmm::Program::VariableNotFoundError& e) {
             CodeGenError err;
             err.exception = e.what(),
-            err.line = node->_lineNumber;
+            err.line = node->_virtualLineNumber;
             context->errors.push_back(err);
             return {mNode->name, Cmm::V_Any};
         }
@@ -385,7 +386,7 @@ static std::pair<std::string, Cmm::ValueType> writeExpression(Cmm::EvaluableNode
         if (!_cL->second.contains(mNode->targetType)) {
             CodeGenWarn err;
             err.exception = std::string(Cmm::ValuesHelper::ConversionError(_internalResult.second, mNode->targetType).what());
-            err.line = node->_lineNumber;
+            err.line = node->_virtualLineNumber;
 
             if (_internalResult.second == Cmm::V_Any) {
                 err.exception = "Conversions with type [any] depends on runtime value.";
@@ -420,7 +421,7 @@ static std::pair<std::string, Cmm::ValueType> writeExpression(Cmm::EvaluableNode
         if (!_cL->second.contains(Cmm::V_Bool)) {
             CodeGenWarn err;
             err.exception = std::string(Cmm::ValuesHelper::ConversionError(_internalResult.second, Cmm::V_Bool).what());
-            err.line = node->_lineNumber;
+            err.line = node->_virtualLineNumber;
 
             if (_internalResult.second == Cmm::V_Any) {
                 err.exception = "Conversions with type [any] depends on runtime value.";
@@ -450,7 +451,7 @@ static std::pair<std::string, Cmm::ValueType> writeExpression(Cmm::EvaluableNode
         if (!_cL->second.contains(Cmm::V_Integer)) {
             CodeGenWarn err;
             err.exception = std::string(Cmm::ValuesHelper::ConversionError(_internalResult.second, Cmm::V_Integer).what());
-            err.line = node->_lineNumber;
+            err.line = node->_virtualLineNumber;
 
             if (_internalResult.second == Cmm::V_Any) {
                 err.exception = "Conversions with type [any] depends on runtime value.";
@@ -479,7 +480,7 @@ static std::pair<std::string, Cmm::ValueType> writeExpression(Cmm::EvaluableNode
         if (_internalResult.second == Cmm::V_Any || _internalResult.second == Cmm::V_String) {
             CodeGenWarn err;
             err.exception = std::string(Cmm::ValuesHelper::ConversionError(_internalResult.second, Cmm::V_Any).what());
-            err.line = node->_lineNumber;
+            err.line = node->_virtualLineNumber;
 
             if (_internalResult.second == Cmm::V_Any) {
                 err.exception = "Conversions with type [any] depends on runtime value.";
@@ -525,7 +526,7 @@ static std::pair<std::string, Cmm::ValueType> writeExpression(Cmm::EvaluableNode
             // one of them is V_void
             CodeGenError err;
             err.exception = "Tried to do an operation on a [void] type.",
-            err.line = node->_lineNumber;
+            err.line = node->_virtualLineNumber;
             context->errors.push_back(err);
         } else result_type = it->second;
         return {temp, result_type};
@@ -546,7 +547,7 @@ static std::pair<std::string, Cmm::ValueType> writeExpression(Cmm::EvaluableNode
         } catch (Cmm::Program::FunctionNotFoundError& e) {
             CodeGenError err;
             err.exception = e.what(),
-            err.line = node->_lineNumber;
+            err.line = node->_virtualLineNumber;
             context->errors.push_back(err);
         }
 
@@ -569,7 +570,7 @@ static void generateQuads_recv(Cmm::ASTNode* node, CodeGenContext* context, size
         if (stack.variables.find(mNode->name) != stack.variables.end()) {
             CodeGenError err;
             err.exception = Cmm::Program::AlreadyDefinedError(mNode->name).what();
-            err.line = mNode->_lineNumber;
+            err.line = mNode->_virtualLineNumber;
             context->errors.push_back(err);
         } else {
 
@@ -579,7 +580,7 @@ static void generateQuads_recv(Cmm::ASTNode* node, CodeGenContext* context, size
             if (expr.second == Cmm::V_Void) {
                 CodeGenError err;
                 err.exception = "Trying to assign an expression with void result to variable";
-                err.line = mNode->_lineNumber;
+                err.line = mNode->_virtualLineNumber;
                 context->errors.push_back(err);
             }
 
@@ -589,7 +590,7 @@ static void generateQuads_recv(Cmm::ASTNode* node, CodeGenContext* context, size
             }
 
             Symbol s = {
-                .codeLine = (size_t) mNode->_lineNumber,
+                .codeLine = (size_t) mNode->_virtualLineNumber,
                 .quadLine = (size_t) context->currentLine,
                 .scope = context->stack.size() - 1,
                 .type = {expr.second},
@@ -610,7 +611,7 @@ static void generateQuads_recv(Cmm::ASTNode* node, CodeGenContext* context, size
         if (stack.variables.find(mNode->name) != stack.variables.end()) {
             CodeGenError err;
             err.exception = Cmm::Program::AlreadyDefinedError(mNode->name).what();
-            err.line = mNode->_lineNumber;
+            err.line = mNode->_virtualLineNumber;
             context->errors.push_back(err);
         } else {
 
@@ -619,7 +620,7 @@ static void generateQuads_recv(Cmm::ASTNode* node, CodeGenContext* context, size
             if (_internalType != _externalType) {
                 CodeGenWarn err;
                 err.exception = "Implicit conversion from [" + Cmm::ValuesHelper::ValueTypeAsString(_internalType) + "] to [" + Cmm::ValuesHelper::ValueTypeAsString(_externalType) + "].";
-                err.line = node->_lineNumber;
+                err.line = node->_virtualLineNumber;
                 context->warnings.push_back(err);
 
                 auto _shadowNode = new Cmm::Expressions::CastNode(mNode->value, Cmm::ValuesHelper::ValueTypeAsString(_externalType));
@@ -639,7 +640,7 @@ static void generateQuads_recv(Cmm::ASTNode* node, CodeGenContext* context, size
             }
 
             Symbol s = {
-                .codeLine = (size_t) mNode->_lineNumber,
+                .codeLine = (size_t) mNode->_virtualLineNumber,
                 .quadLine = (size_t) context->currentLine,
                 .scope = context->stack.size() - 1,
                 .type = {_externalType},
@@ -664,14 +665,14 @@ static void generateQuads_recv(Cmm::ASTNode* node, CodeGenContext* context, size
                 // this is a const
                 CodeGenError err;
                 err.exception = Cmm::Program::ConstantAssignmentError(mNode->name).what(),
-                err.line = node->_lineNumber;
+                err.line = node->_virtualLineNumber;
                 context->errors.push_back(err);
             }
 
         } catch (std::exception& e) {
             CodeGenError err;
             err.exception = Cmm::Program::VariableNotFoundError(mNode->name).what();
-            err.line = mNode->_lineNumber;
+            err.line = mNode->_virtualLineNumber;
             context->errors.push_back(err);
         }
 
@@ -681,7 +682,7 @@ static void generateQuads_recv(Cmm::ASTNode* node, CodeGenContext* context, size
         if (_internalType != _externalType) {
             CodeGenWarn err;
             err.exception = "Implicit conversion from [" + Cmm::ValuesHelper::ValueTypeAsString(_internalType) + "] to [" + Cmm::ValuesHelper::ValueTypeAsString(_externalType) + "].";
-            err.line = node->_lineNumber;
+            err.line = node->_virtualLineNumber;
             context->warnings.push_back(err);
 
             auto _shadowNode = new Cmm::Expressions::CastNode(mNode->expr, Cmm::ValuesHelper::ValueTypeAsString(_externalType));
@@ -752,7 +753,7 @@ static void generateQuads_recv(Cmm::ASTNode* node, CodeGenContext* context, size
                 mNode->id,
                 args
             })).what();
-            err.line = mNode->_lineNumber;
+            err.line = mNode->_virtualLineNumber;
             context->errors.push_back(err);
         } catch (std::exception& e) {
             // we are good
@@ -777,7 +778,7 @@ static void generateQuads_recv(Cmm::ASTNode* node, CodeGenContext* context, size
                 if (scope.variables.contains(i->id)) {
                     CodeGenError err;
                     err.exception = "Function has repeated argument: " + i->id;
-                    err.line = i->_lineNumber;
+                    err.line = i->_virtualLineNumber;
                     context->errors.push_back(err);
                 }
 
@@ -801,7 +802,7 @@ static void generateQuads_recv(Cmm::ASTNode* node, CodeGenContext* context, size
 
                 // add it to the symbol table
                 Symbol s = {
-                    .codeLine = (size_t) mNode->_lineNumber,
+                    .codeLine = (size_t) mNode->_virtualLineNumber,
                     .quadLine = (size_t) context->currentLine,
                     .scope = context->stack.size() - 1,
                     .type = {type},
@@ -818,7 +819,7 @@ static void generateQuads_recv(Cmm::ASTNode* node, CodeGenContext* context, size
                 accept_types.push_back(type);
             }
 
-            writeQuad(out, indentation, "FUNC", mNode->id, "", "", context);
+            writeQuad(out, indentation, mNode->function == nullptr  ? "NATIVE FUNC" : "FUNC", mNode->id, "", "", context);
 
             it->second[{args, op_args}] = mNode->returnType->types.size() == 1 ? (*mNode->returnType->types.begin()) : Cmm::V_Any;
             context->returnLabels.push_back(retType);
@@ -830,7 +831,7 @@ static void generateQuads_recv(Cmm::ASTNode* node, CodeGenContext* context, size
             }
 
             Symbol s = {
-                .codeLine = (size_t) mNode->_lineNumber,
+                .codeLine = (size_t) mNode->_virtualLineNumber,
                 .quadLine = (size_t) context->currentLine,
                 .scope = context->stack.size() - 2,
                 .type = ret_type,
@@ -878,7 +879,7 @@ static void generateQuads_recv(Cmm::ASTNode* node, CodeGenContext* context, size
     //             mNode->id,
     //             args
     //         })).what();
-    //         err.line = mNode->_lineNumber;
+    //         err.line = mNode->_virtualLineNumber;
     //         context->errors.push_back(err);
     //     }
     //
@@ -901,7 +902,7 @@ static void generateQuads_recv(Cmm::ASTNode* node, CodeGenContext* context, size
     //             if (scope.variables.contains(i->id)) {
     //                 CodeGenError err;
     //                 err.exception = "Function has repeated argument: " + i->id;
-    //                 err.line = i->_lineNumber;
+    //                 err.line = i->_virtualLineNumber;
     //                 context->errors.push_back(err);
     //             }
     //
@@ -924,7 +925,7 @@ static void generateQuads_recv(Cmm::ASTNode* node, CodeGenContext* context, size
     //
     //             // add it to the symbol table
     //             Symbol s = {
-    //                 .codeLine = (size_t) mNode->_lineNumber,
+    //                 .codeLine = (size_t) mNode->_virtualLineNumber,
     //                 .quadLine = (size_t) context->currentLine,
     //                 .scope = context->stack.size() - 1,
     //                 .type = {type},
@@ -952,7 +953,7 @@ static void generateQuads_recv(Cmm::ASTNode* node, CodeGenContext* context, size
     //         }
     //
     //         Symbol s = {
-    //             .codeLine = (size_t) mNode->_lineNumber,
+    //             .codeLine = (size_t) mNode->_virtualLineNumber,
     //             .quadLine = (size_t) context->currentLine,
     //             .scope = context->stack.size() - 2,
     //             .type = ret_type,
@@ -1121,7 +1122,7 @@ static void generateQuads_recv(Cmm::ASTNode* node, CodeGenContext* context, size
         if (context->continueLabels.empty()) {
             CodeGenError err;
             err.exception = Cmm::Program::ControlError("continue cannot be used outside a looper scope").what();
-            err.line = mNode->_lineNumber;
+            err.line = mNode->_virtualLineNumber;
             context->errors.push_back(err);
         } else {
             label = context->continueLabels.back();
@@ -1136,7 +1137,7 @@ static void generateQuads_recv(Cmm::ASTNode* node, CodeGenContext* context, size
         if (context->breakLabels.empty()) {
             CodeGenError err;
             err.exception = Cmm::Program::ControlError("break cannot be used outside a looper / switch scope").what();
-            err.line = mNode->_lineNumber;
+            err.line = mNode->_virtualLineNumber;
             context->errors.push_back(err);
         } else {
             label = context->breakLabels.back();
@@ -1152,7 +1153,7 @@ static void generateQuads_recv(Cmm::ASTNode* node, CodeGenContext* context, size
         if (context->returnLabels.empty()) {
             CodeGenError err;
             err.exception = Cmm::Program::ControlError("return cannot be used outside a function scope").what();
-            err.line = mNode->_lineNumber;
+            err.line = mNode->_virtualLineNumber;
             context->errors.push_back(err);
         } else {
             func_ret_type = context->returnLabels.back();
@@ -1165,7 +1166,7 @@ static void generateQuads_recv(Cmm::ASTNode* node, CodeGenContext* context, size
                 if (in_returns == func_ret_type.end()) {
                     CodeGenWarn err;
                     err.exception = "Implicit conversion from [" + Cmm::ValuesHelper::ValueTypeAsString(result_type) + "] to [" + Cmm::ValuesHelper::ValueTypeAsString(func_ret_type[0]) + "].";
-                    err.line = node->_lineNumber;
+                    err.line = node->_virtualLineNumber;
                     context->warnings.push_back(err);
 
                     auto _shadowNode = new Cmm::Expressions::CastNode(mNode->expr, Cmm::ValuesHelper::ValueTypeAsString(func_ret_type[0]));
@@ -1180,7 +1181,7 @@ static void generateQuads_recv(Cmm::ASTNode* node, CodeGenContext* context, size
             } else {
                 CodeGenError err;
                 err.exception = Cmm::Program::ControlError("function requires a return value.").what();
-                err.line = mNode->_lineNumber;
+                err.line = mNode->_virtualLineNumber;
                 context->errors.push_back(err);
                 writeQuad(out, indentation, "RETURN", "", "", "", context); // auto correct
             }
@@ -1188,13 +1189,19 @@ static void generateQuads_recv(Cmm::ASTNode* node, CodeGenContext* context, size
             if (mNode->expr) {
                 CodeGenError err;
                 err.exception = Cmm::Program::ControlError("returning a value in a void function.").what();
-                err.line = mNode->_lineNumber;
+                err.line = mNode->_virtualLineNumber;
                 context->errors.push_back(err);
             }
 
             writeQuad(out, indentation, "RETURN", "", "", "", context);
         }
         context->stack.back().deadCode = true;
+    }
+
+    // macros
+    if (auto mNode = dynamic_cast<Cmm::Macros::ClearMacro*>(node)) {
+        context->errors.clear();
+        context->warnings.clear();
     }
 
 }

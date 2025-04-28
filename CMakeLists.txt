@@ -100,6 +100,8 @@ add_executable(Cmm
         src/generator/quad_generator.hpp
         src/utils/file_utils.cpp
         src/utils/file_utils.hpp
+        src/nodes/Macros.cpp
+        src/nodes/Macros.hpp
 )
 
 add_custom_target(

@@ -28,11 +28,7 @@ extern int yydebug;
 extern int yyvlineno;
 extern int yylineno;
 
-void yyerror(const char* s) {
-  std::cout  << "[Error] " << yyvlineno << " " << s
-              << " (unexpected token: '" << yytext << "')" << std::endl;
-}
-
+void yyerror(const char* s);
 extern Cmm::Program::ProgramNode* root;
 
 %}
@@ -82,7 +78,8 @@ extern Cmm::Program::ProgramNode* root;
 %type <str> compoundable_operator
 
 %type <str> type_specifier
-%type <evaluable> constant_value expr expr_value expr_term expr_casted_term
+%type <evaluable> constant_value expr expr_casted_term
+%type <evaluable> expr_term_l0 expr_term_l1 expr_term_l2 expr_term_l3 expr_term_l4 expr_term_l5
 
 %type <executable> program statement statements_list var_decl_stmt var_assign_stmt
 
@@ -139,7 +136,10 @@ statement:
 
   | line_rule                        { $$ = nullptr; } // just a line rule
   | MARCO_CLEAR                      { $$ = new Cmm::Macros::ClearMacro(); }
-  | error D_SEMICOLON                { yyerrok; $$ = nullptr; }
+  | error                            {
+                                        yyerrok;
+                                        $$ = nullptr;
+                                     }
   ;
 
 //               ==============  CONTROL   ==============
@@ -281,45 +281,63 @@ func_param:
 //               ============== Expressions ==============
 
 expr:
-    expr_casted_term                      { $$ = $1; }
-  | expr OP_PLUS expr_casted_term         { $$ = new Cmm::Expressions::TermNode($1, $3, *$2); }
-  | expr OP_MINUS expr_casted_term        { $$ = new Cmm::Expressions::TermNode($1, $3, *$2); }
+    expr_casted_term                              { $$ = $1; }
   ;
 
 expr_casted_term:
-    D_LPAREN type_specifier D_RPAREN expr_term { $$ = new Cmm::Expressions::CastNode($4, *$2); }
-  | expr_term                                  { $$ = $1; }
+    D_LPAREN type_specifier D_RPAREN expr_term_l0 { $$ = new Cmm::Expressions::CastNode($4, *$2); }
+  | expr_term_l0                                  { $$ = $1; }
   ;
 
-expr_term:
-    expr_value                                  { $$ = $1; }
-  | expr_term OP_MULT expr_value                { $$ = new Cmm::Expressions::TermNode($1, $3, *$2); }
-  | expr_term OP_DIV expr_value                 { $$ = new Cmm::Expressions::TermNode($1, $3, *$2); }
-  | expr_term OP_LS expr_value                  { $$ = new Cmm::Expressions::TermNode($1, $3, *$2); }
-  | expr_term OP_RS expr_value                  { $$ = new Cmm::Expressions::TermNode($1, $3, *$2); }
-  | expr_term OP_BOR expr_value                 { $$ = new Cmm::Expressions::TermNode($1, $3, *$2); }
-  | expr_term OP_BAND expr_value                { $$ = new Cmm::Expressions::TermNode($1, $3, *$2); }
-  | expr_term OP_XOR expr_value                 { $$ = new Cmm::Expressions::TermNode($1, $3, *$2); }
-  | expr_term OP_OR expr_value                  { $$ = new Cmm::Expressions::TermNode($1, $3, *$2); }
-  | expr_term OP_AND expr_value                 { $$ = new Cmm::Expressions::TermNode($1, $3, *$2); }
-  | expr_term OP_EQUAL expr_value               { $$ = new Cmm::Expressions::TermNode($1, $3, *$2); }
-  | expr_term OP_GREATER expr_value             { $$ = new Cmm::Expressions::TermNode($1, $3, *$2); }
-  | expr_term OP_LESS expr_value                { $$ = new Cmm::Expressions::TermNode($1, $3, *$2); }
-  | expr_term OP_LE expr_value                  { $$ = new Cmm::Expressions::TermNode($1, $3, *$2); }
-  | expr_term OP_GE expr_value                  { $$ = new Cmm::Expressions::TermNode($1, $3, *$2); }
-  | expr_term OP_NEQUAL expr_value              { $$ = new Cmm::Expressions::TermNode($1, $3, *$2); }
-  | expr_term OP_MOD expr_value                 { $$ = new Cmm::Expressions::TermNode($1, $3, *$2); }
+expr_term_l0:
+    expr_term_l1 OP_OR  expr_term_l1                 { $$ = new Cmm::Expressions::TermNode($1, $3, *$2); }
+  | expr_term_l1 OP_AND expr_term_l1                 { $$ = new Cmm::Expressions::TermNode($1, $3, *$2); }
+  | expr_term_l1
   ;
 
-expr_value:
-    constant_value                           { $$ = $1; }
-  | func_call                                { $$ = $1; }
-  | ID                                       { $$ = new Cmm::Expressions::VariableNode(*$1); }
-  | D_LPAREN expr D_RPAREN                   { $$ = $2; }
-  | OP_MINUS  expr_value %prec OP_UNARY_MINUS  { $$ = new Cmm::Expressions::NegatedNode($2); }
-  | OP_PLUS   expr_value %prec OP_UNARY_MINUS  { $$ = $2; }
-  | OP_NOT    expr_value %prec OP_UNARY_MINUS  { $$ = new Cmm::Expressions::NotNode($2); }
-  | OP_INVERT expr_value %prec OP_UNARY_MINUS  { $$ = new Cmm::Expressions::InvertNode($2); }
+expr_term_l1:
+     expr_term_l2
+  | expr_term_l2 OP_EQUAL   expr_term_l2             { $$ = new Cmm::Expressions::TermNode($1, $3, *$2); }
+  | expr_term_l2 OP_GREATER expr_term_l2             { $$ = new Cmm::Expressions::TermNode($1, $3, *$2); }
+  | expr_term_l2 OP_LESS    expr_term_l2             { $$ = new Cmm::Expressions::TermNode($1, $3, *$2); }
+  | expr_term_l2 OP_LE      expr_term_l2             { $$ = new Cmm::Expressions::TermNode($1, $3, *$2); }
+  | expr_term_l2 OP_GE      expr_term_l2             { $$ = new Cmm::Expressions::TermNode($1, $3, *$2); }
+  | expr_term_l2 OP_NEQUAL  expr_term_l2             { $$ = new Cmm::Expressions::TermNode($1, $3, *$2); }
+  ;
+
+expr_term_l2:
+    expr_term_l3
+  | expr_term_l3 OP_PLUS  expr_term_l3               { $$ = new Cmm::Expressions::TermNode($1, $3, *$2); }
+  | expr_term_l3 OP_MINUS expr_term_l3               { $$ = new Cmm::Expressions::TermNode($1, $3, *$2); }
+  | expr_term_l3 OP_BOR   expr_term_l3               { $$ = new Cmm::Expressions::TermNode($1, $3, *$2); }
+  | expr_term_l3 OP_BAND  expr_term_l3               { $$ = new Cmm::Expressions::TermNode($1, $3, *$2); }
+  | expr_term_l3 OP_XOR   expr_term_l3               { $$ = new Cmm::Expressions::TermNode($1, $3, *$2); }
+  ;
+
+
+expr_term_l3:
+    expr_term_l4
+  | expr_term_l4 OP_MULT expr_term_l4                { $$ = new Cmm::Expressions::TermNode($1, $3, *$2); }
+  | expr_term_l4 OP_DIV  expr_term_l4                { $$ = new Cmm::Expressions::TermNode($1, $3, *$2); }
+  | expr_term_l4 OP_MOD  expr_term_l4                { $$ = new Cmm::Expressions::TermNode($1, $3, *$2); }
+  ;
+
+expr_term_l4:
+    expr_term_l5
+  | expr_term_l5 OP_LS   expr_term_l5                { $$ = new Cmm::Expressions::TermNode($1, $3, *$2); }
+  | expr_term_l5 OP_RS   expr_term_l5                { $$ = new Cmm::Expressions::TermNode($1, $3, *$2); }
+  ;
+
+
+expr_term_l5:
+    constant_value                               { $$ = $1; }
+  | func_call                                    { $$ = $1; }
+  | ID                                           { $$ = new Cmm::Expressions::VariableNode(*$1); }
+  | D_LPAREN expr D_RPAREN                       { $$ = $2; }
+  | OP_MINUS  expr_term_l5 %prec OP_UNARY_MINUS  { $$ = new Cmm::Expressions::NegatedNode($2); }
+  | OP_PLUS   expr_term_l5 %prec OP_UNARY_MINUS  { $$ = $2; }
+  | OP_NOT    expr_term_l5 %prec OP_UNARY_MINUS  { $$ = new Cmm::Expressions::NotNode($2); }
+  | OP_INVERT expr_term_l5 %prec OP_UNARY_MINUS  { $$ = new Cmm::Expressions::InvertNode($2); }
   | OP_INC    ID                               { $$ = new Cmm::Variables::PreIncNode(*$2, *$1); }
   | OP_DEC    ID                               { $$ = new Cmm::Variables::PreIncNode(*$2, *$1); }
   | ID        OP_INC                           { $$ = new Cmm::Variables::PostIncNode(*$1, *$2); }
@@ -361,3 +379,12 @@ line_rule:
         yyvlineno = std::stoi(*$2);
     }
 %%
+
+void yyerror(const char* s) {
+  std::cout  << "[Error] " << yyvlineno << " " << s
+              << " (unexpected token: '" << yytext << "')" << std::endl;
+
+  // if (!Cmm::Cfg::allowErrors) {
+  //   YYABORT;
+  // }
+}

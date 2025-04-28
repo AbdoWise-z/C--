@@ -138,21 +138,24 @@ void run_code(const std::string& file_path, const std::string& include_path) {
 
     Cmm::debugger::beginSession();
 
+    std::string wrapper_code = "#include <" + file_path + ">"; // code injection :goose:
+
     auto m_path = FileUtils::getSelfPath();
     m_path = std::filesystem::path(m_path).parent_path().string();
 
-    std::string wrapper_code = "#include <" + file_path + ">"; // code injection :goose:
+    auto paths = {
+        m_path + "/..",
+        m_path + "/../Cmm",
+        m_path + "/../Cmm/std" ,
+        m_path + "/Cmm/std" ,
+        m_path + "/std" ,
+        m_path, include_path
+    };
+
+    // std::cout << m_path << std::endl;
     auto [code, load] = Cmm::PreProcessor::processContent(
-            wrapper_code,
-            {
-                m_path + "/..",
-                m_path + "/../Cmm",
-                m_path + "/../Cmm/std" ,
-                m_path + "/Cmm/std" ,
-                m_path + "/std" ,
-                m_path,
-                include_path
-            });
+        wrapper_code, paths
+    );
 
     // std::cout << code << std::endl;
     for (const auto& lib: load) {
@@ -195,7 +198,7 @@ void compile_code(const std::string& file_path, const std::string& include_path,
             m_path, include_path
         };
 
-        std::cout << m_path << std::endl;
+        // std::cout << m_path << std::endl;
         auto [code, load] = Cmm::PreProcessor::processContent(
             wrapper_code, paths
         );

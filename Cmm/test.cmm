@@ -1,4 +1,26 @@
-func f() -> str {
-    var k = "str";
-    return k;
+#include <io>
+
+func main() -> void {
+    var x = 3;
+    switch (x - 3)
+    {
+    case 0:
+        print("here1\n");
+        switch (x - 2)
+        {
+        case 1:
+            print("here2\n");
+        case 2:
+            print("here3\n");
+            break;
+        }
+    case 1:
+        print("here4\n");
+        break;
+    default:
+        print("here5\n");
+        break;
+    }
 }
+
+main();

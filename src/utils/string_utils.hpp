@@ -4,6 +4,7 @@
 
 #include <string>
 #include <sstream>
+#include <vector>
 
 namespace StringUtils {
     template <typename InputIt>
@@ -28,6 +29,8 @@ namespace StringUtils {
 
     std::string unescapeString(const std::string& input);
     std::string escapeString(const std::string &input);
+
+    std::vector<std::string> splitLines(const std::string &input);
 }
 
 

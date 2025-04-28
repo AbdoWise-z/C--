@@ -1,6 +1,8 @@
 
 #include "string_utils.hpp"
 
+#include <vector>
+
 std::string StringUtils::unescapeString(const std::string &input) {
     std::string output;
     output.reserve(input.size()); // Reserve space for efficiency
@@ -53,4 +55,14 @@ std::string StringUtils::escapeString(const std::string &input) {
     }
 
     return output;
+}
+
+std::vector<std::string> StringUtils::splitLines(const std::string &input) {
+    std::vector<std::string> lines;
+    std::istringstream stream(input);
+    std::string line;
+    while (std::getline(stream, line)) {
+        lines.push_back(line);
+    }
+    return lines;
 }

@@ -34,7 +34,19 @@ extern void yylex_destroy();
 void run_code(std::vector<std::string> params) {
     try {
         std::string input = StringUtils::join(params.begin(), params.end(), " ");
-        auto [code, load] = Cmm::PreProcessor::processContent(input, {"./Cmm/std" , "./std" , "."});
+        auto m_path = FileUtils::getSelfPath();
+        m_path = std::filesystem::path(m_path).parent_path().string();
+
+        auto paths = {
+            m_path + "/..",
+            m_path + "/../Cmm",
+            m_path + "/../Cmm/std" ,
+            m_path + "/Cmm/std" ,
+            m_path + "/std" ,
+            m_path,
+        };
+
+        auto [code, load] = Cmm::PreProcessor::processContent(input, paths);
 
         // std::cout << code << std::endl;
 
@@ -168,16 +180,6 @@ void run_code(const std::string& file_path, const std::string& include_path) {
     yylex_destroy();
 
     Cmm::debugger::endSession();
-}
-
-static std::vector<std::string> splitLines(const std::string &input) {
-    std::vector<std::string> lines;
-    std::istringstream stream(input);
-    std::string line;
-    while (std::getline(stream, line)) {
-        lines.push_back(line);
-    }
-    return lines;
 }
 
 void compile_code(const std::string& file_path, const std::string& include_path, const std::string& quads, const std::string& symbols) {

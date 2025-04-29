@@ -9,6 +9,7 @@
 #endif
 
 #include <iostream>
+#include <sstream>
 #include <vector>
 
 #include "common.h"
@@ -72,10 +73,25 @@ Cmm::ValueObject charAdd(const Cmm::FunctionSignature& sig, std::vector<Cmm::Val
     };
 }
 
+Cmm::ValueObject charOf(const Cmm::FunctionSignature& sig, std::vector<Cmm::ValueObject>& params) {
+    int _s  = static_cast<int>(*(static_cast<Cmm::Integer *>(params[0].value)));
+
+    char str = _s;
+
+    std::stringstream ss;
+    ss << str;
+
+    return {
+        .type = Cmm::V_String,
+        .value = new Cmm::String( ss.str() )
+    };
+}
+
 
 void do_register(Cmm::NativeAddFunction add) {
     add("strlen", {{Cmm::V_String}, {false}}, reinterpret_cast<Cmm::NativeFunction>(m_strlen));
     add("charAt", {{Cmm::V_String, Cmm::V_Integer}, {false, false}}, reinterpret_cast<Cmm::NativeFunction>(charAt));
     add("slice", {{Cmm::V_String, Cmm::V_Integer, Cmm::V_Integer}, {false, false, false}}, reinterpret_cast<Cmm::NativeFunction>(slice));
     add("charAdd", {{Cmm::V_String, Cmm::V_Integer}, {false, false}}, reinterpret_cast<Cmm::NativeFunction>(charAdd));
+    add("charOf", {{Cmm::V_Integer}, {false}}, reinterpret_cast<Cmm::NativeFunction>(charOf));
 }
